@@ -1,0 +1,3 @@
+# 第一版暂不启用容器编排。
+# 后续可在这里统一启动 PostgreSQL、Redis、meizhaiseek-api 和 Web 服务。
+services: {}

@@ -1,0 +1,294 @@
+﻿# meizhaiseek-platform API
+
+褰撳墠鍚庣鏈嶅姟鍚嶄负 `meizhaiseek-api`銆傚墠绔彧閫氳繃缁熶竴浠诲姟鎺ュ彛鎻愪氦鏅鸿兘浣撲换鍔★紝涓嶇洿鎺ヨ皟鐢ㄥ叿浣撳瓙 agent銆?
+## v1.2 閴存潈璇存槑
+
+闄?`/health` 鍜?`/api/auth/login` 澶栵紝涓昏 API 闇€瑕佸湪璇锋眰澶存惡甯?`Authorization: Bearer <token>`銆傜敤鎴锋暟鎹娇鐢ㄦ湰鍦?JSON 淇濆瓨锛屼笉浣跨敤鏁版嵁搴撱€?
+榛樿绠＄悊鍛橈細
+
+```text
+鐢ㄦ埛鍚嶏細admin
+瀵嗙爜锛歛dmin123
+```
+
+瀵嗙爜浣跨敤 PBKDF2-SHA256 淇濆瓨锛宼oken 浣跨敤 HMAC-SHA256 绛惧悕銆備慨鏀瑰瘑鐮佸悗鏃?token 绔嬪嵆澶辨晥銆?
+## POST /api/auth/login
+
+浣跨敤鐢ㄦ埛鍚嶅拰瀵嗙爜鐧诲綍锛岃繑鍥?token銆佽繃鏈熸椂闂翠笌涓嶅惈瀵嗙爜瀛楁鐨勭敤鎴蜂俊鎭€?
+## POST /api/auth/logout
+
+璁板綍閫€鍑哄璁℃棩蹇椼€傚綋鍓嶄笉缁存姢 token 榛戝悕鍗曘€?
+## GET /api/auth/me
+
+楠岃瘉 token銆佺敤鎴峰惎鐢ㄧ姸鎬佷笌 `auth_version`銆?
+## POST /api/auth/change-password
+
+鏍￠獙鍘熷瘑鐮佸悗淇敼瀵嗙爜锛屾柊瀵嗙爜鑷冲皯 8 浣嶏紱鎴愬姛鍚庡繀椤婚噸鏂扮櫥褰曘€?
+## GET /api/admin/audit-logs
+
+浠?admin 鍙敤銆傛敮鎸?`action`銆乣user`銆乣status`銆乣start_time`銆乣end_time` 鍜?`limit` 绛涢€夈€?
+## GET /health
+
+```json
+{
+  "status": "ok",
+  "service": "meizhaiseek-api"
+}
+```
+
+## GET /api/agents
+
+杩斿洖鍓嶇 22 涓櫤鑳戒綋娉ㄥ唽淇℃伅銆?
+## GET /api/agent-configs
+
+杩斿洖 22 涓墠绔櫤鑳戒綋閰嶇疆銆?
+## GET /api/agent-configs/{agent_type}
+
+杩斿洖鍗曚釜鏅鸿兘浣撻厤缃€傞殣钘忕殑 `competitor_analysis` 鍙€氳繃鍗曢」鎺ュ彛璁块棶銆?
+## POST /api/agent-configs/{agent_type}
+
+鍙洿鏂颁紶鍏ュ瓧娈碉紝杩斿洖鏇存柊鍚庣殑瀹屾暣閰嶇疆銆俙video_script_breakdown` 鐨?`session_id` 浼氳嚜鍔ㄥ洖閫€涓?`019dd824-f4bb-7273-8ac3-6e19b195ff82`銆?
+## GET /api/skills
+
+杩斿洖褰撳墠 mock 鎶€鑳藉垪琛ㄣ€?
+## GET /api/skills/templates
+
+鏀寔 query 鍙傛暟 `agent_type`銆備紶鍏ュ悗鍙繑鍥?enabled 涓旈€傜敤浜庤鏅鸿兘浣撶殑鎶€鑳芥ā鏉裤€?
+## GET /api/skills/templates/{skill_id}
+
+杩斿洖鍗曚釜鎶€鑳芥ā鏉裤€?
+## POST /api/skills/templates
+
+鏂板鎴栨洿鏂版妧鑳芥ā鏉匡紝淇濆瓨鍒版湰鍦?JSON銆?
+## DELETE /api/skills/templates/{skill_id}
+
+绗竴鐗堜负杞垹闄わ紝灏?`enabled=false`銆?
+## POST /api/files/video/upload
+
+瑙嗛鑴氭湰鎷嗚В蹇嵎涓婁紶鎺ュ彛锛屾敮鎸?`.mp4`銆乣.mov`銆乣.webm`銆乣.mkv`銆?
+## POST /api/files/upload
+
+閫氱敤鏂囦欢涓婁紶鎺ュ彛锛屾敮鎸?`xlsx/xls/csv/txt/json/png/jpg/jpeg/webp/mp4/mov/webm/mkv`銆?
+杩斿洖绀轰緥锛?
+```json
+{
+  "file_id": "file_xxx",
+  "filename": "demo.xlsx",
+  "file_type": "excel",
+  "saved_path": "apps/api/uploads/files/demo.xlsx",
+  "size": 1200,
+  "created_at": "2026-06-18 12:00:00",
+  "preview_status": "pending",
+  "message": "鏂囦欢涓婁紶鎴愬姛"
+}
+```
+
+## GET /api/files/{file_id}/preview
+
+鏂囦欢棰勮鎺ュ彛銆侲xcel/CSV 杩斿洖鍓?20 琛岋紝TXT/JSON 杩斿洖鎽樿锛屽浘鐗囧拰瑙嗛杩斿洖瀹夊叏涓嬭浇淇℃伅銆?
+## POST /api/agent-runs
+
+鍒涘缓缁熶竴 agent run銆傛敮鎸?`selected_skill_ids`銆乣link`銆乣file_ids`銆乣dataset_ids`銆乣image_paths` 鍜屽彲閫?`conversation_id`銆傛柊浠诲姟娌℃湁 conversation_id 鏃惰嚜鍔ㄥ垱寤轰細璇濓紱杩斿洖鍚屾椂鍖呭惈 `run_id` 鍜?`conversation_id`銆?
+```json
+{
+  "agent_type": "smart_selection",
+  "mode": "default",
+  "prompt": "鐢ㄦ埛鍘熷鎻愮ず璇?,
+  "selected_skill_ids": ["smart_selection_basic"],
+  "link": "",
+  "file_ids": ["file_xxx"],
+  "image_paths": [],
+  "video_path": "",
+  "video_url": "",
+  "session_id": "",
+  "workflow_options": {}
+}
+```
+
+## v1.5.1 Conversation
+
+- `GET /api/conversations?limit=50&include_archived=false`锛氳繑鍥炲綋鍓嶇櫥褰曠敤鎴风殑鐪熷疄浼氳瘽鍒楄〃銆?- `GET /api/conversations/{conversation_id}`锛氳繑鍥?`{conversation, latest_run, runs, warnings}`锛況un 鏂囦欢缂哄け鏃堕€氳繃 warnings 鎻愮ず銆?- `POST /api/conversations/{conversation_id}/rename`锛氳姹?`{ "title": "鏂版爣棰? }`锛屼粎鍙慨鏀硅嚜宸辩殑浼氳瘽銆?- `POST /api/conversations/{conversation_id}/archive`锛氳蒋褰掓。鑷繁鐨勪細璇濓紝涓嶅垹闄?run銆佹秷鎭垨 artifact銆?
+Conversation 淇濆瓨浜?`runtime/users/{user_id}/conversations/conversations.json`銆備换鍔＄姸鎬併€佺粨鏋溿€侀敊璇€佸彇娑堝拰閲嶈瘯鍧囧悓姝ュ埌瀵瑰簲 assistant message銆?
+## v1.5.2 QA Chat
+
+AI 瀵硅瘽鎺ュ彛鍧囪姹傜櫥褰曪紝admin銆乷perator銆乿iewer 閮藉彲浣跨敤銆備細璇濇寜褰撳墠 `user_id` 淇濆瓨鍒?`runtime/users/{user_id}/qa_conversations/qa_conversations.json`锛屼笉澶嶇敤鏅鸿兘浣撲换鍔?conversation銆?
+- `GET /api/qa/health`锛氳繑鍥?QA 鑳藉姏鐘舵€侊紝涓嶈繑鍥?DeepSeek API Key銆?- `GET /api/qa/conversations?limit=50`锛氳繑鍥炲綋鍓嶇敤鎴?AI 瀵硅瘽浜岀骇鏍忚褰曘€?- `GET /api/qa/conversations/{conversation_id}`锛氳繑鍥炲崟鏉?AI 瀵硅瘽璇︽儏鍜?messages銆?- `POST /api/qa/conversations`锛氬垱寤虹┖ AI 瀵硅瘽锛岃姹?`{ "title": "鏂板璇? }`銆?- `POST /api/qa/chat`锛氭彁浜ら棶棰橈紝鑷姩鍐欏叆 user/assistant message銆?
+`POST /api/qa/chat` 璇锋眰锛?
+```json
+{
+  "conversation_id": null,
+  "question": "鎬庝箞鎵撶垎娆撅紵",
+  "use_rag": true,
+  "top_k": 5
+}
+```
+
+鎴愬姛杩斿洖锛?
+```json
+{
+  "conversation_id": "qa_conv_xxx",
+  "message_id": "msg_xxx",
+  "answer": "鍥炵瓟鍐呭",
+  "sources": [],
+  "warnings": [],
+  "model": "deepseek-v4-flash"
+}
+```
+
+褰?RAG 鏁版嵁搴撲负绌烘椂锛屾帴鍙ｅ厑璁?DeepSeek 鐩存帴鍥炵瓟骞惰繑鍥?warnings銆傚綋 `DEEPSEEK_API_KEY` 鏈厤缃椂锛屾帴鍙ｈ繑鍥炰腑鏂囬敊璇紝骞跺湪瀵瑰簲 conversation 涓繚鐣?failed assistant message銆?
+## v1.5.3 QA Knowledge
+
+AI 瀵硅瘽鐭ヨ瘑搴撴帴鍙ｅ潎瑕佹眰鐧诲綍銆俛dmin銆乷perator 鍙互涓婁紶銆佸垹闄ゅ拰閲嶆柊绱㈠紩鑷繁鐨勭煡璇嗗簱鏂囨。锛泇iewer 鍙互鏌ョ湅鑷繁鐨勬枃妗ｃ€佽鎯呭拰缁熻锛屼絾涓嶈兘绠＄悊銆傜煡璇嗗簱鏂囨。鍐欏叆 SQLite `documents`銆乣chunks` 琛紝鎸?`user_id` 闅旂锛汥eepSeek API Key 涓嶈繘鍏ュ墠绔€佹棩蹇楁垨瀹¤璇︽儏銆?
+- `POST /api/qa/knowledge/upload`锛氫笂浼犲苟鍚屾鍏ュ簱 `.txt`銆乣.md`銆乣.docx` 鏂囨。锛宮ultipart 瀛楁涓?`file` 鍜屽彲閫?`title`銆?- `GET /api/qa/knowledge/documents`锛氳繑鍥炲綋鍓嶇敤鎴风煡璇嗗簱鏂囨。鍒楄〃銆?- `GET /api/qa/knowledge/documents/{doc_id}`锛氳繑鍥炲綋鍓嶇敤鎴峰崟涓枃妗ｈ鎯呭拰鏈€澶?10 鏉?chunk preview銆?- `DELETE /api/qa/knowledge/documents/{doc_id}`锛氳蒋鍒犻櫎褰撳墠鐢ㄦ埛鏂囨。骞跺垹闄ゅ搴?chunks銆?- `POST /api/qa/knowledge/documents/{doc_id}/reindex`锛氶噸鏂拌В鏋愭簮鏂囦欢骞堕噸寤?chunks銆?- `GET /api/qa/knowledge/stats`锛氳繑鍥炲綋鍓嶇敤鎴锋枃妗ｆ暟銆乧hunk 鏁般€乺eady/failed 鏁伴噺鍜?RAG 閰嶇疆鐘舵€併€?
+涓婁紶鎴愬姛杩斿洖锛?
+```json
+{
+  "doc_id": "doc_xxx",
+  "title": "鏂囨。鏍囬",
+  "status": "ready",
+  "chunk_count": 12,
+  "message": "鏂囨。鍏ュ簱瀹屾垚"
+}
+```
+
+鏂囨。璇︽儏杩斿洖锛?
+```json
+{
+  "document": {
+    "doc_id": "doc_xxx",
+    "title": "鏂囨。鏍囬",
+    "source_type": ".md",
+    "status": "ready",
+    "chunk_count": 12,
+    "created_at": "...",
+    "updated_at": "..."
+  },
+  "chunks_preview": [
+    {
+      "chunk_id": "chunk_xxx",
+      "chunk_index": 0,
+      "content_preview": "...",
+      "created_at": "..."
+    }
+  ]
+}
+```
+
+缁熻杩斿洖锛?
+```json
+{
+  "document_count": 3,
+  "chunk_count": 42,
+  "ready_count": 2,
+  "failed_count": 1,
+  "rag_sqlite_exists": true,
+  "embedding_model_path": "./models/bge-small-zh"
+}
+```
+
+## v1.5.4 Conversation Archive
+
+浼氳瘽鏍忓垹闄や娇鐢ㄨ蒋褰掓。锛屼笉纭垹闄?JSON 鏁版嵁銆俛dmin/operator 鍙互褰掓。鑷繁鐨勪細璇濓紱viewer 杩斿洖 403锛涙湭鐧诲綍杩斿洖 401銆傚綊妗ｅ悗榛樿鍒楄〃鎺ュ彛涓嶅啀杩斿洖璇ヨ褰曘€?
+- `POST /api/qa/conversations/{conversation_id}/archive`锛氬綊妗ｅ綋鍓嶇敤鎴疯嚜宸辩殑 AI 瀵硅瘽璁板綍銆?- `POST /api/conversations/{conversation_id}/archive`锛氬綊妗ｅ綋鍓嶇敤鎴疯嚜宸辩殑 AI 鏅鸿兘浣撲細璇濊褰曘€?
+## v1.5.6 QA/RAG 璇婃柇
+
+璇婃柇鎺ュ彛涓嶄笅杞芥ā鍨嬨€佷笉浼€犳ā鍨嬬姸鎬併€佷笉杩斿洖 DeepSeek API Key銆?
+- `GET /api/qa/model-status?include_load_check=false`锛氭煡鐪?bge-small-zh銆丼QLite RAG銆丏eepSeek 閰嶇疆鐘舵€侊紱admin/operator/viewer 鍙敤銆?- `POST /api/qa/test-embedding`锛氭祴璇曚腑鏂囧悜閲忕敓鎴愶紱admin/operator 鍙敤锛岃姹?`{ "text": "娴嬭瘯涓枃鍚戦噺鐢熸垚" }`銆?- `POST /api/qa/test-retrieval`锛氭祴璇曞綋鍓嶇敤鎴风煡璇嗗簱妫€绱紱admin/operator 鍙敤锛岃姹?`{ "question": "鎬庝箞鎵撶垎娆撅紵", "top_k": 5 }`銆?- `POST /api/qa/diagnose`锛氳繑鍥?summary 鍜?checks锛沘dmin/operator 鍙敤銆?
+## GET /api/agent-runs/{run_id}
+
+鏌ヨ agent run 鐘舵€侊紝杩斿洖杩涘害銆佹棩蹇椼€佺粨鏋溿€侀敊璇拰鏂囦欢銆?
+## GET /api/agent-runs
+
+杩斿洖褰撳墠鐢ㄦ埛鏈€杩戜换鍔″垪琛ㄣ€俛dmin 鍙娇鐢?`include_legacy=true` 璇诲彇鏃у叏灞€浠诲姟銆?
+## POST /api/agent-runs/{run_id}/cancel
+
+杞彇娑?running 浠诲姟銆傚凡瀹屾垚鎴栧凡澶辫触浠诲姟杩斿洖 400銆?
+## POST /api/agent-runs/{run_id}/retry
+
+鍩轰簬鍘熶换鍔?payload 鍒涘缓鏂扮殑 run銆傞噸璇曚細淇濈暀 `agent_type`銆乣mode`銆乣prompt`銆乣selected_skill_ids`銆乣link`銆乣file_ids`銆乣image_paths`銆乣video_path`銆乣video_url`銆乣session_id` 鍜?`workflow_options`銆?
+## GET /api/artifacts/download
+
+涓嬭浇瀹夊叏鐩綍鍐呯殑缁撴灉鏂囦欢銆傛煡璇㈠弬鏁帮細`path`銆?
+涓嬭浇鍚屾椂鎵ц瀹夊叏鐩綍鍜岀敤鎴峰綊灞炴牎楠屻€俛dmin 鍙闂敤鎴风洰褰曞強鏃у畨鍏ㄧ洰褰曪紝鏅€氳鑹插彧鑳戒笅杞借嚜宸辩殑鏂囦欢銆傚畨鍏ㄧ洰褰曞寘鎷細
+
+- `LOCAL_AGENT_OUTPUT_DIR`
+- `apps/api/runtime/artifacts`
+- `apps/api/uploads`
+- `VIDEO_UPLOAD_DIR`
+
+## GET /api/admin/runtime/health
+
+杩斿洖杩愯鏃跺仴搴风姸鎬併€佺増鏈€佹湇鍔″悕鍜岄厤缃?warnings銆?
+## GET /api/admin/runtime/configs/status
+
+杩斿洖 `agent_configs`銆乣skill_templates`銆乣files` 鐨勫瓨鍦ㄧ姸鎬併€乻chema version銆佹暟閲忓拰 warnings銆?
+## POST /api/admin/runtime/configs/backup
+
+澶囦唤褰撳墠 runtime configs銆?
+## POST /api/admin/runtime/configs/repair
+
+鏍￠獙骞朵慨澶?runtime configs銆佹妧鑳芥ā鏉垮拰鏂囦欢璁板綍銆傛崯鍧忔枃浠朵細绉诲叆 corrupted 鐩綍銆?
+## POST /api/admin/runtime/configs/reset
+
+澶囦唤褰撳墠閰嶇疆鍚庢仮澶嶉粯璁?agent configs 鍜?skill templates銆?
+## GET /api/admin/runtime/configs/export
+
+瀵煎嚭褰撳墠閰嶇疆銆佹妧鑳芥ā鏉垮拰鏂囦欢璁板綍鐨?JSON 姹囨€汇€?
+## POST /api/admin/runtime/cache/clear
+
+娓呯悊鍙竻鐞嗚繍琛屾椂缂撳瓨锛屽綋鍓嶅寘鎷枃浠堕瑙堢紦瀛樸€?
+## GET /api/admin/agent-runs/stats
+
+杩斿洖浠诲姟鎬绘暟銆佸悇鐘舵€佹暟閲忋€佽秴鏃?running 鏁伴噺鍜岀己澶辩粨鏋滄枃浠舵暟閲忋€?
+## POST /api/admin/agent-runs/repair-stale
+
+灏嗚秴杩囨寚瀹氬垎閽熸暟鐨?running 浠诲姟淇涓?failed銆傞粯璁?120 鍒嗛挓銆?
+## POST /api/admin/agent-runs/cleanup
+
+鎸夊ぉ鏁板拰鐘舵€佹竻鐞嗗巻鍙蹭换鍔°€俙dry_run=true` 鏃跺彧杩斿洖棰勮鏁伴噺锛涘疄闄呮竻鐞嗕細绉诲姩鍒板綊妗ｇ洰褰曘€?
+## GET /api/admin/debug-payloads/{run_id}
+
+鏌ョ湅 local agent 璋冪敤淇濆瓨鐨?request銆乺esponse 鍜?error銆?
+## POST /api/admin/debug-payloads/{run_id}/replay
+
+璇诲彇 debug request 骞堕噸鏂拌皟鐢?local agent锛岃繑鍥?replay_result銆?
+## v1.3 鏈湴 Agent Connector
+
+- `GET /api/agent-connectors`锛氬垪鍑鸿繛鎺ュ櫒銆?- `GET /api/agent-connectors/{connector_id}`锛氳鍙栬繛鎺ュ櫒銆?- `POST /api/agent-connectors`锛氭柊澧炶繛鎺ュ櫒銆?- `POST /api/agent-connectors/{connector_id}`锛氶儴鍒嗘洿鏂拌繛鎺ュ櫒銆?- `DELETE /api/agent-connectors/{connector_id}`锛氳蒋绂佺敤杩炴帴鍣ㄣ€?- `POST /api/agent-connectors/{connector_id}/test`锛氭祴璇?mock銆丠TTP 鎴?CLI 杩炴帴銆?- `POST /api/agent-connectors/{connector_id}/preview-payload`锛氭寜鎸囧畾杩炴帴鍣ㄩ瑙?Payload銆?- `POST /api/agent-runs/preview-payload`锛氭寜鏅鸿兘浣撶粦瀹氬叧绯婚瑙堟渶缁?Payload锛屼笉鍒涘缓浠诲姟銆?- `GET /api/admin/debug-payloads?limit=&agent_type=&status=`锛氭煡璇㈡渶杩戣仈璋冭褰曘€?
+浠ヤ笂鎺ュ彛鍧囪姹?admin Bearer token锛涜姹傚拰鍝嶅簲涓殑瀵嗙爜銆乼oken銆乻ecret 涓?API Key 浼氬湪 Debug 鍜?Audit 涓劚鏁忋€?
+
+## v1.5.6 QA 流式问答
+
+`POST /api/qa/chat/stream`
+
+请求：
+
+```json
+{
+  "conversation_id": "qa_conv_xxx 或 null",
+  "question": "怎么打爆款？",
+  "use_rag": true,
+  "top_k": 5
+}
+```
+
+响应：`text/event-stream`
+
+事件：
+
+- `start`：返回 `conversation_id` 和 `message_id`。
+- `retrieval_start`：提示正在检索本地知识库。
+- `sources`：返回 `sources` 和 `warnings`。
+- `delta`：返回增量文本 `{ "text": "..." }`。
+- `done`：返回完整回答和消息 ID。
+- `error`：返回中文错误信息。
+
+该接口需要登录，admin/operator/viewer 均可使用。`/api/qa/chat` 非流式接口继续保留作为 fallback。
+## v1.4 鐢ㄦ埛绠＄悊涓庡璁″鍑?
+浠ヤ笅鎺ュ彛鍧囪姹?admin Bearer token锛?
+- `GET /api/admin/users`锛氭寜 `role`銆乣enabled`銆乣keyword`銆乣limit` 鏌ヨ鐢ㄦ埛锛屼笉杩斿洖瀵嗙爜鍝堝笇銆?- `POST /api/admin/users`锛氬垱寤?admin銆乷perator 鎴?viewer 鐢ㄦ埛锛屽瘑鐮佽嚦灏?8 浣嶃€?- `GET /api/admin/users/{user_id}`锛氳鍙栧崟涓敤鎴枫€?- `POST /api/admin/users/{user_id}`锛氭洿鏂拌鑹层€佸惎鐢ㄧ姸鎬佸拰澶囨敞銆?- `POST /api/admin/users/{user_id}/enable`锛氬惎鐢ㄧ敤鎴枫€?- `POST /api/admin/users/{user_id}/disable`锛氱鐢ㄧ敤鎴凤紱绂佹绂佺敤褰撳墠绠＄悊鍛樻垨鏈€鍚庝竴涓惎鐢ㄧ殑绠＄悊鍛樸€?- `POST /api/admin/users/{user_id}/reset-password`锛氶噸缃瘑鐮佸苟閫掑 `auth_version`銆?- `GET /api/admin/users/{user_id}/agent-runs`锛氭寜 `status`銆乣agent_type` 鏌ョ湅鎸囧畾鐢ㄦ埛浠诲姟銆?- `GET /api/admin/agent-runs`锛氳法鐢ㄦ埛鏌ヨ浠诲姟锛屾敮鎸?`user_id`銆乣status`銆乣agent_type`銆乣limit`銆?- `GET /api/admin/audit-logs/export`锛氭寜鐜版湁鏃ュ織绛涢€夋潯浠跺鍑?`csv` 鎴?`jsonl` 鏂囦欢銆?
+瑙掕壊鏉冮檺锛歛dmin 鍙闂叏閮ㄦ帴鍙ｏ紱operator 鍙垱寤轰换鍔°€佷笂浼犳枃浠跺苟鎿嶄綔鑷繁鐨勪换鍔★紱viewer 浠呭彲鏌ョ湅鍜屼笅杞借嚜宸辩殑宸叉湁缁撴灉銆?
+## v1.5 Dataset 鏁版嵁娓呮礂
+
+- `GET /api/files?extensions=xlsx,xls,csv&limit=50`锛氬垪鍑哄綋鍓嶇敤鎴峰凡涓婁紶鐨勮〃鏍兼枃浠躲€?- `POST /api/datasets/from-file`锛氭牴鎹綋鍓嶇敤鎴风殑 `file_id` 鍒涘缓 Dataset 骞惰繑鍥炲瓧娈靛缓璁€?- `GET /api/datasets`锛氭煡璇㈠綋鍓嶇敤鎴?Dataset锛沘dmin 鍙娇鐢?`include_all_users` 鎴?`user_id`銆?- `GET /api/datasets/mapping-templates`锛氳鍙栧綋鍓嶇敤鎴峰彲澶嶇敤鐨勫瓧娈垫槧灏勬ā鏉裤€?- `GET /api/datasets/{dataset_id}`锛氳鍙?Dataset 鍏冩暟鎹€?- `GET /api/datasets/{dataset_id}/preview`锛氳鍙栧墠 20 琛屽拰瀛楁璇嗗埆缁撴灉銆?- `POST /api/datasets/{dataset_id}/field-mapping`锛氫繚瀛樺瓧娈垫槧灏勶紝鍙悓姝ヤ繚瀛樼敤鎴锋ā鏉裤€?- `GET /api/datasets/{dataset_id}/field-mapping`锛氳鍙栧凡淇濆瓨鎴栧缓璁槧灏勩€?- `POST /api/datasets/{dataset_id}/clean`锛氭墽琛屽悓姝ユ竻娲楀苟鐢熸垚 Excel銆乸rofile 鍜?metrics 鏂囦欢銆?- `GET /api/datasets/{dataset_id}/profile`锛氳鍙栨竻娲楁瑙堛€?- `GET /api/datasets/{dataset_id}/files`锛氳鍙栨竻娲楃粨鏋滃強瀹夊叏涓嬭浇鍦板潃銆?- `DELETE /api/datasets/{dataset_id}`锛氳蒋鍒犻櫎 Dataset銆?
+`POST /api/agent-runs` 鍜?Payload 棰勮鏀寔 `dataset_ids`銆傞€氱敤 workflow 浼氶檮甯?`dataset_profiles` 鍜?`dataset_files`锛涜棰戣剼鏈媶瑙ｅ崗璁笉鎺ュ彈 Dataset銆?
