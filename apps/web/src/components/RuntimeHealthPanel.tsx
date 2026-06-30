@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -8,12 +8,13 @@ import {
   backupRuntimeConfigs,
   clearRuntimeCache,
   getRuntimeConfigsStatus,
-  getRuntimeHealth,
   repairRuntimeConfigs,
   resetRuntimeConfigs,
   type RuntimeConfigsStatusResponse,
   type RuntimeHealthResponse
 } from "@/lib/api";
+import { useRuntimeHealth } from "@/hooks/useRuntimeHealth";
+import { useStorageHealth } from "@/hooks/useStorageHealth";
 
 type RuntimeHealthPanelProps = {
   open: boolean;
@@ -27,13 +28,15 @@ export function RuntimeHealthPanel({ open, onClose, onChanged }: RuntimeHealthPa
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { data: healthData, error: healthLoadError, mutate: mutateRuntimeHealth } = useRuntimeHealth(open);
+  const { data: storageHealth, mutate: mutateStorageHealth } = useStorageHealth(open);
 
   const refresh = async () => {
     setLoading(true);
     setError("");
     try {
-      const [nextHealth, nextConfigs] = await Promise.all([getRuntimeHealth(), getRuntimeConfigsStatus()]);
-      setHealth(nextHealth);
+      const [nextHealth, nextConfigs] = await Promise.all([mutateRuntimeHealth(), getRuntimeConfigsStatus(), mutateStorageHealth()]);
+      if (nextHealth) setHealth(nextHealth);
       setConfigs(nextConfigs);
     } catch (err) {
       setError(err instanceof Error ? err.message : "后台状态读取失败。");
@@ -42,9 +45,9 @@ export function RuntimeHealthPanel({ open, onClose, onChanged }: RuntimeHealthPa
     }
   };
 
-  useEffect(() => {
-    if (open) refresh();
-  }, [open]);
+  useEffect(() => { if (healthData) setHealth(healthData); }, [healthData]);
+  useEffect(() => { if (healthLoadError) setError(healthLoadError instanceof Error ? healthLoadError.message : "后台状态读取失败。"); }, [healthLoadError]);
+  useEffect(() => { if (open) refresh(); }, [open]);
 
   const runAction = async (label: string, action: () => Promise<unknown>, confirmMessage?: string) => {
     if (confirmMessage && !window.confirm(confirmMessage)) return;
@@ -64,13 +67,13 @@ export function RuntimeHealthPanel({ open, onClose, onChanged }: RuntimeHealthPa
   };
 
   return (
-    <SafeDrawer open={open} title="后台状态" eyebrow="meizhaiseek v1.6.2" onClose={onClose} maxWidth="max-w-3xl">
+    <SafeDrawer open={open} title="后台状态" eyebrow="meizhaiseek v1.6.3" onClose={onClose} maxWidth="max-w-3xl">
         <div className="mb-5 flex items-center gap-2"><Activity className="h-5 w-5 text-violet-600" /><p className="text-sm text-slate-500">运行时配置与缓存健康检查</p></div>
 
         <div className="rounded-[24px] border border-slate-100 bg-slate-50 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-violet-700">meizhaiseek v1.6.2</p>
+              <p className="text-sm font-semibold text-violet-700">meizhaiseek v1.6.3</p>
               <h4 className="mt-1 text-2xl font-bold text-slate-950">{health?.service || "meizhaiseek-api"}</h4>
               <p className="mt-2 text-sm text-slate-500">运行时配置、缓存、任务状态和 debug payload 自检。</p>
             </div>
@@ -83,6 +86,7 @@ export function RuntimeHealthPanel({ open, onClose, onChanged }: RuntimeHealthPa
               {health.warnings.map((warning) => <p key={warning}>{warning}</p>)}
             </div>
           ) : null}
+          {storageHealth ? <p className="mt-3 text-xs text-slate-500">APP SQLite：{storageHealth.status}{storageHealth.tables ? ` · ${Object.keys(storageHealth.tables).length} tables` : ""}</p> : null}
         </div>
 
         <div className="mt-5 grid gap-3">
@@ -122,6 +126,7 @@ function ActionButton({ disabled, icon, label, onClick }: { disabled: boolean; i
     </button>
   );
 }
+
 
 
 

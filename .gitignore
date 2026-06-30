@@ -12,6 +12,8 @@ venv/
 *.log
 *.log.*
 .env
+apps/api/runtime/logs/
+apps/api/runtime/app/generated_secrets.json
 
 .codex-runtime/
 runtime/

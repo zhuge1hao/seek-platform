@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Activity, Database, RefreshCw, Search, Trash2, Upload, Wand2 } from "lucide-react";
@@ -9,8 +9,6 @@ import {
   deleteKnowledgeDocument,
   diagnoseQAKnowledge,
   getKnowledgeDocument,
-  getKnowledgeStats,
-  getQAModelStatus,
   listKnowledgeDocuments,
   reindexKnowledgeDocument,
   testQAEmbedding,
@@ -25,6 +23,7 @@ import {
   type KnowledgeStats
 } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
+import { useKnowledgeStats, useQAModelStatus } from "@/hooks/useKnowledgeStats";
 
 type Props = {
   open: boolean;
@@ -51,15 +50,17 @@ export function KnowledgeBasePanel({ open, onClose, onUploaded }: Props) {
   const [embeddingResult, setEmbeddingResult] = useState<QAEmbeddingTestResult | null>(null);
   const [retrievalResult, setRetrievalResult] = useState<QARetrievalTestResult | null>(null);
   const [diagnoseResult, setDiagnoseResult] = useState<QADiagnoseResult | null>(null);
+  const { data: statsData, error: statsError, mutate: mutateStats } = useKnowledgeStats(open);
+  const { data: modelStatusData, error: modelStatusError, mutate: mutateModelStatus } = useQAModelStatus(open);
 
   const refresh = async () => {
     setLoading(true);
     setError("");
     try {
-      const [nextStats, nextDocs, nextModelStatus] = await Promise.all([getKnowledgeStats(), listKnowledgeDocuments(), getQAModelStatus()]);
-      setStats(nextStats);
+      const [nextStats, nextDocs, nextModelStatus] = await Promise.all([mutateStats(), listKnowledgeDocuments(), mutateModelStatus()]);
+      if (nextStats) setStats(nextStats);
       setDocuments(nextDocs.documents || []);
-      setModelStatus(nextModelStatus);
+      if (nextModelStatus) setModelStatus(nextModelStatus);
     } catch (err) {
       setError(err instanceof Error ? err.message : "知识库加载失败。");
     } finally {
@@ -68,6 +69,12 @@ export function KnowledgeBasePanel({ open, onClose, onUploaded }: Props) {
   };
 
   useEffect(() => { if (open) void refresh(); }, [open]);
+  useEffect(() => { if (statsData) setStats(statsData); }, [statsData]);
+  useEffect(() => { if (modelStatusData) setModelStatus(modelStatusData); }, [modelStatusData]);
+  useEffect(() => {
+    const loadError = statsError || modelStatusError;
+    if (loadError) setError(loadError instanceof Error ? loadError.message : "知识库加载失败。");
+  }, [statsError, modelStatusError]);
 
   const selectDocument = async (docId: string) => {
     setLoading(true);
@@ -179,9 +186,9 @@ export function KnowledgeBasePanel({ open, onClose, onUploaded }: Props) {
 
   const badge = (ok: boolean, warning = false) => <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${ok ? "bg-emerald-50 text-emerald-700" : warning ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"}`}>{ok ? "正常" : warning ? "提醒" : "不可用"}</span>;
 
-  const sidebar = <><div className="shrink-0 p-4"><p className="text-xs font-semibold text-violet-700">meizhaiseek v1.6.2</p><h3 className="mt-1 font-bold">知识库</h3></div><div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">{documents.map((item) => <button className={`mb-2 w-full rounded-xl p-3 text-left ${selected?.doc_id === item.doc_id ? "bg-violet-100 text-violet-800" : "bg-white text-slate-700"}`} key={item.doc_id} onClick={() => void selectDocument(item.doc_id)} type="button"><span className="block truncate text-sm font-semibold">{item.title}</span><span className="mt-1 block text-xs">{item.status} · {item.chunk_count} chunks</span></button>)}{!documents.length && !loading ? <p className="px-2 text-xs text-slate-400">暂无知识库文档</p> : null}</div></>;
+  const sidebar = <><div className="shrink-0 p-4"><p className="text-xs font-semibold text-violet-700">meizhaiseek v1.6.3</p><h3 className="mt-1 font-bold">知识库</h3></div><div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">{documents.map((item) => <button className={`mb-2 w-full rounded-xl p-3 text-left ${selected?.doc_id === item.doc_id ? "bg-violet-100 text-violet-800" : "bg-white text-slate-700"}`} key={item.doc_id} onClick={() => void selectDocument(item.doc_id)} type="button"><span className="block truncate text-sm font-semibold">{item.title}</span><span className="mt-1 block text-xs">{item.status} · {item.chunk_count} chunks</span></button>)}{!documents.length && !loading ? <p className="px-2 text-xs text-slate-400">暂无知识库文档</p> : null}</div></>;
 
-  return <SafeDrawer open={open} title={selected?.title || "AI 对话知识库"} eyebrow="meizhaiseek v1.6.2" onClose={onClose} sidebar={sidebar} maxWidth="max-w-6xl">
+  return <SafeDrawer open={open} title={selected?.title || "AI 对话知识库"} eyebrow="meizhaiseek v1.6.3" onClose={onClose} sidebar={sidebar} maxWidth="max-w-6xl">
     {error ? <div className="mb-4"><ErrorState message={error} onRetry={() => void refresh()} /></div> : null}
     {notice ? <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{notice}</p> : null}
     {modelStatus ? <section className="mb-6 grid gap-3 lg:grid-cols-3">
@@ -205,5 +212,6 @@ export function KnowledgeBasePanel({ open, onClose, onUploaded }: Props) {
     {loading ? <LoadingState label="正在读取知识库..." /> : selected ? <section className="space-y-5"><div className="rounded-2xl border border-slate-100 bg-white p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="text-lg font-bold text-slate-900">{selected.title}</h3><p className="mt-1 text-sm text-slate-500">{selected.source_type} · {selected.status} · {selected.chunk_count} chunks</p><p className="mt-1 text-xs text-slate-400">{selected.updated_at ? new Date(selected.updated_at).toLocaleString("zh-CN") : ""}</p></div>{!readOnly ? <div className="flex flex-wrap gap-2"><button className="inline-flex items-center gap-2 rounded-xl border border-violet-200 px-3 py-2 text-sm font-semibold text-violet-700 disabled:opacity-50" disabled={busy} onClick={() => void reindex(selected.doc_id)} type="button"><RefreshCw className="h-4 w-4" />重新索引</button><button className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-600 disabled:opacity-50" disabled={busy} onClick={() => void remove(selected.doc_id)} type="button"><Trash2 className="h-4 w-4" />删除</button></div> : null}</div></div><div><h3 className="mb-3 flex items-center gap-2 font-bold text-slate-900"><Database className="h-4 w-4 text-violet-600" />Chunk Preview</h3><div className="max-h-96 space-y-3 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50 p-3">{chunks.length ? chunks.map((chunk) => <div className="rounded-xl bg-white p-3 text-sm text-slate-700" key={chunk.chunk_id}><p className="mb-2 text-xs font-semibold text-violet-700">#{chunk.chunk_index}</p><p className="whitespace-pre-wrap break-words leading-6">{chunk.content_preview}</p></div>) : <p className="p-3 text-sm text-slate-400">暂无 chunk preview</p>}</div></div></section> : <p className="rounded-2xl bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">从左侧选择文档查看详情。</p>}
   </SafeDrawer>;
 }
+
 
 

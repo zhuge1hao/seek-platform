@@ -70,6 +70,7 @@ Authorization: Bearer <token>
 - 迁移报告有 errors：查看具体文件和错误项，修复坏 JSON 后手动触发迁移。
 - RAG 检索无 sources：检查 RAG SQLite 是否有当前用户 chunks，该问题与 APP SQLite 无关。
 - 用户无法登录：检查 `users` 表是否迁移成功，确认 `is_enabled` 和 `auth_version` 未被异常修改。
+- 开发启动日志统一写入 `apps/api/runtime/logs/`，历史散落日志归档到 `apps/api/runtime/logs/archive/`；该目录不提交 Git。
 
 ## v1.5.8 Dataset metadata 与增量写入
 

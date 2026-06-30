@@ -1,5 +1,24 @@
 # TODO
 
+## v1.6.3 已完成目标
+
+- 引入 SWR 基础数据获取层
+- 新增 queryKeys 和读取型 hooks
+- RuntimeHealth / Conversation / Knowledge 等低风险接口接入 SWR
+- DeepSeek async_generate_answer 兼容层
+- 保留 DeepSeek 同步调用兼容
+- 新增最小 smoke 测试脚本
+- 新增 docs/SMOKE_TESTS.md
+- 根目录日志迁移到 runtime/logs
+- .bak-v1.5.7 文档备份移动到 docs/archive
+- 新增 security_config_service
+- AUTH_TOKEN_SECRET 缺失时生成式初始化
+- 默认 secret / 默认初始密码 health warning
+- docker-compose 配置补齐
+- GitHub Actions CI
+- 本地验证通过
+- GitHub commit/push
+
 ## v1.6.2 已完成目标
 
 - `/agent` 会话切换深度性能优化

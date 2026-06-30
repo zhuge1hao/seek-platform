@@ -12,7 +12,8 @@ import { ConversationPanel } from "@/components/ConversationPanel";
 import { QuickPrompts } from "@/components/QuickPrompts";
 import { getStoredUser, type AuthUser } from "@/lib/auth";
 import { findAgentByType, type AgentDefinition, type AgentToolId } from "@/lib/agents";
-import { deleteConversation, getConversation, listConversations, type AgentRunStatus, type Conversation, type ConversationSummary } from "@/lib/api";
+import { deleteConversation, getConversation, type AgentRunStatus, type Conversation, type ConversationSummary } from "@/lib/api";
+import { useAgentConversations } from "@/hooks/useAgentConversations";
 import { useAgentRunPolling } from "@/hooks/useAgentRunPolling";
 import { agentCards } from "@/lib/mockData";
 import { markPerf } from "@/lib/perf";
@@ -32,6 +33,13 @@ const quickPromptAgentMap: Record<string, AgentToolId> = {
   "帮我找到行业必争蓝海词": "blue-ocean",
   "一键拆解爆款视频": "video-script-breakdown"
 };
+
+function runMessageContent(current: string, run: AgentRunStatus) {
+  if (run.status === "failed") return run.error || "任务执行失败。";
+  if (run.status === "cancelled") return "任务已取消";
+  if (run.status === "completed") return run.result?.answer || "任务执行完成";
+  return current || run.current_step || "任务正在执行。";
+}
 
 export default function AgentPage() {
   const [selectedAgentId, setSelectedAgentId] = useState<AgentToolId | null>(null);
@@ -55,12 +63,22 @@ export default function AgentPage() {
   const loadingConversationIdRef = useRef<string | null>(null);
   const mountedRef = useRef(false);
   const loadConversationRef = useRef<(conversationId: string, options?: { force?: boolean }) => Promise<void>>(async () => undefined);
+  const { data: conversationData, error: conversationsLoadError, mutate: mutateAgentConversations } = useAgentConversations();
 
   const refreshConversations = useCallback(async () => {
-    const result = await listConversations();
-    setConversations(result.conversations);
-    return result.conversations;
-  }, []);
+    const result = await mutateAgentConversations();
+    const items = result?.conversations || [];
+    setConversations(items);
+    return items;
+  }, [mutateAgentConversations]);
+
+  useEffect(() => {
+    if (conversationData?.conversations) setConversations(conversationData.conversations);
+  }, [conversationData]);
+
+  useEffect(() => {
+    if (conversationsLoadError) setConversationError(conversationsLoadError instanceof Error ? conversationsLoadError.message : "聊天记录加载失败。");
+  }, [conversationsLoadError]);
 
   const clearActiveConversation = useCallback((message = "") => {
     activeRequestRef.current?.abort();
@@ -204,7 +222,7 @@ export default function AgentPage() {
         latest_run_id: run.run_id,
         status: run.status,
         summary: run.error || run.result?.answer || conversation.summary,
-        messages: conversation.messages.map((message) => message.run_id === run.run_id ? { ...message, status: run.status, result: run.result, error: run.error, progress: run.progress, current_step: run.current_step, logs: run.logs } : message)
+        messages: conversation.messages.map((message) => message.run_id === run.run_id ? { ...message, content: runMessageContent(message.content, run), status: run.status, result: run.result, error: run.error, progress: run.progress, current_step: run.current_step, logs: run.logs } : message)
       };
     });
     if (["completed", "failed", "cancelled"].includes(run.status) && run.conversation_id) void refreshConversations();

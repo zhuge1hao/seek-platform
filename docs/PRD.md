@@ -1,5 +1,9 @@
 # meizhaiseek-platform PRD
 
+## v1.6.3：架构评估 P1-P3 优化与工程规范补齐
+
+v1.6.3 根据最新架构评估报告，在 P0 持久化链路已通过运行时验证的基础上，开始处理 P1-P3 架构优化问题。该版本引入 SWR 数据获取层基础、DeepSeek async 调用兼容层、最小 smoke 测试集、日志目录治理、历史备份文档归档、安全配置生成式初始化、Docker Compose 配置和 GitHub Actions 最小 CI，为后续业务智能体扩展提供更稳定的工程基础。
+
 ## v1.6.2：AI 智能体页面卡顿深度优化
 
 v1.6.2 针对 `/agent?conversation_id=` 会话切换时仍存在卡顿的问题进行深度优化。该版本从请求、轮询、状态更新、后端 payload、前端渲染多个层面处理性能瓶颈：会话切换只加载轻量摘要，重结果、Debug Payload、artifact 详情延迟加载；统一 agent run 轮询，避免多个组件重复轮询；结果面板按 Tab 和“加载更多”分段渲染；大 JSON 默认折叠截断；会话列表减少重复刷新，从而避免 React 主线程被大 payload 阻塞。

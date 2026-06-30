@@ -22,9 +22,9 @@ def _load_env_file() -> None:
 _load_env_file()
 
 from routers import admin_runtime, admin_users, agent_configs, agent_connectors, agent_runs, agents, artifacts, auth, chat, conversations, datasets, files, qa_chat, qa_knowledge, skills
-from services import app_sqlite, conversation_store, json_to_sqlite_migrator, service_events
+from services import app_sqlite, conversation_store, json_to_sqlite_migrator, security_config_service, service_events
 
-app = FastAPI(title="meizhaiseek-api", version="1.6.2")
+app = FastAPI(title="meizhaiseek-api", version="1.6.3")
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,6 +60,8 @@ def health() -> dict[str, str]:
 def startup_storage() -> None:
     app_sqlite.init_app_db()
     app_sqlite.run_migrations()
+    if not os.getenv("AUTH_TOKEN_SECRET", "").strip():
+        security_config_service.ensure_generated_secret()
     service_events.register_run_updated_handler(conversation_store.sync_run_to_conversation)
     if os.getenv("APP_SQLITE_AUTO_MIGRATE", "true").lower() in {"1", "true", "yes", "on"}:
         try:

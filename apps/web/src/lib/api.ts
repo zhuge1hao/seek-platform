@@ -291,6 +291,15 @@ export type RuntimeHealthResponse = {
   warnings: string[];
 };
 
+export type StorageHealthResponse = {
+  status: string;
+  backend?: string;
+  sqlite_path?: string;
+  tables?: Record<string, number>;
+  legacy_json?: Record<string, unknown>;
+  warnings?: string[];
+};
+
 export type RuntimeConfigsStatusResponse = {
   status: string;
   configs: Array<{ name: string; path: string; exists: boolean; valid: boolean; schema_version: string; count: number; warnings: string[] }>;
@@ -883,6 +892,10 @@ export async function getArtifactBlobUrl(downloadUrl: string): Promise<string> {
 export async function getRuntimeHealth(): Promise<RuntimeHealthResponse> {
   const response = await apiFetch(`${API_BASE_URL}/api/admin/runtime/health`);
   return parseJsonResponse<RuntimeHealthResponse>(response);
+}
+
+export async function getStorageHealth(): Promise<StorageHealthResponse> {
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/admin/storage/health`));
 }
 
 export async function getRuntimeConfigsStatus(): Promise<RuntimeConfigsStatusResponse> {

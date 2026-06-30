@@ -9,13 +9,14 @@ import { KnowledgeBasePanel } from "@/components/KnowledgeBasePanel";
 import { QuickPrompts } from "@/components/QuickPrompts";
 import { getStoredUser, type AuthUser } from "@/lib/auth";
 import { chatQuickPrompts } from "@/lib/mockData";
+import { useQAConversations } from "@/hooks/useQAConversations";
 import {
   deleteQAConversation,
   getQAConversation,
-  listQAConversations,
   qaChat,
   streamQAChat,
   type ConversationSummary,
+  type QAConversationSummary,
   type QAConversation,
   type QAConversationMessage,
   type QASource
@@ -28,6 +29,21 @@ function replaceChatUrl(nextUrl: string) {
 }
 
 type ChatMessage = QAConversationMessage & { error?: string; loading_note?: string };
+
+function mapQASummaries(items: QAConversationSummary[]): ConversationSummary[] {
+  return items.map((item) => ({
+    conversation_id: item.conversation_id,
+    title: item.title,
+    agent_type: "qa_chat",
+    agent_name: "AI 对话",
+    created_at: item.updated_at,
+    updated_at: item.updated_at,
+    latest_run_id: null,
+    status: item.status,
+    summary: `${item.message_count} 条消息`,
+    is_archived: false
+  }));
+}
 
 function SourceList({ sources }: { sources?: QASource[] }) {
   const [open, setOpen] = useState(false);
@@ -103,26 +119,24 @@ export default function ChatPage() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const selectConversationRef = useRef<(conversationId: string) => Promise<void>>(async () => undefined);
+  const { data: qaConversationData, error: qaConversationError, mutate: mutateQAConversations } = useQAConversations();
 
   const qaSummaries = useMemo(() => conversations, [conversations]);
 
   const refreshConversations = useCallback(async () => {
-    const result = await listQAConversations();
-    const mapped = result.conversations.map((item) => ({
-      conversation_id: item.conversation_id,
-      title: item.title,
-      agent_type: "qa_chat",
-      agent_name: "AI 对话",
-      created_at: item.updated_at,
-      updated_at: item.updated_at,
-      latest_run_id: null,
-      status: item.status,
-      summary: `${item.message_count} 条消息`,
-      is_archived: false
-    }));
+    const result = await mutateQAConversations();
+    const mapped = mapQASummaries(result?.conversations || []);
     setConversations(mapped);
     return mapped;
-  }, []);
+  }, [mutateQAConversations]);
+
+  useEffect(() => {
+    if (qaConversationData?.conversations) setConversations(mapQASummaries(qaConversationData.conversations));
+  }, [qaConversationData]);
+
+  useEffect(() => {
+    if (qaConversationError) setError(qaConversationError instanceof Error ? qaConversationError.message : "AI 对话加载失败。");
+  }, [qaConversationError]);
 
   const selectConversation = useCallback(async (conversationId: string) => {
     if (conversationId === activeConversationId) {

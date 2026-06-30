@@ -1,3 +1,35 @@
-# 第一版暂不启用容器编排。
-# 后续可在这里统一启动 PostgreSQL、Redis、meizhaiseek-api 和 Web 服务。
-services: {}
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file:
+      - .env
+    environment:
+      APP_SQLITE_PATH: apps/api/runtime/app/meizhaiseek.sqlite3
+      RAG_SQLITE_PATH: apps/api/runtime/rag/rag.sqlite3
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+      - ./apps/api/runtime:/app/apps/api/runtime
+      - ./apps/api/uploads:/app/apps/api/uploads
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000
+    working_dir: /app/apps/api
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+    command: npm run dev -- -H 0.0.0.0 -p 3000
+    working_dir: /app/apps/web
+    depends_on:
+      - api

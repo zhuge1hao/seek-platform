@@ -2,15 +2,14 @@ import base64
 import hashlib
 import hmac
 import json
-import logging
 import os
 import time
 from datetime import datetime, timezone
 from typing import Any
 
+from services import security_config_service
 
-LOGGER = logging.getLogger(__name__)
-DEFAULT_SECRET = "meizhaiseek-dev-secret"
+DEFAULT_SECRET = security_config_service.DEFAULT_AUTH_TOKEN_SECRET
 
 
 class TokenError(RuntimeError):
@@ -18,11 +17,7 @@ class TokenError(RuntimeError):
 
 
 def _secret() -> bytes:
-    value = os.getenv("AUTH_TOKEN_SECRET", "").strip()
-    if not value:
-        LOGGER.warning("AUTH_TOKEN_SECRET 未配置，当前使用开发默认值。")
-        value = DEFAULT_SECRET
-    return value.encode("utf-8")
+    return security_config_service.get_auth_token_secret().encode("utf-8")
 
 
 def _encode(value: bytes) -> str:

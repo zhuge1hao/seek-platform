@@ -3,6 +3,10 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $apiDir = Join-Path $root "apps\api"
 $webDir = Join-Path $root "apps\web"
+$logDir = Join-Path $apiDir "runtime\logs"
+$apiLog = Join-Path $logDir "api-dev.log"
+$webLog = Join-Path $logDir "web-dev.log"
+New-Item -ItemType Directory -Force $logDir | Out-Null
 
 Write-Host ""
 Write-Host "meizhaiseek-platform dev launcher" -ForegroundColor Magenta
@@ -50,21 +54,25 @@ Write-Host "Starting services..." -ForegroundColor Cyan
 Write-Host "Frontend: http://localhost:3000"
 Write-Host "Backend:  http://127.0.0.1:8000"
 Write-Host "API docs: http://127.0.0.1:8000/docs"
+Write-Host "Logs:     $logDir"
 Write-Host ""
 Write-Host "Press Ctrl+C to stop both services." -ForegroundColor Yellow
 Write-Host ""
 
 $apiJob = Start-Job -Name "meizhaiseek-api" -ScriptBlock {
-  param($apiDir)
+  param($apiDir, $apiLog)
   Set-Location $apiDir
-  python -m uvicorn main:app --reload --port 8000
-} -ArgumentList $apiDir
+  python -m uvicorn main:app --reload --port 8000 *>&1 | Tee-Object -FilePath $apiLog -Append
+} -ArgumentList $apiDir, $apiLog
 
 $webJob = Start-Job -Name "meizhaiseek-web" -ScriptBlock {
-  param($webDir)
+  param($webDir, $webLog)
   Set-Location $webDir
-  npm.cmd run dev -- -p 3000
-} -ArgumentList $webDir
+  if (-not $env:NEXT_PUBLIC_API_BASE_URL) {
+    $env:NEXT_PUBLIC_API_BASE_URL = "http://localhost:8000"
+  }
+  npm.cmd run dev -- -p 3000 *>&1 | Tee-Object -FilePath $webLog -Append
+} -ArgumentList $webDir, $webLog
 
 try {
   while ($true) {

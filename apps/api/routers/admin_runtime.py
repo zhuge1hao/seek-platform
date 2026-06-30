@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from services import agent_config_store, agent_connector_store, agent_run_maintenance, app_sqlite, audit_log_service, debug_payload_service, file_preview_service, file_store, json_to_sqlite_migrator, local_agent_client, payload_preview_service, skill_template_service
+from services import agent_config_store, agent_connector_store, agent_run_maintenance, app_sqlite, audit_log_service, debug_payload_service, file_preview_service, file_store, json_to_sqlite_migrator, local_agent_client, payload_preview_service, security_config_service, skill_template_service
 from services.auth_service import require_admin
 from services.config_backup_service import backup_file, list_backups
 from services.config_guard import guard_file_store, validate_json_file
@@ -18,10 +18,10 @@ router = APIRouter(dependencies=[Depends(require_admin)])
 def runtime_health() -> dict[str, Any]:
     agent_report = agent_config_store.guard_configs()
     skill_report = skill_template_service.guard_templates()
-    warnings = [*agent_report.get("warnings", []), *skill_report.get("warnings", [])]
+    warnings = [*agent_report.get("warnings", []), *skill_report.get("warnings", []), *security_config_service.get_security_warnings()]
     return {
         "status": "ok" if not warnings else "warning",
-        "version": "v1.6.2",
+        "version": "v1.6.3",
         "service": "meizhaiseek-api",
         "configs_valid": True,
         "agent_run_store_valid": True,

@@ -58,3 +58,43 @@ def ask(user_id: str, question: str, conversation_id: str | None = None, use_rag
         "warnings": warnings,
         "model": os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
     }
+
+
+async def async_ask(user_id: str, question: str, conversation_id: str | None = None, use_rag: bool = True, top_k: int | None = None) -> dict[str, Any]:
+    question = question.strip()
+    if not question:
+        raise QAChatError("请输入内容。", 400)
+    conversation, _user_message = qa_conversation_store.append_user_message(user_id, conversation_id, question)
+    warnings: list[str] = []
+    sources: list[dict[str, Any]] = []
+    if use_rag:
+        try:
+            if qa_rag_store.count_chunks(user_id) == 0:
+                warnings.append("未检索到本地知识库内容，本次回答主要来自模型通用能力。")
+            else:
+                sources = qa_rag_retriever.search(question, user_id, top_k=top_k)
+                if not sources:
+                    warnings.append("未检索到本地知识库内容，本次回答主要来自模型通用能力。")
+        except QAEmbeddingError:
+            warnings.append("本地向量模型不可用，已跳过 RAG 检索。")
+    else:
+        warnings.append("已关闭 RAG 检索，本次回答主要来自模型通用能力。")
+
+    messages = [
+        {"role": "system", "content": SYSTEM_MESSAGE},
+        {"role": "user", "content": f"用户问题：\n{question}\n\n本地知识库检索结果：\n{_rag_block(sources)}\n\n请基于以上内容回答。"},
+    ]
+    try:
+        answer = await deepseek_client.async_generate_answer(messages)
+    except deepseek_client.DeepSeekError as exc:
+        qa_conversation_store.append_assistant_message(user_id, conversation["conversation_id"], str(exc), sources=sources, warnings=warnings, status="failed")
+        raise QAChatError(str(exc), 502) from exc
+    message = qa_conversation_store.append_assistant_message(user_id, conversation["conversation_id"], answer, sources=sources, warnings=warnings, status="completed")
+    return {
+        "conversation_id": conversation["conversation_id"],
+        "message_id": message["message_id"],
+        "answer": answer,
+        "sources": sources,
+        "warnings": warnings,
+        "model": os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
+    }

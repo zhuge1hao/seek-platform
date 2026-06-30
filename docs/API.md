@@ -1,11 +1,11 @@
 # meizhaiseek API 文档
 
-本文档为 UTF-8 编码，记录 meizhaiseek v1.6 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
+本文档为 UTF-8 编码，记录 meizhaiseek v1.6.3 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
 
 ## 基础健康
 
 - `GET /health`：公开健康检查，返回 `{"status":"ok","service":"meizhaiseek-api"}`。
-- `GET /api/admin/runtime/health`：管理员运行时健康检查，返回服务名、版本 `v1.6`、配置状态和 warnings。
+- `GET /api/admin/runtime/health`：管理员运行时健康检查，返回服务名、版本 `v1.6.3`、配置状态和 warnings。v1.6.3 起 warnings 会包含默认开发 secret、默认初始管理员密码、runtime 生成 secret 等安全配置提示。
 
 ## 认证与用户管理
 
@@ -184,6 +184,10 @@ APP SQLite 默认路径为 `apps/api/runtime/app/meizhaiseek.sqlite3`。RAG SQLi
 ## v1.6.2 Performance
 
 v1.6.2 新增 `GET /api/agent-runs/{run_id}/summary` 和 `GET /api/agent-runs/{run_id}/result`。`summary` 用于 `/agent` 页面轻量轮询，返回任务状态、进度、步骤摘要、artifact 计数和 result preview；`result` 用于用户展开完整结果时按需读取完整 `result_json`。`GET /api/conversations/{conversation_id}` 保持原 wire shape，但其中 run/message 大字段默认返回 preview，Debug Payload 仍走后台详情接口。
+
+## v1.6.3 Engineering
+
+v1.6.3 无新增业务 API。`GET /api/admin/runtime/health` 的 `version` 返回 `v1.6.3`，`warnings` 增加安全配置提示。新增本地 smoke 脚本 `python apps/api/scripts/smoke_minimal.py`，用于验证 `/health`、登录、conversation、agent run、SQLite 持久化、storage health 和 QA model status。
 
 ## v1.6.1 Hotfix
 

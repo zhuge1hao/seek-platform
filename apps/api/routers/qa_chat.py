@@ -113,9 +113,9 @@ def archive_qa_conversation(conversation_id: str, request: Request, user: dict[s
 
 
 @router.post("/qa/chat")
-def qa_chat(payload: QAChatRequest, request: Request, user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
+async def qa_chat(payload: QAChatRequest, request: Request, user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
     try:
-        result = qa_chat_service.ask(user["user_id"], payload.question, payload.conversation_id, payload.use_rag, payload.top_k)
+        result = await qa_chat_service.async_ask(user["user_id"], payload.question, payload.conversation_id, payload.use_rag, payload.top_k)
     except qa_chat_service.QAChatError as exc:
         audit_log_service.write_log("qa.chat.failed", "failed", user, payload.conversation_id or "new", {"question_length": len(payload.question), "model": deepseek_client.model_name()}, audit_log_service.client_ip(request))
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc

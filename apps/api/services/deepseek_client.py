@@ -1,6 +1,7 @@
+import asyncio
 import json
 import os
-from typing import Any, Iterator
+from typing import Any, AsyncIterator, Iterator
 
 import requests
 
@@ -59,6 +60,10 @@ def generate_answer(messages: list[dict[str, str]], temperature: float = 0.3) ->
     return str(answer or "").strip()
 
 
+async def async_generate_answer(messages: list[dict[str, str]], temperature: float = 0.3) -> str:
+    return await asyncio.to_thread(generate_answer, messages, temperature)
+
+
 def stream_answer(messages: list[dict[str, str]], temperature: float = 0.3) -> Iterator[str]:
     base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
     try:
@@ -89,3 +94,8 @@ def stream_answer(messages: list[dict[str, str]], temperature: float = 0.3) -> I
                     yield str(text)
     except requests.RequestException as exc:
         raise DeepSeekError(f"DeepSeek 流式接口调用失败：{exc}") from exc
+
+
+async def async_stream_answer(messages: list[dict[str, str]], temperature: float = 0.3) -> AsyncIterator[str]:
+    for delta in await asyncio.to_thread(lambda: list(stream_answer(messages, temperature))):
+        yield delta
