@@ -33,6 +33,11 @@ function Empty({ label }: { label: string }) {
   return <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-400">{label}</p>;
 }
 
+function FullText({ className = "text-sm font-semibold text-slate-800", value }: { className?: string; value: unknown }) {
+  const content = text(value);
+  return <p className={`mt-1 overflow-x-auto whitespace-nowrap ${className}`} title={content}>{content}</p>;
+}
+
 function StepIcon({ status }: { status: string }) {
   if (status === "completed") return <CheckCircle2 className="h-4 w-4 text-emerald-600" />;
   if (status === "failed") return <XCircle className="h-4 w-4 text-rose-600" />;
@@ -124,7 +129,7 @@ export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel
           ].map(([label, value]) => (
             <div key={label as string} className="rounded-xl bg-white px-3 py-2">
               <p className="text-xs text-slate-500">{label}</p>
-              <p className="mt-1 truncate text-sm font-semibold text-slate-800">{text(value)}</p>
+              <FullText value={value} />
             </div>
           ))}
         </div>
@@ -137,7 +142,7 @@ export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel
             <StepIcon status={step.status} />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-800">{step.title || step.step_id}</p>
-              <p className="mt-1 truncate text-xs text-slate-500">{step.status} · {step.message || "-"}</p>
+              <FullText className="text-xs text-slate-500" value={`${step.status} · ${step.message || "-"}`} />
             </div>
           </div>
         ))}</div> : <Empty label="暂无执行步骤。" />}
