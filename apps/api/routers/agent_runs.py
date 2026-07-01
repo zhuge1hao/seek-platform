@@ -1,6 +1,9 @@
+﻿import asyncio
+import json
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 
 from schemas.agent_runs import (
     DEFAULT_VIDEO_SCRIPT_MODE,
@@ -9,7 +12,7 @@ from schemas.agent_runs import (
     default_generic_session_id,
     default_video_script_session_id,
 )
-from services import audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
+from services import async_store_utils, audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
 from services.agent_config_store import get_config
 from services.agent_registry import get_agent_by_type
 from services.auth_service import require_admin, require_operator_or_admin, require_viewer_or_above
@@ -99,14 +102,23 @@ def _read_run_or_404(run_id: str, user: dict[str, Any]) -> dict[str, Any]:
     return run
 
 
+async def _async_read_run_or_404(run_id: str, user: dict[str, Any]) -> dict[str, Any]:
+    run = await async_store_utils.async_get_run(run_id) if user.get("role") == "admin" else await async_store_utils.async_get_run(run_id, user["user_id"], False)
+    if run is None:
+        raise HTTPException(status_code=404, detail="任务不存在。")
+    if not can_access_owner(user, run.get("user_id")):
+        raise HTTPException(status_code=403, detail="当前账号无权访问该任务。")
+    return run
+
+
 @router.get("/agent-runs/{run_id}/summary")
-def get_agent_run_summary(run_id: str, user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
-    return task_store.summarize_run(_read_run_or_404(run_id, user)) or {}
+async def get_agent_run_summary(run_id: str, user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
+    return await async_store_utils.async_summarize_run(await _async_read_run_or_404(run_id, user)) or {}
 
 
 @router.get("/agent-runs/{run_id}/result")
-def get_agent_run_result(run_id: str, user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
-    run = _read_run_or_404(run_id, user)
+async def get_agent_run_result(run_id: str, user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
+    run = await _async_read_run_or_404(run_id, user)
     return {
         "run_id": run.get("run_id"),
         "conversation_id": run.get("conversation_id"),
@@ -117,6 +129,38 @@ def get_agent_run_result(run_id: str, user: dict[str, Any] = Depends(require_vie
         "artifacts": (run.get("result") or {}).get("files") if isinstance(run.get("result"), dict) else [],
         "updated_at": run.get("updated_at"),
     }
+
+
+def _sse(event: str, data: dict[str, Any]) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+@router.get("/agent-runs/{run_id}/events")
+async def get_agent_run_events(run_id: str, user: dict[str, Any] = Depends(require_viewer_or_above)) -> StreamingResponse:
+    await _async_read_run_or_404(run_id, user)
+
+    async def stream():
+        last_payload = ""
+        heartbeat_count = 0
+        while True:
+            run = await _async_read_run_or_404(run_id, user)
+            summary = await async_store_utils.async_summarize_run(run) or {}
+            payload = json.dumps(summary, ensure_ascii=False, sort_keys=True)
+            status = str(summary.get("status") or "")
+            if payload != last_payload:
+                last_payload = payload
+                event = status if status in {"completed", "failed", "cancelled"} else "status"
+                yield _sse(event, summary)
+                if status in {"completed", "failed", "cancelled"}:
+                    break
+            else:
+                heartbeat_count += 1
+                if heartbeat_count >= 8:
+                    heartbeat_count = 0
+                    yield _sse("heartbeat", {"run_id": run_id, "status": status})
+            await asyncio.sleep(2)
+
+    return StreamingResponse(stream(), media_type="text/event-stream")
 
 
 @router.get("/agent-runs/{run_id}")

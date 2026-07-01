@@ -1,4 +1,8 @@
-﻿# meizhaiseek-platform PRD
+﻿## v1.6.5：架构评估 P1-P3 二轮优化、回归测试与服务启动
+
+v1.6.5 根据 2026-07-01 架构评估报告继续处理剩余 P1-P3 优化项。该版本扩大 SWR 数据层覆盖范围，增加 auth、conversation、agent-runs、video normalizer 等核心路径测试；治理残留日志与 legacy JSON fallback；补充 Docker Compose 生产模式；新增 SQLite async wrapper 第一阶段；新增 Agent Run SSE 状态推送并保留 polling fallback；强化视频拆解 E2E 测试，进一步提升工程稳定性、可维护性和本地部署可靠性。
+
+# meizhaiseek-platform PRD
 
 ## v1.6.4：视频拆解智能体真实成功链路验收与产物闭环
 v1.6.4 在本地视频拆解 Agent 已启动并验证 `/health`、mock `/run`、真实 `/run` 均可 completed 的基础上，完成主平台与 8001 Agent 的真实成功链路联调。该版本固化 Connector 配置、`/run` Payload 映射、`shot_text_excel` 模式、结果 normalizer、shot_report 解析、Excel/JSON/图片 artifact 自动登记、Debug Payload 端到端记录、前端真实结果展示和可选 video-agent-e2e smoke 验证，使视频拆解智能体成为平台第一个完整可交付样板。
@@ -96,3 +100,4 @@ APP SQLite 鍜?RAG SQLite 鍒嗗紑绠＄悊銆侫PP SQLite 涓嶄繚瀛?embeddi
 - v1.6锛氳棰戞媶瑙ｆ櫤鑳戒綋鐢熶骇鍖栥€?- v1.7锛氭櫤鑳戒綋钃濆浘涓庢柟娉曡閰嶇疆涓績銆?- v1.8锛氬弬鑰冮」鐩媶瑙ｅ姪鎵嬨€?
 ### v1.6锛氳棰戞媶瑙ｆ櫤鑳戒綋鐢熶骇鍖?
 v1.6 灏嗗凡閮ㄧ讲鐨勬湰鍦拌棰戞媶瑙?Agent 浜у搧鍖栦负骞冲彴绗竴涓寮忎笟鍔℃櫤鑳戒綋銆傝鐗堟湰鏂板鏈湴 Agent 杩炴帴鐘舵€佹娴嬨€佹彁浜ゅ墠棰勬銆佽棰戞媶瑙ｄ笓鐢ㄨ緭鍏ュ尯銆侀珮绾ф媶瑙ｅ弬鏁般€佷换鍔℃楠ょ姸鎬併€佺粨鏋勫寲缁撴灉闈㈡澘銆侀暅澶存椂闂磋酱銆佸瓧骞?OCR銆佸崠鐐硅瘑鍒€佽瑙夎瘉鏄庡抚銆佽川閲忚鍛婂拰杈撳嚭鏂囦欢绠＄悊銆傝棰戞媶瑙ｄ换鍔°€佺粨鏋溿€佹枃浠躲€乤rtifact 鍜?Debug Payload 鍧囧啓鍏?APP SQLite锛屽苟鏀寔鍒锋柊鎭㈠銆佷笅杞姐€侀瑙堛€佸彇娑堝拰閲嶈瘯銆?
+

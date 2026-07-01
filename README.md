@@ -1,4 +1,14 @@
-﻿# meizhaiseek-platform
+﻿# meizhaiseek v1.6.5 Notes
+
+- 前端数据层：读取型接口通过 SWR hooks 接入，HTTP 仍统一走 apps/web/src/lib/api.ts。
+- 测试：python -m unittest discover -s apps/api/tests；smoke 使用 python apps/api/scripts/smoke_minimal.py。
+- Docker 开发：docker compose up --build。
+- Docker 生产模式：docker compose -f docker-compose.prod.yml up --build。
+- 日志目录：apps/api/runtime/logs/。
+- legacy JSON fallback 默认关闭：APP_LEGACY_JSON_FALLBACK=false。
+- Docker 内访问本机视频 Agent 使用 http://host.docker.internal:8001。
+
+# meizhaiseek-platform
 
 meizhaiseek-platform 鏄竴涓潰鍚戠數鍟嗙粡钀ュ叏閾捐矾鐨勬湰鍦?AI 宸ヤ綔鍙般€傚綋鍓嶇増鏈负 meizhaiseek v1.6.4锛屽寘鍚?Next.js 鍓嶇銆丗astAPI 鍚庣銆丄PP SQLite銆丷AG SQLite銆丄I 瀵硅瘽銆佹櫤鑳戒綋浠诲姟銆丏ataset銆丆onnector 鍜屽悗鍙扮鐞嗚兘鍔涖€?
 ## 椤圭洰缁撴瀯
@@ -90,3 +100,4 @@ docker compose up --build
 - API: http://localhost:8000
 
 杩愯鏁版嵁鎸傝浇鍦?`apps/api/runtime/` 鍜?`apps/api/uploads/`銆?
+

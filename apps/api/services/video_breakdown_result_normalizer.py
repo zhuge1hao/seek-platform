@@ -43,6 +43,29 @@ def _path(*values: Any) -> str:
     return ""
 
 
+def _lookup(source: dict[str, Any], *keys: str) -> Any:
+    lowered = {str(key).lower().replace(" ", "_"): value for key, value in source.items()}
+    for key in keys:
+        value = lowered.get(key.lower().replace(" ", "_"))
+        if value not in (None, ""):
+            return value
+    return None
+
+
+def _int_from_text(text: str, *labels: str) -> int | None:
+    for label in labels:
+        pattern = label.replace(" ", r"\s*")
+        match = re.search(rf"{pattern}\D+(\d+)", text, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+    return None
+
+
+def _path_from_text(text: str, suffix: str) -> str:
+    match = re.search(rf"([A-Za-z]:\\[^\r\n]+?{re.escape(suffix)})", text)
+    return match.group(1).strip() if match else ""
+
+
 def _read_report(path_value: str, warnings: list[str]) -> dict[str, Any]:
     if not path_value:
         return {}
@@ -123,14 +146,15 @@ def _proof_frames_from_timeline(timeline: list[dict[str, Any]]) -> list[dict[str
 
 
 def normalize_video_breakdown_result(raw_response: Any, run: dict[str, Any], output_dir: str, files: list[dict[str, Any]]) -> dict[str, Any]:
-    raw = raw_response if isinstance(raw_response, dict) else {"text": str(raw_response)}
+    raw_text = str(raw_response) if not isinstance(raw_response, dict) else ""
+    raw = raw_response if isinstance(raw_response, dict) else {"text": raw_text}
     data = _as_dict(raw.get("data"))
     shot_result = _as_dict(data.get("shot_result"))
     excel_result = _as_dict(data.get("excel_result"))
     explicit_files = normalize_artifact_files(raw.get("artifacts") or raw.get("files") or [])
 
-    excel_path = _path(data.get("excel_file"), excel_result.get("excel"))
-    shot_report_path = _path(data.get("shot_report"), excel_result.get("report"), shot_result.get("model_optimized_shot_report"))
+    excel_path = _path(data.get("excel_file"), excel_result.get("excel"), _lookup(raw, "excel_path", "Excel", "xlsx path"), _path_from_text(raw_text, ".xlsx"))
+    shot_report_path = _path(data.get("shot_report"), excel_result.get("report"), shot_result.get("model_optimized_shot_report"), _lookup(raw, "shot_report", "report_path", "shot_report_path"), _path_from_text(raw_text, "model_optimized_shot_report.json"))
     warnings = [str(item) for item in _as_list(raw.get("warnings"))]
     report = _read_report(shot_report_path, warnings)
     timeline = _timeline_from_report(report)
@@ -152,10 +176,10 @@ def normalize_video_breakdown_result(raw_response: Any, run: dict[str, Any], out
         "video_name": Path(str(video_path or "")).name or None,
         "video_path": video_path,
         "status": raw.get("status") or "completed",
-        "raw_shot_count": _int(report.get("source_candidate_count"), shot_result.get("shot_count"), shot_result.get("raw_shot_count")),
-        "model_optimized_shot_count": _int(report.get("optimized_shot_count"), data.get("model_optimized_shots"), excel_result.get("columns"), len(timeline) if timeline else None),
-        "excel_column_count": _int(excel_result.get("columns")),
-        "excel_image_count": _int(excel_result.get("images")),
+        "raw_shot_count": _int(report.get("source_candidate_count"), shot_result.get("shot_count"), shot_result.get("raw_shot_count"), _lookup(raw, "raw_shot_count", "raw shot count", "rawShotCount"), _int_from_text(raw_text, "raw shot count")),
+        "model_optimized_shot_count": _int(report.get("optimized_shot_count"), data.get("model_optimized_shots"), _lookup(raw, "model_optimized_shots", "optimized_shots", "model optimized shots"), excel_result.get("columns"), _int_from_text(raw_text, "model optimized shots", "optimized shots"), len(timeline) if timeline else None),
+        "excel_column_count": _int(excel_result.get("columns"), _lookup(raw, "excel_column_count", "Excel columns"), _int_from_text(raw_text, "Excel columns")),
+        "excel_image_count": _int(excel_result.get("images"), _lookup(raw, "excel_image_count", "Excel images"), _int_from_text(raw_text, "images")),
         "artifact_count": len(normalized_files),
         "excel_path": excel_path,
         "shot_report_path": shot_report_path,

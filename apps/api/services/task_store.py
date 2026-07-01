@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from schemas.agent_runs import AgentRunCreate
-from services import app_sqlite, service_events
+from services import app_sqlite, legacy_json_fallback, service_events
 from services.config_guard import guard_agent_run_file
 from services.user_context import agent_runs_dir
 
@@ -167,6 +167,9 @@ def create_run_from_payload(payload: dict[str, Any], logs: list[str] | None = No
 
 
 def _legacy_run(run_id: str, user_id: str | None = None, include_legacy: bool = True) -> dict[str, Any] | None:
+    if not legacy_json_fallback.enabled():
+        return None
+    legacy_json_fallback.warn_once("agent_runs")
     paths: list[Path] = []
     if user_id:
         paths.append(agent_runs_dir(user_id) / f"{run_id}.json")
@@ -192,6 +195,9 @@ def get_run(run_id: str, user_id: str | None = None, include_legacy: bool = True
 
 
 def _legacy_runs(user_id: str | None, include_legacy: bool, include_all_users: bool) -> list[dict[str, Any]]:
+    if not legacy_json_fallback.enabled():
+        return []
+    legacy_json_fallback.warn_once("agent_runs")
     paths: list[Path] = []
     users_root = API_ROOT / "runtime" / "users"
     if include_all_users and users_root.exists():

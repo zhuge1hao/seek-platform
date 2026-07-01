@@ -1,4 +1,23 @@
-﻿# TODO
+﻿## v1.6.5 已完成目标
+
+- 扩大 SWR 覆盖范围
+- 新增 useAgentConnectors / useDebugPayloads / useDatasets / useFiles / useAgentConfigs / useSkills / useAdminUsers
+- 新增 FRONTEND_DATA_LAYER 文档
+- 增加核心路径测试
+- auth / conversation_store / task_store / video_result_normalizer 测试
+- smoke / testing 文档更新
+- 残留日志归档检查
+- legacy JSON fallback feature flag
+- runtime health 显示 fallback 状态
+- docker-compose.prod.yml
+- SQLite async wrapper 第一阶段
+- Agent Run SSE events 接口
+- 前端 useAgentRunEvents
+- polling fallback 保留
+- video-agent E2E 测试增强
+- GitHub Actions 更新
+
+# TODO
 
 ## v1.6.4 已完成目标
 - 主平台 Connector 默认配置到 `http://127.0.0.1:8001`
@@ -130,3 +149,4 @@
 
 - v1.6锛氳棰戞媶瑙ｆ櫤鑳戒綋鐢熶骇鍖?- v1.7锛氭櫤鑳戒綋钃濆浘涓庢柟娉曡閰嶇疆涓績
 - v1.8锛氬弬鑰冮」鐩媶瑙ｅ姪鎵?
+

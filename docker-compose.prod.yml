@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file:
+      - .env
+    environment:
+      APP_SQLITE_PATH: apps/api/runtime/app/meizhaiseek.sqlite3
+      RAG_SQLITE_PATH: apps/api/runtime/rag/rag.sqlite3
+      APP_LEGACY_JSON_FALLBACK: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api/runtime:/app/apps/api/runtime
+      - ./apps/api/uploads:/app/apps/api/uploads
+    working_dir: /app/apps/api
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    working_dir: /app/apps/web
+    command: sh -c "npm run build && npm run start -- -H 0.0.0.0 -p 3000"
+    depends_on:
+      - api

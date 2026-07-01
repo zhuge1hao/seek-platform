@@ -294,6 +294,7 @@ export type RuntimeHealthResponse = {
   status: string;
   version: string;
   service: string;
+  legacy_json_fallback_enabled?: boolean;
   configs_valid: boolean;
   agent_run_store_valid: boolean;
   warnings: string[];

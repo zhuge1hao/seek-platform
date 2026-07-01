@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import os
 import sqlite3
 import sys
@@ -10,8 +10,8 @@ import requests
 
 
 ROOT = Path(__file__).resolve().parents[3]
-TEST_VIDEO_FILE = r"E:\USE\codexhome\fenge\videos\test\1.mp4"
-TEST_OUTPUT_DIR = r"E:\USE\codexhome\fenge\output\test"
+TEST_VIDEO_FILE = os.getenv("VIDEO_AGENT_TEST_VIDEO", r"E:\USE\codexhome\fenge\videos\test\1.mp4")
+TEST_OUTPUT_DIR = os.getenv("VIDEO_AGENT_TEST_OUTPUT_DIR", r"E:\USE\codexhome\fenge\output\test")
 
 
 def load_env() -> None:
@@ -60,7 +60,8 @@ def check(condition: bool, message: str) -> None:
 
 def video_agent_available() -> bool:
     try:
-        video_agent_url = os.getenv("VIDEO_AGENT_URL", "http://127.0.0.1:8001").rstrip("/")
+        video_agent_url = os.getenv("VIDEO_AGENT_BASE_URL") or os.getenv("VIDEO_AGENT_URL", "http://127.0.0.1:8001")
+        video_agent_url = video_agent_url.rstrip("/")
         response = requests.get(f"{video_agent_url}/health", timeout=5)
         data = response.json()
         return response.ok and data.get("status") == "ok"
@@ -76,7 +77,7 @@ def run_video_e2e(token: str) -> None:
         json={
             "agent_type": "video_script_breakdown",
             "mode": "shot_text_excel",
-            "prompt": "smoke_test v1.6.4 video agent e2e",
+            "prompt": "smoke_test v1.6.5 video agent e2e",
             "video_path": TEST_VIDEO_FILE,
             "workflow_options": {
                 "smoke_test": True,
@@ -104,6 +105,7 @@ def run_video_e2e(token: str) -> None:
     files = result.get("files") or []
     check(any((item.get("file_type") or item.get("type")) == "excel" for item in files), "video-agent-e2e registered Excel artifact")
     check(any(str(item.get("filename") or item.get("name") or "").endswith(".json") for item in files), "video-agent-e2e registered JSON artifact")
+    check(any(item.get("download_url") for item in files), "video-agent-e2e artifact download URL exists")
     conversation = request_json("GET", f"/api/conversations/{conversation_id}", token).get("conversation") or {}
     assistant = [item for item in conversation.get("messages") or [] if item.get("role") == "assistant" and item.get("run_id") == run_id]
     check(bool(assistant and assistant[-1].get("status") == "completed"), "video-agent-e2e assistant message completed")
@@ -130,7 +132,8 @@ def main() -> int:
         check(bool(token), "admin login returns token")
 
         runtime = request_json("GET", "/api/admin/runtime/health", token)
-        check(runtime.get("version") == "v1.6.4", "runtime health version is v1.6.4")
+        check(runtime.get("version") == "v1.6.5", "runtime health version is v1.6.5")
+        check(runtime.get("legacy_json_fallback_enabled") is False, "legacy JSON fallback disabled by default")
 
         conversations = request_json("GET", "/api/conversations", token)
         check(isinstance(conversations.get("conversations"), list), "agent conversations list is readable")
@@ -145,7 +148,7 @@ def main() -> int:
             json={
                 "agent_type": "video_script_breakdown",
                 "mode": "mock",
-                "prompt": "smoke_test v1.6.4 agent persistence",
+                "prompt": "smoke_test v1.6.5 agent persistence",
                 "workflow_options": {"smoke_test": True, "export_json": False, "keep_debug_payload": True},
             },
         )
@@ -193,3 +196,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

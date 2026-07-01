@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from services import app_sqlite
+from services import app_sqlite, legacy_json_fallback
 from services.artifact_service import normalize_artifact_file
 from services.field_mapping_service import preview_payload, write_json
 from services.user_context import datasets_dir
@@ -162,6 +162,9 @@ def replace_user_datasets_for_migration(user_id: str, items: list[dict[str, Any]
 
 
 def _ensure_legacy_loaded(user_id: str) -> None:
+    if not legacy_json_fallback.enabled():
+        return
+    legacy_json_fallback.warn_once("datasets")
     with app_sqlite.connection() as conn:
         exists = conn.execute("SELECT 1 FROM datasets WHERE user_id=? LIMIT 1", (user_id,)).fetchone()
     if not exists and _store_path(user_id).exists():

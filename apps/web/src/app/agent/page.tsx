@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Settings, Shield } from "lucide-react";
@@ -14,6 +14,7 @@ import { getStoredUser, type AuthUser } from "@/lib/auth";
 import { findAgentByType, type AgentDefinition, type AgentToolId } from "@/lib/agents";
 import { deleteConversation, getConversation, type AgentRunStatus, type Conversation, type ConversationSummary } from "@/lib/api";
 import { useAgentConversations } from "@/hooks/useAgentConversations";
+import { useAgentRunEvents } from "@/hooks/useAgentRunEvents";
 import { useAgentRunPolling } from "@/hooks/useAgentRunPolling";
 import { agentCards } from "@/lib/mockData";
 import { markPerf } from "@/lib/perf";
@@ -36,7 +37,7 @@ const quickPromptAgentMap: Record<string, AgentToolId> = {
 
 function runMessageContent(current: string, run: AgentRunStatus) {
   if (run.status === "failed") return run.error || "任务执行失败。";
-  if (run.status === "cancelled") return "任务已取消";
+  if (run.status === "cancelled") return "任务已取消。";
   if (run.status === "completed") return run.result?.answer || "任务执行完成";
   return current || run.current_step || "任务正在执行。";
 }
@@ -228,11 +229,20 @@ export default function AgentPage() {
     if (["completed", "failed", "cancelled"].includes(run.status) && run.conversation_id) void refreshConversations();
   }, [refreshConversations]);
 
-  const { pollingError, startPolling } = useAgentRunPolling(handleRunChange);
+  const { pollingError, startPolling, stopPolling } = useAgentRunPolling(handleRunChange);
+  const { eventsState, eventsError, startEvents, stopEvents } = useAgentRunEvents(handleRunChange);
 
   useEffect(() => {
-    startPolling(currentRun?.run_id, currentRun?.status);
-  }, [currentRun?.run_id, currentRun?.status, startPolling]);
+    stopPolling();
+    stopEvents();
+    if (!currentRun?.run_id || ["completed", "failed", "cancelled"].includes(currentRun.status)) return;
+    startEvents(currentRun.run_id, currentRun.status);
+  }, [currentRun?.run_id, currentRun?.status, startEvents, stopEvents, stopPolling]);
+
+  useEffect(() => {
+    if (eventsState === "fallback") startPolling(currentRun?.run_id, currentRun?.status);
+    else if (eventsState === "connected") stopPolling();
+  }, [currentRun?.run_id, currentRun?.status, eventsState, startPolling, stopPolling]);
 
   const handleSelectConversation = useCallback((conversationId: string) => {
     if (conversationId === activeConversationId || conversationId === loadingConversationIdRef.current) return;
@@ -241,7 +251,20 @@ export default function AgentPage() {
 
   return (
     <AppShell activeId="agent" contentClassName="flex bg-[radial-gradient(circle_at_top,#f4e8ff_0%,transparent_35%),linear-gradient(135deg,#fafcff_0%,#f6f4ff_54%,#eef6ff_100%)]">
-      <ConversationPanel canDelete={currentUser?.role ? currentUser.role !== "viewer" : false} collapsedStorageKey="meizhaiseek_agent_panel_collapsed" conversations={conversations} deleteDisabledMessage="当前账号为只读权限，无法删除对话。" error={conversationError || pollingError} getDeleteConfirmMessage={(conversation) => conversation.status === "running" ? "该任务仍在执行，删除记录不会停止后台任务，是否继续？" : "确认删除该智能体对话记录吗？"} loading={conversationLoading} onDeleteConversation={handleDeleteConversation} onNewConversation={handleNewConversation} onSelectConversation={handleSelectConversation} selectedConversationId={activeConversationId || currentConversation?.conversation_id} title="AI 智能体" />
+      <ConversationPanel
+        canDelete={currentUser?.role ? currentUser.role !== "viewer" : false}
+        collapsedStorageKey="meizhaiseek_agent_panel_collapsed"
+        conversations={conversations}
+        deleteDisabledMessage="当前账号为只读权限，无法删除对话。"
+        error={conversationError || pollingError || eventsError}
+        getDeleteConfirmMessage={(conversation) => conversation.status === "running" ? "该任务仍在执行，删除记录不会停止后台任务，是否继续？" : "确认删除该智能体对话记录吗？"}
+        loading={conversationLoading}
+        onDeleteConversation={handleDeleteConversation}
+        onNewConversation={handleNewConversation}
+        onSelectConversation={handleSelectConversation}
+        selectedConversationId={activeConversationId || currentConversation?.conversation_id}
+        title="AI 智能体"
+      />
       <section className="min-h-screen min-w-0 flex-1 overflow-y-auto px-8 py-10">
         <div className="mx-auto flex min-h-[calc(100vh-80px)] max-w-5xl flex-col items-center justify-center">
           {currentUser?.role === "admin" ? <div className="mb-4 flex w-full justify-end gap-3">
@@ -250,7 +273,7 @@ export default function AgentPage() {
           </div> : null}
           <div className="mb-8 text-center"><p className="text-sm font-medium text-violet-700">AI 智能经营助手</p><h2 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">你好，meizhaiseek</h2></div>
           {conversationWarnings.length ? <div className="mb-4 w-full max-w-[880px] rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">{conversationWarnings.join("；")}</div> : null}
-          {detailLoading ? <div className="mb-6 w-full max-w-[880px] rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 text-sm text-slate-500">正在切换会话…</div> : null}
+          {detailLoading ? <div className="mb-6 w-full max-w-[880px] rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 text-sm text-slate-500">正在切换会话...</div> : null}
           {currentConversation && !detailLoading ? <ConversationMessages messages={currentConversation.messages} /> : !detailLoading ? <div className="mb-9 grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">{agentCards.map((card, index) => <AgentCard active={selectedAgentId === card.id} index={index} key={card.id} onClick={() => handleAgentSelect(card.id)} title={card.title} />)}</div> : null}
           <AgentWorkspace configRefreshKey={configRefreshKey} inputValue={inputValue} isSending={false} onAgentSelect={handlePopoverAgentSelect} onInputChange={setInputValue} onSend={handleSend} selectedAgentId={selectedAgentId} conversationId={currentConversation?.conversation_id || null} initialRun={currentRun} onConversationChange={(id) => void handleConversationChange(id)} onRunChange={handleRunChange} />
           {!selectedAgentId ? <QuickPrompts onSelect={handleQuickPromptSelect} /> : null}
@@ -261,3 +284,4 @@ export default function AgentPage() {
     </AppShell>
   );
 }
+

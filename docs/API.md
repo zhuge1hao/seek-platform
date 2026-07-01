@@ -1,4 +1,11 @@
-﻿# meizhaiseek API 鏂囨。
+﻿## v1.6.5 Runtime And Agent Run Events
+
+- GET /api/admin/runtime/health：version 返回 v1.6.5，新增 legacy_json_fallback_enabled，默认 false。
+- GET /api/agent-runs/{run_id}/events：登录后订阅自己的 run 状态 SSE。
+- SSE 格式：event: status/completed/failed/cancelled/heartbeat，data 为 run summary JSON。
+- 前端优先使用 SSE；连接失败后回退 /api/agent-runs/{run_id}/summary polling。
+
+# meizhaiseek API 鏂囨。
 
 鏈枃妗ｄ负 UTF-8 缂栫爜锛岃褰?meizhaiseek v1.6.4 鐨勪富瑕佸悗绔帴鍙ｃ€傞櫎 `/health` 鍜岀櫥褰曟帴鍙ｅ锛屼笟鍔℃帴鍙ｉ粯璁ら渶瑕?`Authorization: Bearer <token>`銆?
 ## 鍩虹鍋ュ悍
@@ -153,3 +160,4 @@ v1.6.4 标准化字段：
 
 ### artifacts 下载/预览
 平台会登记 Excel、JSON、TXT、MD、PNG、JPG、JPEG、WEBP，并为 output_dir 生成 `folder_manifest.json`。下载和预览继续使用现有 artifact 接口，校验登录用户、run 归属和安全路径。文件不存在时返回中文错误。
+

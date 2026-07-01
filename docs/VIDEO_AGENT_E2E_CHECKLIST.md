@@ -1,46 +1,34 @@
-# 视频拆解 Agent E2E 验收清单
+﻿## v1.6.5 E2E Checklist Update
 
-## 前置条件
-- 主平台 API 在 `http://127.0.0.1:8000` 运行。
-- 前端在 `http://127.0.0.1:3000` 运行。
-- 本地视频 Agent 已启动：
+- 运行 python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent。
+- 检查 video status connected、run completed、summary/result/artifacts、assistant completed message、artifact download URL。
+
+# 瑙嗛鎷嗚В Agent E2E 楠屾敹娓呭崟
+
+## 鍓嶇疆鏉′欢
+- 涓诲钩鍙?API 鍦?`http://127.0.0.1:8000` 杩愯銆?- 鍓嶇鍦?`http://127.0.0.1:3000` 杩愯銆?- 鏈湴瑙嗛 Agent 宸插惎鍔細
   ```powershell
   cd E:\USE\codexhome\fenge
   .\start_agent_8001.bat
   ```
-- 测试视频存在：`E:\USE\codexhome\fenge\videos\test\1.mp4`
+- 娴嬭瘯瑙嗛瀛樺湪锛歚E:\USE\codexhome\fenge\videos\test\1.mp4`
 
-## 手工验收
-- 打开 `/agent`，选择视频拆解智能体。
-- 点击“测试连接”，确认状态为 connected，`model_version` 为 `shot_cutting_agent_v2_19_reference_balanced_fast_proof`。
-- 点击“使用测试视频”，确认填入：
-  - `video_file=E:\USE\codexhome\fenge\videos\test\1.mp4`
+## 鎵嬪伐楠屾敹
+- 鎵撳紑 `/agent`锛岄€夋嫨瑙嗛鎷嗚В鏅鸿兘浣撱€?- 鐐瑰嚮鈥滄祴璇曡繛鎺モ€濓紝纭鐘舵€佷负 connected锛宍model_version` 涓?`shot_cutting_agent_v2_19_reference_balanced_fast_proof`銆?- 鐐瑰嚮鈥滀娇鐢ㄦ祴璇曡棰戔€濓紝纭濉叆锛?  - `video_file=E:\USE\codexhome\fenge\videos\test\1.mp4`
   - `output_dir=E:\USE\codexhome\fenge\output\test`
   - `subtitle_region=bottom`
   - `ocr_workers=6`
   - `mode=shot_text_excel`
-- 打开 Payload 预览，确认最终 request 只有本地 Agent 支持的字段：`mode`、`video_file`、`output_dir`、`subtitle_region`、`ocr_workers`。
-- 提交任务并等待 completed。
-- 确认结果面板显示 raw shot count、model optimized shots、Excel columns/images、Excel path、shot_report path。
-- 确认 Artifact 列表包含 Excel、shot_report、`folder_manifest.json`，图片如存在可预览。
-- 刷新页面、切换路由再回来，run 结果和 artifacts 能恢复。
-
-## 自动 smoke
-默认 smoke 不依赖 8001：
-```powershell
+- 鎵撳紑 Payload 棰勮锛岀‘璁ゆ渶缁?request 鍙湁鏈湴 Agent 鏀寔鐨勫瓧娈碉細`mode`銆乣video_file`銆乣output_dir`銆乣subtitle_region`銆乣ocr_workers`銆?- 鎻愪氦浠诲姟骞剁瓑寰?completed銆?- 纭缁撴灉闈㈡澘鏄剧ず raw shot count銆乵odel optimized shots銆丒xcel columns/images銆丒xcel path銆乻hot_report path銆?- 纭 Artifact 鍒楄〃鍖呭惈 Excel銆乻hot_report銆乣folder_manifest.json`锛屽浘鐗囧瀛樺湪鍙瑙堛€?- 鍒锋柊椤甸潰銆佸垏鎹㈣矾鐢卞啀鍥炴潵锛宺un 缁撴灉鍜?artifacts 鑳芥仮澶嶃€?
+## 鑷姩 smoke
+榛樿 smoke 涓嶄緷璧?8001锛?```powershell
 python apps/api/scripts/smoke_minimal.py
 ```
 
-真实视频 E2E：
-```powershell
+鐪熷疄瑙嗛 E2E锛?```powershell
 python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 ```
 
-如果只传 `--video-agent-e2e` 且 8001 不可达，视频 E2E 应显示 SKIP；如果同时传 `--require-video-agent`，则应 FAIL。
-
-## 验收标准
-- `GET /health` 返回 `{"status":"ok","service":"meizhaiseek-api"}`。
-- `/api/admin/runtime/health` 返回 `version=v1.6.4`。
-- `/api/agents/video-script/status` 8001 可达时为 connected，不可达时为 disconnected 且不返回 500。
-- completed 任务写入 APP SQLite：agent run、conversation、assistant message、debug payload、artifacts。
-- 失败任务保留真实 error，不伪造成成功。
+濡傛灉鍙紶 `--video-agent-e2e` 涓?8001 涓嶅彲杈撅紝瑙嗛 E2E 搴旀樉绀?SKIP锛涘鏋滃悓鏃朵紶 `--require-video-agent`锛屽垯搴?FAIL銆?
+## 楠屾敹鏍囧噯
+- `GET /health` 杩斿洖 `{"status":"ok","service":"meizhaiseek-api"}`銆?- `/api/admin/runtime/health` 杩斿洖 `version=v1.6.4`銆?- `/api/agents/video-script/status` 8001 鍙揪鏃朵负 connected锛屼笉鍙揪鏃朵负 disconnected 涓斾笉杩斿洖 500銆?- completed 浠诲姟鍐欏叆 APP SQLite锛歛gent run銆乧onversation銆乤ssistant message銆乨ebug payload銆乤rtifacts銆?- 澶辫触浠诲姟淇濈暀鐪熷疄 error锛屼笉浼€犳垚鎴愬姛銆?

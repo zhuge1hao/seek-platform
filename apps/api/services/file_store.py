@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from services import app_sqlite
+from services import app_sqlite, legacy_json_fallback
 from services.config_backup_service import resolve_runtime_path
 from services.config_guard import guard_file_store
 from services.user_context import files_dir
@@ -46,6 +46,9 @@ def _load_records(user_id: str | None = None) -> list[dict[str, Any]]:
     records = [_row_to_record(row) for row in rows]
     if records:
         return records
+    if not legacy_json_fallback.enabled():
+        return []
+    legacy_json_fallback.warn_once("files")
     path = _store_path(user_id)
     if not path.exists():
         return []

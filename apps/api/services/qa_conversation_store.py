@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from services import app_sqlite
+from services import app_sqlite, legacy_json_fallback
 from services.config_backup_service import resolve_runtime_path
 from services.user_context import safe_user_id
 
@@ -130,6 +130,9 @@ def replace_user_qa_conversations_for_migration(user_id: str, items: list[dict[s
 
 
 def _ensure_legacy_loaded(user_id: str) -> None:
+    if not legacy_json_fallback.enabled():
+        return
+    legacy_json_fallback.warn_once("qa_conversations")
     with app_sqlite.connection() as conn:
         exists = conn.execute("SELECT 1 FROM qa_conversations WHERE user_id=? LIMIT 1", (user_id,)).fetchone()
     if not exists:
