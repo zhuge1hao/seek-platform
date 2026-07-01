@@ -59,7 +59,6 @@ function LoadMore({ shown, total, onClick }: { shown: number; total: number; onC
 export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel({ run }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [fullResult, setFullResult] = useState<AgentRunResult | null>(null);
-  const [loadingFull, setLoadingFull] = useState(false);
   const [visible, setVisible] = useState<Record<TabKey, number>>(LIMITS);
 
   useEffect(() => {
@@ -69,10 +68,9 @@ export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel
   }, [run.run_id]);
 
   useEffect(() => {
-    if (activeTab === "overview" || !run.result_has_more || fullResult || loadingFull) return;
+    if (!run.result_has_more || fullResult) return;
     const controller = new AbortController();
     const end = markPerf("agent.videoResult.fetch", { run_id: run.run_id });
-    setLoadingFull(true);
     getAgentRunResult(run.run_id, controller.signal)
       .then((detail) => setFullResult(detail.result))
       .catch((error) => {
@@ -80,14 +78,13 @@ export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel
       })
       .finally(() => {
         end();
-        setLoadingFull(false);
       });
     return () => controller.abort();
-  }, [activeTab, fullResult, loadingFull, run.result_has_more, run.run_id]);
+  }, [fullResult, run.result_has_more, run.run_id]);
 
   const result = (fullResult || run.result || {}) as Partial<AgentRunResult>;
   const prepared = useMemo(() => {
-    const end = markPerf("agent.videoResult.prepare", { run_id: run.run_id, tab: activeTab });
+    const end = markPerf("agent.videoResult.prepare", { run_id: run.run_id });
     const next = {
       summary: result.summary || {},
       steps: (result.steps || run.steps || []) as VideoWorkflowStep[],
@@ -99,7 +96,7 @@ export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel
     };
     end();
     return next;
-  }, [activeTab, result, run.run_id, run.steps]);
+  }, [result, run.run_id, run.steps]);
 
   const more = (tab: TabKey) => setVisible((current) => ({ ...current, [tab]: current[tab] + LIMITS[tab] }));
   const slice = <T,>(tab: TabKey, items: T[]) => items.slice(0, visible[tab]);
@@ -147,9 +144,8 @@ export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel
       </section>
 
       <div className="flex flex-wrap gap-2">
-        {tabs.map((tab) => <button className={`rounded-full px-3 py-2 text-sm font-semibold ${activeTab === tab.key ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-600"}`} key={tab.key} onClick={() => setActiveTab(tab.key)} type="button">{tab.label}</button>)}
+        {tabs.map((tab) => <button className={`rounded-full px-3 py-2 text-sm font-semibold ${activeTab === tab.key ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-600"}`} key={tab.key} onClick={() => { if (activeTab !== tab.key) setActiveTab(tab.key); }} type="button">{tab.label}</button>)}
       </div>
-      {loadingFull ? <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">正在读取完整结果...</div> : null}
 
       {activeTab === "overview" ? <section className="rounded-2xl border border-slate-100 p-4"><p className="text-sm text-slate-500">切换上方标签查看镜头、字幕、证明帧、警告和输出文件。</p></section> : null}
 
