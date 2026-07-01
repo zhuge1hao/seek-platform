@@ -21,7 +21,7 @@ def runtime_health() -> dict[str, Any]:
     warnings = [*agent_report.get("warnings", []), *skill_report.get("warnings", []), *security_config_service.get_security_warnings()]
     return {
         "status": "ok" if not warnings else "warning",
-        "version": "v1.6.3",
+        "version": "v1.6.4",
         "service": "meizhaiseek-api",
         "configs_valid": True,
         "agent_run_store_valid": True,

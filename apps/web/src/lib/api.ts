@@ -55,6 +55,7 @@ export type AgentConnector = {
   agent_type: string;
   mode: "http" | "cli" | "mock";
   base_url: string;
+  health_path?: string;
   endpoint: string;
   cli_command?: string;
   session_id?: string;
@@ -75,6 +76,11 @@ export type VideoAgentStatus = {
   reachable: boolean;
   latency_ms?: number | null;
   message: string;
+  health_status?: string;
+  service?: string;
+  version?: string;
+  model_version?: string;
+  project_root?: string;
   error?: string | null;
   start_hint?: string;
 };
@@ -106,6 +112,8 @@ export type VideoWorkflowOptions = {
   generate_contact_sheet: boolean;
   target_frame_budget: number;
   ocr_threads: number;
+  ocr_workers?: number;
+  subtitle_region?: "bottom" | "top" | "top-bottom" | "wide" | "middle" | "center" | "auto" | string;
   baseline_image_dir: string;
   previous_excel_path: string;
   output_dir?: string;

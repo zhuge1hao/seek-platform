@@ -42,7 +42,7 @@ npm.cmd run start -- -H 127.0.0.1 -p 3000
 真实视频拆解 local agent 默认依赖：
 
 ```text
-POST http://localhost:8001/api/agent/run
+POST http://127.0.0.1:8001/run
 ```
 
 如果 8001 没有真实 local agent 服务，任务必须真实 failed，不能伪造成成功。

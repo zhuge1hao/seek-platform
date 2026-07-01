@@ -1,38 +1,25 @@
-# Codex Handoff
+﻿# Codex Handoff
 
-## 项目名称与当前版本
+## 椤圭洰鍚嶇О涓庡綋鍓嶇増鏈?
+- 椤圭洰锛歚meizhaiseek-platform`
+- 褰撳墠鐗堟湰锛歚meizhaiseek v1.6.4`
+- 鐗堟湰鍚嶇О锛氭灦鏋勮瘎浼?P1-P3 浼樺寲涓庡伐绋嬭鑼冭ˉ榻?- 椤圭洰璺緞锛歚E:\USE\codexhome\agents-cowork\meizhaiseek-platform`
+- GitHub锛歚https://github.com/zhuge1hao/seek-platform.git`
+- 褰撳墠鍒嗘敮锛歚main`
+- 鏈€杩戞彁浜わ細鏈疆鎻愪氦 `chore: optimize architecture P1-P3 items`
 
-- 项目：`meizhaiseek-platform`
-- 当前版本：`meizhaiseek v1.6.3`
-- 版本名称：架构评估 P1-P3 优化与工程规范补齐
-- 项目路径：`E:\USE\codexhome\agents-cowork\meizhaiseek-platform`
-- GitHub：`https://github.com/zhuge1hao/seek-platform.git`
-- 当前分支：`main`
-- 最近提交：本轮提交 `chore: optimize architecture P1-P3 items`
+## 褰撳墠椤圭洰鐩爣
 
-## 当前项目目标
-
-meizhaiseek 是面向电商经营全链路的 AI 平台。当前目标是在不破坏已有鉴权、RAG、Dataset、Connector、Debug Payload、后台管理能力的前提下，继续稳定 `/chat` 流式问答、`/agent` 智能体任务、视频拆解智能体、APP SQLite 运行数据存储和 RAG SQLite 知识库边界。
-
-## 技术栈与启动方式
-
-- 前端：Next.js 14 App Router、React 18、TypeScript、Tailwind CSS、lucide-react。
-- 后端：FastAPI、Uvicorn、Pydantic、requests、标准库 `sqlite3`。
-- AI 问答：DeepSeek OpenAI-compatible Chat Completions，支持非流式和 SSE 流式。
-- Embedding：本地 `bge-small-zh`，通过 `sentence-transformers` 懒加载。
-- 主存储：APP SQLite，路径 `apps/api/runtime/app/meizhaiseek.sqlite3`。
-- RAG 存储：独立 SQLite，路径 `apps/api/runtime/rag/rag.sqlite3`。
-- 本地视频 agent：默认 `http://127.0.0.1:8001`，平台不能伪造成功。
-
-启动：
-
+meizhaiseek 鏄潰鍚戠數鍟嗙粡钀ュ叏閾捐矾鐨?AI 骞冲彴銆傚綋鍓嶇洰鏍囨槸鍦ㄤ笉鐮村潖宸叉湁閴存潈銆丷AG銆丏ataset銆丆onnector銆丏ebug Payload銆佸悗鍙扮鐞嗚兘鍔涚殑鍓嶆彁涓嬶紝缁х画绋冲畾 `/chat` 娴佸紡闂瓟銆乣/agent` 鏅鸿兘浣撲换鍔°€佽棰戞媶瑙ｆ櫤鑳戒綋銆丄PP SQLite 杩愯鏁版嵁瀛樺偍鍜?RAG SQLite 鐭ヨ瘑搴撹竟鐣屻€?
+## 鎶€鏈爤涓庡惎鍔ㄦ柟寮?
+- 鍓嶇锛歂ext.js 14 App Router銆丷eact 18銆乀ypeScript銆乀ailwind CSS銆乴ucide-react銆?- 鍚庣锛欶astAPI銆乁vicorn銆丳ydantic銆乺equests銆佹爣鍑嗗簱 `sqlite3`銆?- AI 闂瓟锛欴eepSeek OpenAI-compatible Chat Completions锛屾敮鎸侀潪娴佸紡鍜?SSE 娴佸紡銆?- Embedding锛氭湰鍦?`bge-small-zh`锛岄€氳繃 `sentence-transformers` 鎳掑姞杞姐€?- 涓诲瓨鍌細APP SQLite锛岃矾寰?`apps/api/runtime/app/meizhaiseek.sqlite3`銆?- RAG 瀛樺偍锛氱嫭绔?SQLite锛岃矾寰?`apps/api/runtime/rag/rag.sqlite3`銆?- 鏈湴瑙嗛 agent锛氶粯璁?`http://127.0.0.1:8001`锛屽钩鍙颁笉鑳戒吉閫犳垚鍔熴€?
+鍚姩锛?
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
 .\start-dev.ps1
 ```
 
-校验：
-
+鏍￠獙锛?
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
 python -m compileall apps/api
@@ -42,7 +29,7 @@ $env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'
 npm.cmd run build
 ```
 
-## 关键目录结构
+## 鍏抽敭鐩綍缁撴瀯
 
 ```text
 apps/api/
@@ -65,7 +52,7 @@ apps/api/
     video_agent_status_service.py
   workflows/
     video_script_workflow.py
-  runtime/              # 本地运行数据，不提交 Git
+  runtime/              # 鏈湴杩愯鏁版嵁锛屼笉鎻愪氦 Git
 apps/web/src/
   app/
     agent/page.tsx
@@ -91,93 +78,35 @@ docs/
 AGENTS.md
 ```
 
-## 已完成版本记录
+## 宸插畬鎴愮増鏈褰?
+### v1.5.7锛氭枃妗ｄ贡鐮佷慨澶嶄笌 SQLite 瀛樺偍搴曞骇杩佺Щ
 
-### v1.5.7：文档乱码修复与 SQLite 存储底座迁移
+- 淇骞堕噸鍐?`docs/API.md`銆乣docs/PRD.md` 涓?UTF-8銆?- 鏂板 APP SQLite 鍒濆鍖栥€佽縼绉诲拰 health銆?- 鏂板 JSON 鍒?SQLite 骞傜瓑杩佺Щ銆?- users銆乤udit_logs銆丵A conversation銆丄gent conversation銆乤gent_runs銆乧onnectors銆乨ebug_payloads銆乫iles銆乤rtifacts 杩佸叆 APP SQLite銆?- RAG SQLite 淇濇寔鐙珛锛屽彧淇濆瓨 documents/chunks/embedding銆?
+### v1.5.8锛氬瓨鍌ㄦ€ц兘浼樺寲涓?Dataset SQLite 缁熶竴
 
-- 修复并重写 `docs/API.md`、`docs/PRD.md` 为 UTF-8。
-- 新增 APP SQLite 初始化、迁移和 health。
-- 新增 JSON 到 SQLite 幂等迁移。
-- users、audit_logs、QA conversation、Agent conversation、agent_runs、connectors、debug_payloads、files、artifacts 迁入 APP SQLite。
-- RAG SQLite 保持独立，只保存 documents/chunks/embedding。
-
-### v1.5.8：存储性能优化与 Dataset SQLite 统一
-
-- QA conversation 常规写入改为增量 upsert/update/insert。
-- Agent conversation 常规写入改为增量 upsert/update/insert。
-- bulk replace 仅保留给 legacy migration。
-- Dataset metadata 从 `datasets.json` 迁入 APP SQLite。
-- 新增 `datasets`、`dataset_files`、`dataset_jobs`。
-- Dataset 文件本体仍在磁盘，不进入 SQLite。
-- 新增 `service_events`，解除 `task_store` 与 `conversation_store` 的函数内延迟 import。
-
-### v1.6：视频拆解智能体生产化
-
-- 新增 `GET /api/agents/video-script/status`。
-- 前端新增视频拆解连接状态、提交前预检、高级参数和失败提示。
-- 视频拆解 workflow 标准化 steps。
-- 结构化 result_json：summary、timeline、subtitles、selling_points、proof_frames、quality_warnings、files。
-- 输出文件登记到 artifacts，支持安全下载。
-- Debug Payload 保存 request/response/error。
-- 8001 未启动时任务真实 failed，不伪造成功。
-
-### v1.6.1：AI 智能体会话切换卡死修复
-
-- `/agent?conversation_id=` 切换增加 AbortController。
-- 过期请求通过 request sequence 忽略。
-- 点击当前会话不重复请求。
-- URL 同步使用 `window.history.replaceState`，避免 App Router 同路由 query 重载。
-- 轮询清理补强。
-- 大 JSON 文本截断，避免默认撑爆页面。
-
-### v1.6.2：AI 智能体页面卡顿深度优化
-
-- 后端新增 `GET /api/agent-runs/{run_id}/summary`。
-- 后端新增 `GET /api/agent-runs/{run_id}/result`。
-- conversation detail 默认返回轻量摘要，大 result/debug payload 不默认返回。
-- 前端新增 `markPerf` 开发性能探针。
-- 前端新增 `useAgentRunPolling`，统一 active run 轮询。
-- GenericAgentPanel、VideoScriptAgentPanel、AgentRunStatus 不再各自 setInterval。
-- VideoBreakdownResultPanel 改为 memo + tabs + “加载更多”。
-- Debug Payload 和完整 result 改为按需加载。
-- 文档新增 `docs/AGENT_PERFORMANCE_NOTES.md`。
-
-### v1.6.3：架构评估 P1-P3 优化与工程规范补齐
-
-- 前端新增 SWR/query hooks 基础层，低风险接入 `/agent`、`/chat` 会话列表和后台/知识库读取场景。
-- DeepSeek 非流式问答新增 `async_generate_answer` / `async_ask`，保留同步兼容与稳定 SSE。
-- 新增 `apps/api/scripts/smoke_minimal.py` 和 `docs/SMOKE_TESTS.md`。
-- 根目录、API、Web 历史日志归档到 `apps/api/runtime/logs/archive/`。
-- `docs/*.bak-v1.5.7` 移到 `docs/archive/legacy_bak_v1.5.7/`。
-- 新增 `security_config_service.py`，支持缺失 secret 时生成 `generated_secrets.json`，runtime health 输出安全 warning。
-- 补齐 Docker Compose、Dockerfile 和 GitHub Actions CI。
-
-## 当前正在处理的问题
-
-本轮只处理“新窗口交接包”落盘，不继续写新功能。当前用户重新指定的 P0 是回归 `/agent` 任务和聊天持久化链路：
-
-1. 在 `/agent` 智能体界面执行任务后，左侧聊天记录必须新增并持久保存。
-2. 切换到其他路由再回来，任务/聊天不能消失。
-3. 脚本拆解智能体必须在提交任务后真实执行，而不是只创建 UI 状态。
-4. 任务状态、结果、错误信息要能回显到对应聊天记录。
-
-注意：v1.6.2 已做性能优化，但下一窗口仍应按 P0 做真实回归，不要只相信 UI。
-
-## 最近一次用户明确要求
-
-用户要求生成一个新窗口可继续接手的上下文交接包，只做总结和落盘，更新：
-
+- QA conversation 甯歌鍐欏叆鏀逛负澧為噺 upsert/update/insert銆?- Agent conversation 甯歌鍐欏叆鏀逛负澧為噺 upsert/update/insert銆?- bulk replace 浠呬繚鐣欑粰 legacy migration銆?- Dataset metadata 浠?`datasets.json` 杩佸叆 APP SQLite銆?- 鏂板 `datasets`銆乣dataset_files`銆乣dataset_jobs`銆?- Dataset 鏂囦欢鏈綋浠嶅湪纾佺洏锛屼笉杩涘叆 SQLite銆?- 鏂板 `service_events`锛岃В闄?`task_store` 涓?`conversation_store` 鐨勫嚱鏁板唴寤惰繜 import銆?
+### v1.6锛氳棰戞媶瑙ｆ櫤鑳戒綋鐢熶骇鍖?
+- 鏂板 `GET /api/agents/video-script/status`銆?- 鍓嶇鏂板瑙嗛鎷嗚В杩炴帴鐘舵€併€佹彁浜ゅ墠棰勬銆侀珮绾у弬鏁板拰澶辫触鎻愮ず銆?- 瑙嗛鎷嗚В workflow 鏍囧噯鍖?steps銆?- 缁撴瀯鍖?result_json锛歴ummary銆乼imeline銆乻ubtitles銆乻elling_points銆乸roof_frames銆乹uality_warnings銆乫iles銆?- 杈撳嚭鏂囦欢鐧昏鍒?artifacts锛屾敮鎸佸畨鍏ㄤ笅杞姐€?- Debug Payload 淇濆瓨 request/response/error銆?- 8001 鏈惎鍔ㄦ椂浠诲姟鐪熷疄 failed锛屼笉浼€犳垚鍔熴€?
+### v1.6.1锛欰I 鏅鸿兘浣撲細璇濆垏鎹㈠崱姝讳慨澶?
+- `/agent?conversation_id=` 鍒囨崲澧炲姞 AbortController銆?- 杩囨湡璇锋眰閫氳繃 request sequence 蹇界暐銆?- 鐐瑰嚮褰撳墠浼氳瘽涓嶉噸澶嶈姹傘€?- URL 鍚屾浣跨敤 `window.history.replaceState`锛岄伩鍏?App Router 鍚岃矾鐢?query 閲嶈浇銆?- 杞娓呯悊琛ュ己銆?- 澶?JSON 鏂囨湰鎴柇锛岄伩鍏嶉粯璁ゆ拺鐖嗛〉闈€?
+### v1.6.2锛欰I 鏅鸿兘浣撻〉闈㈠崱椤挎繁搴︿紭鍖?
+- 鍚庣鏂板 `GET /api/agent-runs/{run_id}/summary`銆?- 鍚庣鏂板 `GET /api/agent-runs/{run_id}/result`銆?- conversation detail 榛樿杩斿洖杞婚噺鎽樿锛屽ぇ result/debug payload 涓嶉粯璁よ繑鍥炪€?- 鍓嶇鏂板 `markPerf` 寮€鍙戞€ц兘鎺㈤拡銆?- 鍓嶇鏂板 `useAgentRunPolling`锛岀粺涓€ active run 杞銆?- GenericAgentPanel銆乂ideoScriptAgentPanel銆丄gentRunStatus 涓嶅啀鍚勮嚜 setInterval銆?- VideoBreakdownResultPanel 鏀逛负 memo + tabs + 鈥滃姞杞芥洿澶氣€濄€?- Debug Payload 鍜屽畬鏁?result 鏀逛负鎸夐渶鍔犺浇銆?- 鏂囨。鏂板 `docs/AGENT_PERFORMANCE_NOTES.md`銆?
+### v1.6.4锛氭灦鏋勮瘎浼?P1-P3 浼樺寲涓庡伐绋嬭鑼冭ˉ榻?
+- 鍓嶇鏂板 SWR/query hooks 鍩虹灞傦紝浣庨闄╂帴鍏?`/agent`銆乣/chat` 浼氳瘽鍒楄〃鍜屽悗鍙?鐭ヨ瘑搴撹鍙栧満鏅€?- DeepSeek 闈炴祦寮忛棶绛旀柊澧?`async_generate_answer` / `async_ask`锛屼繚鐣欏悓姝ュ吋瀹逛笌绋冲畾 SSE銆?- 鏂板 `apps/api/scripts/smoke_minimal.py` 鍜?`docs/SMOKE_TESTS.md`銆?- 鏍圭洰褰曘€丄PI銆乄eb 鍘嗗彶鏃ュ織褰掓。鍒?`apps/api/runtime/logs/archive/`銆?- `docs/*.bak-v1.5.7` 绉诲埌 `docs/archive/legacy_bak_v1.5.7/`銆?- 鏂板 `security_config_service.py`锛屾敮鎸佺己澶?secret 鏃剁敓鎴?`generated_secrets.json`锛宺untime health 杈撳嚭瀹夊叏 warning銆?- 琛ラ綈 Docker Compose銆丏ockerfile 鍜?GitHub Actions CI銆?
+## 褰撳墠姝ｅ湪澶勭悊鐨勯棶棰?
+鏈疆鍙鐞嗏€滄柊绐楀彛浜ゆ帴鍖呪€濊惤鐩橈紝涓嶇户缁啓鏂板姛鑳姐€傚綋鍓嶇敤鎴烽噸鏂版寚瀹氱殑 P0 鏄洖褰?`/agent` 浠诲姟鍜岃亰澶╂寔涔呭寲閾捐矾锛?
+1. 鍦?`/agent` 鏅鸿兘浣撶晫闈㈡墽琛屼换鍔″悗锛屽乏渚ц亰澶╄褰曞繀椤绘柊澧炲苟鎸佷箙淇濆瓨銆?2. 鍒囨崲鍒板叾浠栬矾鐢卞啀鍥炴潵锛屼换鍔?鑱婂ぉ涓嶈兘娑堝け銆?3. 鑴氭湰鎷嗚В鏅鸿兘浣撳繀椤诲湪鎻愪氦浠诲姟鍚庣湡瀹炴墽琛岋紝鑰屼笉鏄彧鍒涘缓 UI 鐘舵€併€?4. 浠诲姟鐘舵€併€佺粨鏋溿€侀敊璇俊鎭鑳藉洖鏄惧埌瀵瑰簲鑱婂ぉ璁板綍銆?
+娉ㄦ剰锛歷1.6.2 宸插仛鎬ц兘浼樺寲锛屼絾涓嬩竴绐楀彛浠嶅簲鎸?P0 鍋氱湡瀹炲洖褰掞紝涓嶈鍙浉淇?UI銆?
+## 鏈€杩戜竴娆＄敤鎴锋槑纭姹?
+鐢ㄦ埛瑕佹眰鐢熸垚涓€涓柊绐楀彛鍙户缁帴鎵嬬殑涓婁笅鏂囦氦鎺ュ寘锛屽彧鍋氭€荤粨鍜岃惤鐩橈紝鏇存柊锛?
 - `docs/CODEX_HANDOFF.md`
 - `docs/NEXT_TASKS.md`
 - `docs/CHANGELOG_CONTEXT.md`
 - `AGENTS.md`
 
-并输出文件摘要和可复制的新窗口启动提示词。
-
-## 已经改过的关键文件
-
-后端：
-
+骞惰緭鍑烘枃浠舵憳瑕佸拰鍙鍒剁殑鏂扮獥鍙ｅ惎鍔ㄦ彁绀鸿瘝銆?
+## 宸茬粡鏀硅繃鐨勫叧閿枃浠?
+鍚庣锛?
 - `apps/api/main.py`
 - `apps/api/routers/admin_runtime.py`
 - `apps/api/routers/agent_runs.py`
@@ -198,8 +127,7 @@ AGENTS.md
 - `apps/api/services/video_agent_status_service.py`
 - `apps/api/workflows/video_script_workflow.py`
 
-前端：
-
+鍓嶇锛?
 - `apps/web/src/app/agent/page.tsx`
 - `apps/web/src/app/chat/page.tsx`
 - `apps/web/src/lib/api.ts`
@@ -215,8 +143,7 @@ AGENTS.md
 - `apps/web/src/components/DatasetPanel.tsx`
 - `apps/web/src/components/AdminConsolePanel.tsx`
 
-文档/配置：
-
+鏂囨。/閰嶇疆锛?
 - `.gitignore`
 - `.env.example`
 - `AGENTS.md`
@@ -230,45 +157,14 @@ AGENTS.md
 - `docs/NEXT_TASKS.md`
 - `docs/CHANGELOG_CONTEXT.md`
 
-## 数据库/API/前端状态
+## 鏁版嵁搴?API/鍓嶇鐘舵€?
+- `/health` 淇濇寔 `{"status":"ok","service":"meizhaiseek-api"}`銆?- `/api/admin/runtime/health` 褰撳墠搴旇繑鍥?`version = v1.6.4`銆?- `/api/admin/storage/health` 杩斿洖 APP SQLite 琛ㄧ粺璁″拰 legacy JSON 鐘舵€併€?- `GET /api/agent-runs/{run_id}/summary` 鐢ㄤ簬杞婚噺杞銆?- `GET /api/agent-runs/{run_id}/result` 鐢ㄤ簬鎸夐渶璇诲彇瀹屾暣 result銆?- `GET /api/conversations/{conversation_id}` 淇濇寔 wire shape锛屼絾澶у瓧娈佃繑鍥?preview/summary銆?- `/chat` 娴佸紡闂瓟涓嶅簲琚悗缁敼鍔ㄥ奖鍝嶃€?- `/agent` 椤甸潰杞缁熶竴鍦?`useAgentRunPolling.ts`锛屽瓙缁勪欢涓嶅簲鍐嶅垱寤鸿嚜宸辩殑 interval銆?- Dataset metadata 涓诲瓨鍌ㄦ槸 APP SQLite锛涙枃浠舵湰浣撲粛鍦ㄧ鐩樸€?- Debug Payload 璇︽儏涓嶅湪浼氳瘽鍒囨崲鏃堕粯璁ゅ姞杞姐€?
+## 宸茬煡 bug / 椋庨櫓
 
-- `/health` 保持 `{"status":"ok","service":"meizhaiseek-api"}`。
-- `/api/admin/runtime/health` 当前应返回 `version = v1.6.3`。
-- `/api/admin/storage/health` 返回 APP SQLite 表统计和 legacy JSON 状态。
-- `GET /api/agent-runs/{run_id}/summary` 用于轻量轮询。
-- `GET /api/agent-runs/{run_id}/result` 用于按需读取完整 result。
-- `GET /api/conversations/{conversation_id}` 保持 wire shape，但大字段返回 preview/summary。
-- `/chat` 流式问答不应被后续改动影响。
-- `/agent` 页面轮询统一在 `useAgentRunPolling.ts`，子组件不应再创建自己的 interval。
-- Dataset metadata 主存储是 APP SQLite；文件本体仍在磁盘。
-- Debug Payload 详情不在会话切换时默认加载。
-
-## 已知 bug / 风险
-
-- 用户仍要求优先回归 `/agent` 执行任务后左侧会话持久化、路由恢复和状态回写，说明真实使用中这条链路仍需重点验证。
-- 8001 local agent 是外部服务。未启动时 failed 是正确行为；不要为了验收伪造成 completed。
-- `NEXT_PUBLIC_API_BASE_URL` 在前端 build 时固化，构建前必须设为 `http://localhost:8000`。
-- runtime、SQLite、uploads、models、logs 都被 `.gitignore` 排除，GitHub 不包含本地运行数据。
-- 文档备份文件 `docs/API.md.bak-v1.5.7`、`docs/PRD.md.bak-v1.5.7` 可能保留历史乱码，仅用于追溯。
-
-## 不能破坏的功能
-
-- v1.2 登录鉴权、`auth_version`、用户隔离、admin/operator/viewer 权限。
-- v1.3 Connector、Payload Preview、Debug Payload、Replay。
-- v1.4 管理员账号管理、审计日志、权限、SafeDrawer/滚动修复。
-- v1.5 Dataset、字段映射、清洗、导出、安全下载。
-- v1.5.2 QA 首屏问答和 QA conversation。
-- v1.5.3 知识库上传、删除、重新索引、RAG sources。
-- v1.5.4 二级会话栏收缩/展开、会话归档删除。
-- v1.5.5 模型状态、Embedding 测试、RAG 检索测试、知识库诊断。
-- v1.5.6 QA 流式输出、停止生成、非流式 fallback。
-- v1.5.7 APP SQLite 与 RAG SQLite 分离。
-- v1.5.8 conversation 增量 upsert、Dataset SQLite、service_events。
-- v1.6 视频拆解连接预检、真实执行、结构化结果、artifact 下载。
-- v1.6.2 `/agent` 轻量 payload、单一轮询、延迟加载和分段渲染。
-
-## 下一窗口必须优先读取的文件
-
+- 鐢ㄦ埛浠嶈姹備紭鍏堝洖褰?`/agent` 鎵ц浠诲姟鍚庡乏渚т細璇濇寔涔呭寲銆佽矾鐢辨仮澶嶅拰鐘舵€佸洖鍐欙紝璇存槑鐪熷疄浣跨敤涓繖鏉￠摼璺粛闇€閲嶇偣楠岃瘉銆?- 8001 local agent 鏄閮ㄦ湇鍔°€傛湭鍚姩鏃?failed 鏄纭涓猴紱涓嶈涓轰簡楠屾敹浼€犳垚 completed銆?- `NEXT_PUBLIC_API_BASE_URL` 鍦ㄥ墠绔?build 鏃跺浐鍖栵紝鏋勫缓鍓嶅繀椤昏涓?`http://localhost:8000`銆?- runtime銆丼QLite銆乽ploads銆乵odels銆乴ogs 閮借 `.gitignore` 鎺掗櫎锛孏itHub 涓嶅寘鍚湰鍦拌繍琛屾暟鎹€?- 鏂囨。澶囦唤鏂囦欢 `docs/API.md.bak-v1.5.7`銆乣docs/PRD.md.bak-v1.5.7` 鍙兘淇濈暀鍘嗗彶涔辩爜锛屼粎鐢ㄤ簬杩芥函銆?
+## 涓嶈兘鐮村潖鐨勫姛鑳?
+- v1.2 鐧诲綍閴存潈銆乣auth_version`銆佺敤鎴烽殧绂汇€乤dmin/operator/viewer 鏉冮檺銆?- v1.3 Connector銆丳ayload Preview銆丏ebug Payload銆丷eplay銆?- v1.4 绠＄悊鍛樿处鍙风鐞嗐€佸璁℃棩蹇椼€佹潈闄愩€丼afeDrawer/婊氬姩淇銆?- v1.5 Dataset銆佸瓧娈垫槧灏勩€佹竻娲椼€佸鍑恒€佸畨鍏ㄤ笅杞姐€?- v1.5.2 QA 棣栧睆闂瓟鍜?QA conversation銆?- v1.5.3 鐭ヨ瘑搴撲笂浼犮€佸垹闄ゃ€侀噸鏂扮储寮曘€丷AG sources銆?- v1.5.4 浜岀骇浼氳瘽鏍忔敹缂?灞曞紑銆佷細璇濆綊妗ｅ垹闄ゃ€?- v1.5.5 妯″瀷鐘舵€併€丒mbedding 娴嬭瘯銆丷AG 妫€绱㈡祴璇曘€佺煡璇嗗簱璇婃柇銆?- v1.5.6 QA 娴佸紡杈撳嚭銆佸仠姝㈢敓鎴愩€侀潪娴佸紡 fallback銆?- v1.5.7 APP SQLite 涓?RAG SQLite 鍒嗙銆?- v1.5.8 conversation 澧為噺 upsert銆丏ataset SQLite銆乻ervice_events銆?- v1.6 瑙嗛鎷嗚В杩炴帴棰勬銆佺湡瀹炴墽琛屻€佺粨鏋勫寲缁撴灉銆乤rtifact 涓嬭浇銆?- v1.6.2 `/agent` 杞婚噺 payload銆佸崟涓€杞銆佸欢杩熷姞杞藉拰鍒嗘娓叉煋銆?
+## 涓嬩竴绐楀彛蹇呴』浼樺厛璇诲彇鐨勬枃浠?
 1. `AGENTS.md`
 2. `docs/CODEX_HANDOFF.md`
 3. `docs/NEXT_TASKS.md`
@@ -290,16 +186,11 @@ AGENTS.md
 19. `apps/web/src/components/VideoScriptAgentPanel.tsx`
 20. `apps/web/src/components/AgentRunStatus.tsx`
 
-## 新窗口启动提示词
+## 鏂扮獥鍙ｅ惎鍔ㄦ彁绀鸿瘝
 
 ```text
-请继续接手 E:\USE\codexhome\agents-cowork\meizhaiseek-platform。当前版本是 meizhaiseek v1.6.3，GitHub 仓库是 https://github.com/zhuge1hao/seek-platform.git，但请先读取磁盘代码和文档，不要只依赖历史对话或 Git 状态。
-
-第一步完整读取 AGENTS.md、docs/CODEX_HANDOFF.md、docs/NEXT_TASKS.md、docs/CHANGELOG_CONTEXT.md、docs/API.md、docs/PRD.md、docs/STORAGE_SQLITE.md、docs/AGENT_PERFORMANCE_NOTES.md，然后按 NEXT_TASKS 的 P0 做最小必要处理和验证。
-
-当前最优先任务是回归 /agent：1）在 /agent 智能体界面执行任务后，左侧聊天记录必须新增并持久保存；2）切换到其他路由再回来，任务/聊天不能消失；3）脚本拆解智能体必须在提交任务后真实执行，而不是只创建 UI 状态；4）任务状态、结果、错误信息要能回显到对应聊天记录。
-
-如果视频脚本任务报 local agent 8001 无法连接，不要伪造成成功。先确认 3000/8000 是否启动，再确认是否存在真实 local agent 服务并启动 POST http://localhost:8001/api/agent/run。若没有真实 local agent，只能报告外部服务缺失，平台按设计 failed。
-
-不要破坏 v1.2 鉴权隔离、v1.3 Connector/Debug、v1.4 管理员/审计/权限/滚动、v1.5 Dataset、v1.5.2-v1.5.6 QA/RAG/流式问答、v1.5.7 APP SQLite 迁移、v1.5.8 增量 upsert/Dataset SQLite/service_events、v1.6 视频拆解生产化、v1.6.2 /agent 性能优化。修改后运行 python -m compileall apps/api 和 apps/web 下 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm.cmd run build。
-```
+璇风户缁帴鎵?E:\USE\codexhome\agents-cowork\meizhaiseek-platform銆傚綋鍓嶇増鏈槸 meizhaiseek v1.6.4锛孏itHub 浠撳簱鏄?https://github.com/zhuge1hao/seek-platform.git锛屼絾璇峰厛璇诲彇纾佺洏浠ｇ爜鍜屾枃妗ｏ紝涓嶈鍙緷璧栧巻鍙插璇濇垨 Git 鐘舵€併€?
+绗竴姝ュ畬鏁磋鍙?AGENTS.md銆乨ocs/CODEX_HANDOFF.md銆乨ocs/NEXT_TASKS.md銆乨ocs/CHANGELOG_CONTEXT.md銆乨ocs/API.md銆乨ocs/PRD.md銆乨ocs/STORAGE_SQLITE.md銆乨ocs/AGENT_PERFORMANCE_NOTES.md锛岀劧鍚庢寜 NEXT_TASKS 鐨?P0 鍋氭渶灏忓繀瑕佸鐞嗗拰楠岃瘉銆?
+褰撳墠鏈€浼樺厛浠诲姟鏄洖褰?/agent锛?锛夊湪 /agent 鏅鸿兘浣撶晫闈㈡墽琛屼换鍔″悗锛屽乏渚ц亰澶╄褰曞繀椤绘柊澧炲苟鎸佷箙淇濆瓨锛?锛夊垏鎹㈠埌鍏朵粬璺敱鍐嶅洖鏉ワ紝浠诲姟/鑱婂ぉ涓嶈兘娑堝け锛?锛夎剼鏈媶瑙ｆ櫤鑳戒綋蹇呴』鍦ㄦ彁浜や换鍔″悗鐪熷疄鎵ц锛岃€屼笉鏄彧鍒涘缓 UI 鐘舵€侊紱4锛変换鍔＄姸鎬併€佺粨鏋溿€侀敊璇俊鎭鑳藉洖鏄惧埌瀵瑰簲鑱婂ぉ璁板綍銆?
+濡傛灉瑙嗛鑴氭湰浠诲姟鎶?local agent 8001 鏃犳硶杩炴帴锛屼笉瑕佷吉閫犳垚鎴愬姛銆傚厛纭 3000/8000 鏄惁鍚姩锛屽啀纭鏄惁瀛樺湪鐪熷疄 local agent 鏈嶅姟骞跺惎鍔?POST http://localhost:8001/api/agent/run銆傝嫢娌℃湁鐪熷疄 local agent锛屽彧鑳芥姤鍛婂閮ㄦ湇鍔＄己澶憋紝骞冲彴鎸夎璁?failed銆?
+涓嶈鐮村潖 v1.2 閴存潈闅旂銆乿1.3 Connector/Debug銆乿1.4 绠＄悊鍛?瀹¤/鏉冮檺/婊氬姩銆乿1.5 Dataset銆乿1.5.2-v1.5.6 QA/RAG/娴佸紡闂瓟銆乿1.5.7 APP SQLite 杩佺Щ銆乿1.5.8 澧為噺 upsert/Dataset SQLite/service_events銆乿1.6 瑙嗛鎷嗚В鐢熶骇鍖栥€乿1.6.2 /agent 鎬ц兘浼樺寲銆備慨鏀瑰悗杩愯 python -m compileall apps/api 鍜?apps/web 涓?NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm.cmd run build銆?```

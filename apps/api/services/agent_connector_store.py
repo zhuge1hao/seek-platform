@@ -41,8 +41,9 @@ def _connector(connector_id: str, name: str, agent_type: str, enabled: bool, mod
         "name": name,
         "agent_type": agent_type,
         "mode": "http" if is_video else mode,
-        "base_url": "http://localhost:8001",
-        "endpoint": "/api/agent/run",
+        "base_url": "http://127.0.0.1:8001" if is_video else "http://localhost:8001",
+        "health_path": "/health",
+        "endpoint": "/run" if is_video else "/api/agent/run",
         "cli_command": "",
         "session_id": DEFAULT_VIDEO_SCRIPT_SESSION_ID if is_video else "",
         "timeout_seconds": 1800,
@@ -52,6 +53,28 @@ def _connector(connector_id: str, name: str, agent_type: str, enabled: bool, mod
         "created_at": now,
         "updated_at": now,
     }
+
+
+def _repair_video_connector_defaults(connector: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    if connector.get("connector_id") != "video_script_agent":
+        return connector, False
+    repaired = dict(connector)
+    changed = False
+    if repaired.get("base_url") == "http://localhost:8001":
+        repaired["base_url"] = "http://127.0.0.1:8001"
+        changed = True
+    if repaired.get("endpoint") == "/api/agent/run":
+        repaired["endpoint"] = "/run"
+        changed = True
+    if not repaired.get("health_path"):
+        repaired["health_path"] = "/health"
+        changed = True
+    if repaired.get("payload_style") != "protocol":
+        repaired["payload_style"] = "protocol"
+        changed = True
+    if changed:
+        repaired["updated_at"] = _now()
+    return repaired, changed
 
 
 def default_connectors() -> dict[str, dict[str, Any]]:
@@ -93,6 +116,7 @@ def _validate(payload: dict[str, Any], connector_id: str | None = None) -> dict[
         "agent_type": str(value.get("agent_type") or "").strip(),
         "mode": mode,
         "base_url": str(value.get("base_url") or "").strip(),
+        "health_path": str(value.get("health_path") or "/health").strip(),
         "endpoint": str(value.get("endpoint") or "/api/agent/run").strip(),
         "cli_command": str(value.get("cli_command") or "").strip(),
         "session_id": str(value.get("session_id") or "").strip(),
@@ -134,7 +158,7 @@ def _load() -> dict[str, dict[str, Any]]:
         loaded: dict[str, dict[str, Any]] = {}
         for row in rows:
             metadata = app_sqlite.json_load(row["metadata_json"], {}) or {}
-            loaded[row["connector_id"]] = _validate({
+            connector = _validate({
                 **metadata,
                 "connector_id": row["connector_id"],
                 "name": row["name"],
@@ -146,9 +170,15 @@ def _load() -> dict[str, dict[str, Any]]:
                 "created_at": row["created_at"],
                 "updated_at": row["updated_at"],
             }, row["connector_id"])
+            connector, _ = _repair_video_connector_defaults(connector)
+            loaded[row["connector_id"]] = connector
         for connector_id, item in default_connectors().items():
             loaded.setdefault(connector_id, item)
-        if len(loaded) > len(rows):
+        if len(loaded) > len(rows) or any(
+            row["connector_id"] == "video_script_agent"
+            and (row["base_url"] == "http://localhost:8001" or (app_sqlite.json_load(row["metadata_json"], {}) or {}).get("endpoint") == "/api/agent/run")
+            for row in rows
+        ):
             _write(loaded)
         return loaded
     path = _store_path()
@@ -206,7 +236,7 @@ def update_connector(connector_id: str, updates: dict[str, Any]) -> dict[str, An
     existing = connectors.get(connector_id)
     if existing is None:
         return None
-    allowed = {"name", "agent_type", "mode", "base_url", "endpoint", "cli_command", "session_id", "timeout_seconds", "payload_style", "enabled", "description"}
+    allowed = {"name", "agent_type", "mode", "base_url", "health_path", "endpoint", "cli_command", "session_id", "timeout_seconds", "payload_style", "enabled", "description"}
     merged = {**existing, **{key: value for key, value in updates.items() if key in allowed}}
     merged["created_at"] = existing.get("created_at")
     merged["updated_at"] = _now()

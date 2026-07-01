@@ -8,6 +8,7 @@ from services.agent_registry import get_agent_by_type
 from services.skill_template_service import get_templates_by_ids
 from services.user_context import artifacts_dir
 from services.dataset_store import DatasetError, build_dataset_context
+from services.video_agent_payload_builder import build_video_agent_run_payload
 
 
 class PayloadPreviewError(RuntimeError):
@@ -75,7 +76,6 @@ def build_payload(data: dict[str, Any], user: dict[str, Any], explicit_connector
         "options": options,
     }
     if agent_type == "video_script_breakdown":
-        common["baseline_image_dir"] = options.get("baseline_image_dir") or ""
-        common["previous_excel_path"] = options.get("previous_excel_path") or ""
-        common["options"] = {key: value for key, value in options.items() if key not in {"baseline_image_dir", "previous_excel_path"}}
+        preview_output_dir = str(options.get("output_dir") or output_dir)
+        common = build_video_agent_run_payload({**data, "user_id": user["user_id"]}, options, preview_output_dir)
     return {"connector_id": connector_id, "connector": connector, "payload": common}

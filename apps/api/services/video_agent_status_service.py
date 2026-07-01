@@ -1,14 +1,22 @@
 from __future__ import annotations
 
-import socket
 from time import perf_counter
 from typing import Any
-from urllib.parse import urlparse
+
+import requests
 
 from services import agent_connector_store
 
 
-DEFAULT_START_HINT = "请在本地启动视频拆解 Agent 服务，确认监听 http://127.0.0.1:8001"
+DEFAULT_START_HINT = "Start local video agent: cd E:\\USE\\codexhome\\fenge && .\\start_agent_8001.bat"
+
+
+def _health_url(connector: dict[str, Any]) -> str:
+    base_url = str(connector.get("base_url") or "http://127.0.0.1:8001").rstrip("/")
+    path = str(connector.get("health_path") or "/health")
+    if not path.startswith("/"):
+        path = f"/{path}"
+    return f"{base_url}{path}"
 
 
 def check_status(timeout_seconds: float = 3.0) -> dict[str, Any]:
@@ -17,18 +25,18 @@ def check_status(timeout_seconds: float = 3.0) -> dict[str, Any]:
         return {
             "status": "disconnected",
             "connector_id": "video_script_agent",
-            "name": "视频拆解智能体",
+            "name": "video_script_agent",
             "base_url": "http://127.0.0.1:8001",
             "reachable": False,
             "latency_ms": None,
-            "error": "视频拆解 connector 不存在",
-            "message": "本地视频拆解 Agent 未配置",
+            "error": "video_script_agent connector not found",
+            "message": "Local video agent connector is not configured.",
             "start_hint": DEFAULT_START_HINT,
         }
 
     base_url = str(connector.get("base_url") or "http://127.0.0.1:8001").rstrip("/")
     mode = str(connector.get("mode") or "http").lower()
-    name = connector.get("name") or "视频拆解智能体"
+    name = connector.get("name") or "video_script_agent"
     if not connector.get("enabled", True):
         return {
             "status": "disabled",
@@ -37,9 +45,9 @@ def check_status(timeout_seconds: float = 3.0) -> dict[str, Any]:
             "base_url": base_url,
             "reachable": False,
             "latency_ms": None,
-            "error": "视频拆解 connector 已禁用",
-            "message": "本地视频拆解 Agent 连接器已禁用",
-            "start_hint": "请在本地 Agent / Connector 管理中启用 video_script_agent",
+            "error": "video_script_agent connector is disabled",
+            "message": "Local video agent connector is disabled.",
+            "start_hint": "Enable video_script_agent in Connector management.",
         }
     if mode == "mock":
         return {
@@ -49,7 +57,8 @@ def check_status(timeout_seconds: float = 3.0) -> dict[str, Any]:
             "base_url": base_url,
             "reachable": True,
             "latency_ms": 0,
-            "message": "当前为 mock connector，不会调用真实本地视频拆解 Agent",
+            "health_status": "mock",
+            "message": "Current connector is mock and will not call the real local video agent.",
             "start_hint": "",
         }
     if mode != "http":
@@ -60,28 +69,36 @@ def check_status(timeout_seconds: float = 3.0) -> dict[str, Any]:
             "base_url": base_url,
             "reachable": True,
             "latency_ms": None,
-            "message": "当前 connector 使用 CLI 模式，提交任务时会调用本地命令",
+            "health_status": "cli",
+            "message": "Current connector uses CLI mode.",
             "start_hint": "",
         }
 
-    parsed = urlparse(base_url if "://" in base_url else f"http://{base_url}")
-    host = parsed.hostname or "127.0.0.1"
-    port = parsed.port or (443 if parsed.scheme == "https" else 80)
     started = perf_counter()
     try:
-        with socket.create_connection((host, port), timeout=timeout_seconds):
-            latency_ms = int((perf_counter() - started) * 1000)
-            return {
-                "status": "connected",
-                "connector_id": connector.get("connector_id"),
-                "name": name,
-                "base_url": base_url,
-                "reachable": True,
-                "latency_ms": latency_ms,
-                "message": "本地视频拆解 Agent 已连接",
-                "start_hint": "",
-            }
-    except OSError as exc:
+        response = requests.get(_health_url(connector), timeout=timeout_seconds)
+        latency_ms = int((perf_counter() - started) * 1000)
+        response.raise_for_status()
+        payload = response.json()
+        health_status = str(payload.get("status") or "").lower()
+        connected = health_status == "ok"
+        return {
+            "status": "connected" if connected else "disconnected",
+            "connector_id": connector.get("connector_id"),
+            "name": name,
+            "base_url": base_url,
+            "reachable": connected,
+            "latency_ms": latency_ms,
+            "health_status": payload.get("status"),
+            "service": payload.get("service"),
+            "version": payload.get("version"),
+            "model_version": payload.get("model_version") or payload.get("model"),
+            "project_root": payload.get("project_root"),
+            "message": "Local video agent connected." if connected else "Local video agent health is not ok.",
+            "start_hint": "" if connected else DEFAULT_START_HINT,
+            "error": None if connected else str(payload),
+        }
+    except Exception as exc:
         return {
             "status": "disconnected",
             "connector_id": connector.get("connector_id"),
@@ -89,7 +106,7 @@ def check_status(timeout_seconds: float = 3.0) -> dict[str, Any]:
             "base_url": base_url,
             "reachable": False,
             "latency_ms": int((perf_counter() - started) * 1000),
-            "error": f"无法连接 {base_url}：{exc}",
-            "message": "本地视频拆解 Agent 未启动，请先启动 8001 服务后再提交任务",
+            "error": f"Cannot reach {_health_url(connector)}: {exc}",
+            "message": "Local video agent is disconnected.",
             "start_hint": DEFAULT_START_HINT,
         }

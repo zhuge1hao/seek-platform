@@ -22,7 +22,7 @@ def _timeout_seconds(connector: dict[str, Any] | None = None) -> int:
 
 def _agent_url(connector: dict[str, Any] | None = None) -> str:
     base_url = str((connector or {}).get("base_url") or os.getenv("LOCAL_AGENT_BASE_URL", "http://localhost:8001")).rstrip("/")
-    endpoint = str((connector or {}).get("endpoint") or os.getenv("LOCAL_AGENT_RUN_ENDPOINT", "/api/agent/run"))
+    endpoint = str((connector or {}).get("endpoint") or os.getenv("LOCAL_AGENT_RUN_ENDPOINT", "/run"))
     if not endpoint.startswith("/"):
         endpoint = f"/{endpoint}"
     return f"{base_url}{endpoint}"
@@ -81,9 +81,14 @@ def _call_local_agent(payload: dict[str, Any], run_id: str | None = None, connec
     mode = str((connector or {}).get("mode") or os.getenv("LOCAL_AGENT_MODE", "http")).strip().lower()
     timeout = _timeout_seconds(connector)
     session_id = (connector or {}).get("session_id") or payload.get("session_id")
-    payload = {**payload, "session_id": session_id}
+    platform_agent_type = payload.get("_platform_agent_type") or payload.get("agent_type")
+    debug_user_id = payload.get("_debug_user_id")
+    if platform_agent_type == "video_script_breakdown" and not payload.get("agent_type"):
+        payload = {key: value for key, value in payload.items() if not str(key).startswith("_")}
+    else:
+        payload = {**payload, "session_id": session_id}
     output_dir = payload.get("output_dir")
-    metadata = {"agent_type": payload.get("agent_type"), "connector_id": (connector or {}).get("connector_id"), "mode": mode}
+    metadata = {"agent_type": platform_agent_type, "connector_id": (connector or {}).get("connector_id"), "mode": mode, "user_id": debug_user_id}
     debug_payload_service.save_request(run_id, payload, metadata=metadata)
 
     if mode == "http":
@@ -156,7 +161,7 @@ def _call_local_agent(payload: dict[str, Any], run_id: str | None = None, connec
         return result
 
     if mode == "mock":
-        if payload.get("agent_type") == "video_script_breakdown":
+        if platform_agent_type == "video_script_breakdown":
             raw = mock_video_script(payload)
         else:
             raw = mock_generic(payload)
@@ -167,7 +172,7 @@ def _call_local_agent(payload: dict[str, Any], run_id: str | None = None, connec
 
 
 def run_video_script_breakdown_protocol(payload: dict[str, Any], run_id: str | None = None, connector: dict[str, Any] | None = None) -> dict[str, Any]:
-    payload = {**payload, "agent_type": "video_script_breakdown"}
+    payload = {**payload, "_platform_agent_type": "video_script_breakdown"}
     return _call_local_agent(payload, run_id=run_id, connector=connector)
 
 

@@ -88,7 +88,7 @@ def _upsert(run_id: str, user_id: str | None, request: Any = None, response: Any
 def save_request(run_id: str | None, payload: dict[str, Any], metadata: dict[str, Any] | None = None) -> None:
     if not run_id:
         return
-    user_id = str(payload.get("user_id") or "").strip() or None
+    user_id = str(payload.get("user_id") or (metadata or {}).get("user_id") or "").strip() or None
     if user_id:
         _RUN_OWNERS[run_id] = user_id
     _upsert(run_id, user_id, request=payload, metadata={**(metadata or {}), "user_id": user_id}, status="running")

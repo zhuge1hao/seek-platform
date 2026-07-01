@@ -1,22 +1,14 @@
-# Next Tasks
+﻿# Next Tasks
 
-当前版本：`meizhaiseek v1.6.3`
+褰撳墠鐗堟湰锛歚meizhaiseek v1.6.4`
 
-本文件只描述下一窗口优先级。不要把前端 UI 状态当作后端成功；所有 P0 都必须落到真实 API、SQLite 持久化和会话回写。
+鏈枃浠跺彧鎻忚堪涓嬩竴绐楀彛浼樺厛绾с€備笉瑕佹妸鍓嶇 UI 鐘舵€佸綋浣滃悗绔垚鍔燂紱鎵€鏈?P0 閮藉繀椤昏惤鍒扮湡瀹?API銆丼QLite 鎸佷箙鍖栧拰浼氳瘽鍥炲啓銆?
+## P0锛氬洖褰掑苟淇 `/agent` 浠诲姟鎵ц銆佷細璇濇寔涔呭寲鍜岀姸鎬佸洖鍐?
+### P0.1 鎵ц浠诲姟鍚庡乏渚ц亰澶╄褰曞繀椤绘柊澧炲苟鎸佷箙淇濆瓨
 
-## P0：回归并修复 `/agent` 任务执行、会话持久化和状态回写
-
-### P0.1 执行任务后左侧聊天记录必须新增并持久保存
-
-目标：
-
-- 用户在 `/agent` 智能体界面提交任务后，后端必须创建或更新 agent conversation。
-- 左侧会话栏必须出现真实记录。
-- 会话必须写入 APP SQLite，不允许只存在前端 state 或 localStorage。
-- 用户隔离必须按 `user_id` 生效。
-
-涉及文件：
-
+鐩爣锛?
+- 鐢ㄦ埛鍦?`/agent` 鏅鸿兘浣撶晫闈㈡彁浜や换鍔″悗锛屽悗绔繀椤诲垱寤烘垨鏇存柊 agent conversation銆?- 宸︿晶浼氳瘽鏍忓繀椤诲嚭鐜扮湡瀹炶褰曘€?- 浼氳瘽蹇呴』鍐欏叆 APP SQLite锛屼笉鍏佽鍙瓨鍦ㄥ墠绔?state 鎴?localStorage銆?- 鐢ㄦ埛闅旂蹇呴』鎸?`user_id` 鐢熸晥銆?
+娑夊強鏂囦欢锛?
 - `apps/api/routers/agent_runs.py`
 - `apps/api/routers/conversations.py`
 - `apps/api/services/task_store.py`
@@ -26,24 +18,13 @@
 - `apps/web/src/components/ConversationPanel.tsx`
 - `apps/web/src/lib/api.ts`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- `POST /api/agent-runs` 杩斿洖 `run_id` 鍜?`conversation_id`銆?- `GET /api/conversations` 鑳界湅鍒版柊浼氳瘽銆?- SQLite `agent_conversations` / `agent_messages` / `agent_runs` 鏈夊搴旇褰曘€?- 鍒锋柊椤甸潰鍚庤褰曚粛瀛樺湪銆?- 鐢ㄦ埛 A 涓嶈兘鐪嬪埌鐢ㄦ埛 B 鐨勪細璇濄€?
+### P0.2 鍒囨崲璺敱鍐嶅洖鏉ヤ换鍔?鑱婂ぉ涓嶈兘娑堝け
 
-- `POST /api/agent-runs` 返回 `run_id` 和 `conversation_id`。
-- `GET /api/conversations` 能看到新会话。
-- SQLite `agent_conversations` / `agent_messages` / `agent_runs` 有对应记录。
-- 刷新页面后记录仍存在。
-- 用户 A 不能看到用户 B 的会话。
-
-### P0.2 切换路由再回来任务/聊天不能消失
-
-目标：
-
-- 从 `/agent` 切到 `/chat`、`/board` 或其他路由，再回 `/agent`，恢复 active conversation、messages、latest run、status、result preview。
-- 刷新页面也能恢复。
-- localStorage 只保存 active conversation id，不保存完整 messages。
-
-涉及文件：
-
+鐩爣锛?
+- 浠?`/agent` 鍒囧埌 `/chat`銆乣/board` 鎴栧叾浠栬矾鐢憋紝鍐嶅洖 `/agent`锛屾仮澶?active conversation銆乵essages銆乴atest run銆乻tatus銆乺esult preview銆?- 鍒锋柊椤甸潰涔熻兘鎭㈠銆?- localStorage 鍙繚瀛?active conversation id锛屼笉淇濆瓨瀹屾暣 messages銆?
+娑夊強鏂囦欢锛?
 - `apps/web/src/app/agent/page.tsx`
 - `apps/web/src/hooks/useAgentRunPolling.ts`
 - `apps/web/src/components/AgentRunStatus.tsx`
@@ -52,25 +33,13 @@
 - `apps/web/src/lib/api.ts`
 - `apps/api/routers/conversations.py`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- 鎭㈠浼樺厛绾э細URL `conversation_id` -> `localStorage.meizhaiseek_active_conversation_id` -> 绌虹姸鎬併€?- running run 鎭㈠鍚庣户缁疆璇€?- completed/failed/cancelled 涓嶅啀杞銆?- 涓嶅瓨鍦ㄦ垨宸插綊妗?conversation 涓嶇櫧灞忥紝鏄剧ず涓枃绌虹姸鎬佸苟娓呯悊鏃犳晥 active id銆?- 蹇€熷垏鎹細璇濇渶缁堟樉绀烘渶鍚庝竴娆＄偣鍑荤殑浼氳瘽銆?
+### P0.3 鑴氭湰鎷嗚В鏅鸿兘浣撴彁浜ゅ悗蹇呴』鐪熷疄鎵ц鍚庣浠诲姟
 
-- 恢复优先级：URL `conversation_id` -> `localStorage.meizhaiseek_active_conversation_id` -> 空状态。
-- running run 恢复后继续轮询。
-- completed/failed/cancelled 不再轮询。
-- 不存在或已归档 conversation 不白屏，显示中文空状态并清理无效 active id。
-- 快速切换会话最终显示最后一次点击的会话。
-
-### P0.3 脚本拆解智能体提交后必须真实执行后端任务
-
-目标：
-
-- 视频脚本拆解提交后只调用平台后端 `POST /api/agent-runs`。
-- 后端根据 `agent_type=video_script_breakdown` 进入 `video_script_workflow`。
-- 8001 未启动时任务真实 failed，不伪造成 completed。
-- 真实 local agent 存在时，保存 request/response Debug Payload 和 artifacts。
-
-涉及文件：
-
+鐩爣锛?
+- 瑙嗛鑴氭湰鎷嗚В鎻愪氦鍚庡彧璋冪敤骞冲彴鍚庣 `POST /api/agent-runs`銆?- 鍚庣鏍规嵁 `agent_type=video_script_breakdown` 杩涘叆 `video_script_workflow`銆?- 8001 鏈惎鍔ㄦ椂浠诲姟鐪熷疄 failed锛屼笉浼€犳垚 completed銆?- 鐪熷疄 local agent 瀛樺湪鏃讹紝淇濆瓨 request/response Debug Payload 鍜?artifacts銆?
+娑夊強鏂囦欢锛?
 - `apps/web/src/components/VideoScriptAgentPanel.tsx`
 - `apps/api/routers/agent_runs.py`
 - `apps/api/services/orchestrator.py`
@@ -80,25 +49,13 @@
 - `apps/api/services/debug_payload_service.py`
 - `apps/api/services/artifact_service.py`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- payload 淇濈暀 `agent_type=video_script_breakdown`銆乵ode銆亀orkflow_options銆乿ideo_path/video_url銆?- 榛樿 session id 缁х画娌跨敤 `019dd824-f4bb-7273-8ac3-6e19b195ff82`銆?- 8001 涓嶅彲杈炬椂 run.status 涓?`failed`锛岄敊璇唴瀹瑰寘鍚棤娉曡繛鎺ユ湰鍦拌棰?Agent銆?- failed run 鍐欏叆 APP SQLite銆?- 濡傛灉 8001 鍙揪锛宺un 鑳借繘鍏?running/completed锛宺esult_json 鍜?artifacts_json 鎸佷箙鍖栥€?
+### P0.4 浠诲姟鐘舵€併€佺粨鏋溿€侀敊璇俊鎭洖鏄惧埌瀵瑰簲鑱婂ぉ璁板綍
 
-- payload 保留 `agent_type=video_script_breakdown`、mode、workflow_options、video_path/video_url。
-- 默认 session id 继续沿用 `019dd824-f4bb-7273-8ac3-6e19b195ff82`。
-- 8001 不可达时 run.status 为 `failed`，错误内容包含无法连接本地视频 Agent。
-- failed run 写入 APP SQLite。
-- 如果 8001 可达，run 能进入 running/completed，result_json 和 artifacts_json 持久化。
-
-### P0.4 任务状态、结果、错误信息回显到对应聊天记录
-
-目标：
-
-- `running/completed/failed/cancelled` 通过 `service_events` 同步到对应 conversation 的 assistant message。
-- completed 显示 summary、files、download URL。
-- failed 显示清晰中文错误。
-- retry 追加新 user/assistant messages 和新 run ID，不覆盖旧 run。
-
-涉及文件：
-
+鐩爣锛?
+- `running/completed/failed/cancelled` 閫氳繃 `service_events` 鍚屾鍒板搴?conversation 鐨?assistant message銆?- completed 鏄剧ず summary銆乫iles銆乨ownload URL銆?- failed 鏄剧ず娓呮櫚涓枃閿欒銆?- retry 杩藉姞鏂?user/assistant messages 鍜屾柊 run ID锛屼笉瑕嗙洊鏃?run銆?
+娑夊強鏂囦欢锛?
 - `apps/api/services/task_store.py`
 - `apps/api/services/conversation_store.py`
 - `apps/api/services/service_events.py`
@@ -107,72 +64,43 @@
 - `apps/web/src/components/AgentRunStatus.tsx`
 - `apps/web/src/components/ConversationMessages.tsx`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- running 鐘舵€佽兘鍦ㄨ亰澶╄褰曚腑鐪嬪埌浠诲姟杩涜涓€?- completed 鍚庡搴?assistant message 鏄剧ず缁撴灉鎽樿銆?- failed 鍚庡搴?assistant message 鏄剧ず閿欒鎽樿銆?- cancelled 鍚庢樉绀轰换鍔″凡鍙栨秷銆?- 澶氫細璇濄€佸 run 骞跺瓨鏃剁姸鎬佷笉涓茬嚎銆?
+## P1锛歷1.6.2 鎬ц兘閾捐矾鍥炲綊
 
-- running 状态能在聊天记录中看到任务进行中。
-- completed 后对应 assistant message 显示结果摘要。
-- failed 后对应 assistant message 显示错误摘要。
-- cancelled 后显示任务已取消。
-- 多会话、多 run 并存时状态不串线。
+### P1.1 纭 `/agent` 浠嶅彧鏈夊崟涓€ run polling
 
-## P1：v1.6.2 性能链路回归
-
-### P1.1 确认 `/agent` 仍只有单一 run polling
-
-目标：
-
-- 页面同一时间只有 `useAgentRunPolling.ts` 负责 active run 轮询。
-- 子组件不再创建 `setInterval`。
-
-涉及文件：
-
+鐩爣锛?
+- 椤甸潰鍚屼竴鏃堕棿鍙湁 `useAgentRunPolling.ts` 璐熻矗 active run 杞銆?- 瀛愮粍浠朵笉鍐嶅垱寤?`setInterval`銆?
+娑夊強鏂囦欢锛?
 - `apps/web/src/hooks/useAgentRunPolling.ts`
 - `apps/web/src/app/agent/page.tsx`
 - `apps/web/src/components/GenericAgentPanel.tsx`
 - `apps/web/src/components/VideoScriptAgentPanel.tsx`
 - `apps/web/src/components/AgentRunStatus.tsx`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- `rg "setInterval|polling|pollRun" apps/web/src` 娌℃湁閲嶅杞瀹炵幇銆?- running 杞璇锋眰璧?`/api/agent-runs/{run_id}/summary`銆?- terminal 鐘舵€佸仠姝㈣疆璇€?- 杩炵画澶辫触 3 娆″仠姝㈣疆璇㈠苟鏄剧ず閿欒銆?
+### P1.2 纭澶?payload 寤惰繜鍔犺浇
 
-- `rg "setInterval|polling|pollRun" apps/web/src` 没有重复轮询实现。
-- running 轮询请求走 `/api/agent-runs/{run_id}/summary`。
-- terminal 状态停止轮询。
-- 连续失败 3 次停止轮询并显示错误。
-
-### P1.2 确认大 payload 延迟加载
-
-目标：
-
-- conversation detail 不默认返回完整 result/debug payload。
-- VideoBreakdownResultPanel 默认只渲染概览和摘要。
-- 完整 result 只在用户展开相关 tab 时按需加载。
-
-涉及文件：
-
+鐩爣锛?
+- conversation detail 涓嶉粯璁よ繑鍥炲畬鏁?result/debug payload銆?- VideoBreakdownResultPanel 榛樿鍙覆鏌撴瑙堝拰鎽樿銆?- 瀹屾暣 result 鍙湪鐢ㄦ埛灞曞紑鐩稿叧 tab 鏃舵寜闇€鍔犺浇銆?
+娑夊強鏂囦欢锛?
 - `apps/api/routers/conversations.py`
 - `apps/api/routers/agent_runs.py`
 - `apps/api/services/task_store.py`
 - `apps/web/src/components/VideoBreakdownResultPanel.tsx`
 - `apps/web/src/lib/api.ts`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- `GET /api/conversations/{conversation_id}` 杩斿洖 run/message preview锛屼笉杩斿洖瀹屾暣 raw_response/debug payload銆?- `GET /api/agent-runs/{run_id}/summary` 杩斿洖杞婚噺鎽樿銆?- `GET /api/agent-runs/{run_id}/result` 杩斿洖瀹屾暣 result銆?- timeline 棣栧睆涓嶈秴杩?20 鏉★紝subtitles 涓嶈秴杩?30 鏉★紝proof_frames 涓嶈秴杩?20 鏉★紝files 涓嶈秴杩?30 鏉°€?
+## P2锛氭枃妗ｃ€丟itHub 鍜屾渶灏?smoke
 
-- `GET /api/conversations/{conversation_id}` 返回 run/message preview，不返回完整 raw_response/debug payload。
-- `GET /api/agent-runs/{run_id}/summary` 返回轻量摘要。
-- `GET /api/agent-runs/{run_id}/result` 返回完整 result。
-- timeline 首屏不超过 20 条，subtitles 不超过 30 条，proof_frames 不超过 20 条，files 不超过 30 条。
+### P2.1 淇濇寔鏂囨。鍚屾
 
-## P2：文档、GitHub 和最小 smoke
-
-### P2.1 保持文档同步
-
-目标：
-
-- 文档和真实版本 v1.6.3 保持一致。
-- 不再出现乱码交接文档。
-
-涉及文件：
-
+鐩爣锛?
+- 鏂囨。鍜岀湡瀹炵増鏈?v1.6.4 淇濇寔涓€鑷淬€?- 涓嶅啀鍑虹幇涔辩爜浜ゆ帴鏂囨。銆?
+娑夊強鏂囦欢锛?
 - `AGENTS.md`
 - `docs/CODEX_HANDOFF.md`
 - `docs/NEXT_TASKS.md`
@@ -181,47 +109,28 @@
 - `docs/PRD.md`
 - `docs/TODO.md`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- `docs/CODEX_HANDOFF.md` 鑳借鏂扮獥鍙ｇ洿鎺ユ帴鎵嬨€?- `docs/NEXT_TASKS.md` P0/P1/P2 娓呮櫚銆?- `docs/CHANGELOG_CONTEXT.md` 璁板綍 v1.5.7 鍒?v1.6.4銆?- 绂佹璇嶆壂鎻忔棤鍛戒腑锛氭棫鍝佺墝璇嶃€佹棫涓汉绉板懠銆侀搴﹀睍绀烘枃妗堛€佽瘯鐢?婕旂ず绫绘枃妗堥兘涓嶈兘鍑虹幇銆?
+### P2.2 鏈€灏忚嚜鍔ㄥ寲 smoke
 
-- `docs/CODEX_HANDOFF.md` 能让新窗口直接接手。
-- `docs/NEXT_TASKS.md` P0/P1/P2 清晰。
-- `docs/CHANGELOG_CONTEXT.md` 记录 v1.5.7 到 v1.6.3。
-- 禁止词扫描无命中：旧品牌词、旧个人称呼、额度展示文案、试用/演示类文案都不能出现。
-
-### P2.2 最小自动化 smoke
-
-目标：
-
-- 不引入大测试框架，保留最小可重复检查。
-
-建议覆盖：
-
+鐩爣锛?
+- 涓嶅紩鍏ュぇ娴嬭瘯妗嗘灦锛屼繚鐣欐渶灏忓彲閲嶅妫€鏌ャ€?
+寤鸿瑕嗙洊锛?
 - `/health`
-- 登录 admin
+- 鐧诲綍 admin
 - `/api/admin/runtime/health`
 - `/api/admin/storage/health`
 - `/api/conversations`
 - `/api/agent-runs/{run_id}/summary`
 - `/api/qa/model-status`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- `python -m compileall apps/api` 閫氳繃銆?- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm.cmd run build` 閫氳繃銆?- smoke 缁撴灉璁板綍鍒颁氦鎺ヨ鏄庢垨 TODO銆?
+### P2.3 GitHub 鍚屾
 
-- `python -m compileall apps/api` 通过。
-- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm.cmd run build` 通过。
-- smoke 结果记录到交接说明或 TODO。
-
-### P2.3 GitHub 同步
-
-目标：
-
-- 本地改动完成并验证后同步到 GitHub。
-
-涉及文件：
-
-- 全项目 Git 状态。
-
-验收标准：
-
-- `git status -sb` 清楚。
-- 不提交 `.env`、runtime、SQLite、uploads、models、logs、node_modules、`.next`。
-- 推送到 `https://github.com/zhuge1hao/seek-platform.git`。
+鐩爣锛?
+- 鏈湴鏀瑰姩瀹屾垚骞堕獙璇佸悗鍚屾鍒?GitHub銆?
+娑夊強鏂囦欢锛?
+- 鍏ㄩ」鐩?Git 鐘舵€併€?
+楠屾敹鏍囧噯锛?
+- `git status -sb` 娓呮銆?- 涓嶆彁浜?`.env`銆乺untime銆丼QLite銆乽ploads銆乵odels銆乴ogs銆乶ode_modules銆乣.next`銆?- 鎺ㄩ€佸埌 `https://github.com/zhuge1hao/seek-platform.git`銆?

@@ -19,7 +19,16 @@ ARTIFACT_PATH_PATTERNS = [
     r"\./outputs/[^\s\"'<>|]+?\.(?:xlsx|xls|csv|json|txt|jpg|jpeg|png|webp)",
 ]
 
-DOWNLOADABLE_EXTENSIONS = {".xlsx", ".xls", ".csv", ".json", ".txt", ".jpg", ".jpeg", ".png", ".webp"}
+DOWNLOADABLE_EXTENSIONS = {".xlsx", ".xls", ".csv", ".json", ".txt", ".md", ".jpg", ".jpeg", ".png", ".webp"}
+SKIP_SCAN_DIRS = {"node_modules", ".git", ".next", "__pycache__", "_artifact_qa", ".pnpm"}
+_EXTRA_ALLOWED_ROOTS: set[Path] = set()
+
+
+def allow_artifact_root(path_value: str) -> None:
+    try:
+        _EXTRA_ALLOWED_ROOTS.add(Path(path_value).resolve())
+    except (OSError, RuntimeError):
+        return
 
 
 def _resolve_configured_path(value: str, default_base: Path = API_ROOT) -> Path:
@@ -38,8 +47,9 @@ def _allowed_roots() -> list[Path]:
         API_ROOT / "runtime" / "users",
         API_ROOT / "uploads",
         _resolve_configured_path(os.getenv("VIDEO_UPLOAD_DIR", "uploads/videos")),
+        Path(os.getenv("LOCAL_VIDEO_AGENT_OUTPUT_ROOT", r"E:\USE\codexhome\fenge\output")),
     ]
-    return [root.resolve() for root in roots]
+    return [root.resolve() for root in roots] + list(_EXTRA_ALLOWED_ROOTS)
 
 
 def _file_name(path: str) -> str:
@@ -122,6 +132,32 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _is_scannable_artifact(path: Path) -> bool:
+    lowered = [part.lower() for part in path.parts]
+    return not any(part in SKIP_SCAN_DIRS or part.startswith(".") for part in lowered)
+
+
+def _matches_target_stem(path: Path, root: Path, target_stem: str | None) -> bool:
+    if not target_stem:
+        return True
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        parts = path.parts
+    target = target_stem.lower()
+    lowered_parts = [part.lower() for part in parts]
+    name = path.name.lower()
+    stem = path.stem.lower()
+    return (
+        target in lowered_parts
+        or stem == target
+        or name.startswith(f"{target}_")
+        or name.startswith(f"{target}.")
+        or stem.startswith(f"{target}_")
+        or stem.startswith(f"{target}-")
+    )
+
+
 def _content_type(path: Path, file_type: str) -> str:
     suffix = path.suffix.lower()
     if suffix in {".xlsx", ".xls"}:
@@ -153,8 +189,19 @@ def register_run_artifacts(user_id: str, run_id: str, files: list[dict]) -> list
         path = artifact_path_for_download(path_value)
         file_type = str(item.get("file_type") or item.get("type") or artifact_type_for_path(path_value))
         if path.is_dir():
-            manifest_path = manifest_dir / f"{path.name}_manifest.json"
-            children = [str(child) for child in sorted(path.rglob("*")) if child.is_file()]
+            metadata = dict(item.get("metadata") or {})
+            target_stem = str(metadata.get("target_stem") or "").strip() or None
+            requested_name = str(item.get("name") or "")
+            manifest_name = requested_name if requested_name.endswith(".json") else f"{path.name}_manifest.json"
+            manifest_path = manifest_dir / manifest_name
+            children = [
+                str(child)
+                for child in sorted(path.rglob("*"))
+                if child.is_file()
+                and child.suffix.lower() in DOWNLOADABLE_EXTENSIONS
+                and _is_scannable_artifact(child)
+                and _matches_target_stem(child, path, target_stem)
+            ]
             manifest_path.write_text(json.dumps({"folder": str(path), "files": children}, ensure_ascii=False, indent=2), encoding="utf-8")
             path = manifest_path
             path_value = str(path)
@@ -164,6 +211,12 @@ def register_run_artifacts(user_id: str, run_id: str, files: list[dict]) -> list
         normalized = normalize_artifact_file(path_value, file_type=file_type, name=item.get("name") or item.get("filename"))
         artifact_id = str(item.get("artifact_id") or f"artifact_{uuid.uuid4().hex[:12]}")
         now = _now()
+        metadata = dict(item.get("metadata") or {})
+        metadata.setdefault("source", item.get("source") or ("local_video_agent" if "fenge" in path_value.lower() else "platform"))
+        metadata.setdefault("run_id", run_id)
+        metadata.setdefault("file_type", file_type)
+        metadata.setdefault("original_path", item.get("original_path") or path_value)
+        metadata.setdefault("collected_at", now)
         record = {
             **normalized,
             "artifact_id": artifact_id,
@@ -172,6 +225,7 @@ def register_run_artifacts(user_id: str, run_id: str, files: list[dict]) -> list
             "storage_path": path_value,
             "size_bytes": path.stat().st_size,
             "created_at": item.get("created_at") or now,
+            "metadata": metadata,
         }
         with app_sqlite.connection() as conn:
             conn.execute(
@@ -185,7 +239,7 @@ def register_run_artifacts(user_id: str, run_id: str, files: list[dict]) -> list
                 (
                     artifact_id, user_id, run_id, record["filename"], path_value, normalized["download_url"],
                     _content_type(path, file_type), record["size_bytes"], record["created_at"], now,
-                    app_sqlite.json_dump(record),
+                    app_sqlite.json_dump({**record, **metadata}),
                 ),
             )
         registered.append(record)

@@ -18,7 +18,7 @@ export default function AiCreationPage() {
   const [notice, setNotice] = useState("");
 
   const handleSubmit = () => {
-    setNotice("当前是 meizhaiseek v1.6.3，后续会接入生图、生视频和商品场景生成能力。");
+    setNotice("当前是 meizhaiseek v1.6.4，后续会接入生图、生视频和商品场景生成能力。");
   };
 
   return (
@@ -124,9 +124,3 @@ export default function AiCreationPage() {
     </AppShell>
   );
 }
-
-
-
-
-
-

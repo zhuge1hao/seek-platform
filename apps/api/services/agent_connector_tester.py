@@ -9,7 +9,7 @@ def test_connector(connector: dict[str, Any], prompt: str, extra_payload: dict[s
         "session_id": connector.get("session_id") or "",
         "agent_type": connector.get("agent_type") or "connector_test",
         "agent_name": connector.get("name") or connector.get("connector_id"),
-        "mode": "test",
+        "mode": "mock" if connector.get("agent_type") == "video_script_breakdown" else "test",
         "prompt": prompt or "测试连接",
         "output_dir": "",
         "options": {},
