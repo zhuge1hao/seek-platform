@@ -1,24 +1,24 @@
-# Testing
+﻿# Testing
 
-Run unit tests:
+## 本地测试
 
 ```powershell
+python -m compileall apps/api
 python -m unittest discover -s apps/api/tests
-```
-
-Run smoke:
-
-```powershell
+cd apps/web
+$env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'
+npm.cmd run build
+cd ..\..
 python apps/api/scripts/smoke_minimal.py
 ```
 
-Optional video Agent E2E:
+## 视频 Agent E2E
 
 ```powershell
 python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 ```
 
-Environment variables:
+可配置变量：
 
 - `API_BASE_URL`
 - `SMOKE_ADMIN_USERNAME`
@@ -27,4 +27,13 @@ Environment variables:
 - `VIDEO_AGENT_TEST_VIDEO`
 - `VIDEO_AGENT_TEST_OUTPUT_DIR`
 
-Unit tests use temporary SQLite paths and do not require DeepSeek, BGE, or 8001.
+## 单元测试说明
+
+`apps/api/tests` 使用 Python 标准 `unittest`。测试默认使用临时 SQLite 路径，不依赖 DeepSeek、BGE 模型或 8001 服务。
+
+## 常见失败原因
+
+- 后端未启动。
+- 本地管理员密码未通过环境变量传入。
+- 8001 未启动但指定了 `--require-video-agent`。
+- 前端 build 未设置 `NEXT_PUBLIC_API_BASE_URL`。
