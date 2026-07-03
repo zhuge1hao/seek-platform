@@ -77,7 +77,7 @@ def run_video_e2e(token: str) -> None:
         json={
             "agent_type": "video_script_breakdown",
             "mode": "shot_text_excel",
-            "prompt": "smoke_test v1.6.5 video agent e2e",
+            "prompt": "smoke_test v1.7 video agent e2e",
             "video_path": TEST_VIDEO_FILE,
             "workflow_options": {
                 "smoke_test": True,
@@ -132,7 +132,7 @@ def main() -> int:
         check(bool(token), "admin login returns token")
 
         runtime = request_json("GET", "/api/admin/runtime/health", token)
-        check(runtime.get("version") == "v1.6.5", "runtime health version is v1.6.5")
+        check(runtime.get("version") == "v1.7", "runtime health version is v1.7")
         check(runtime.get("legacy_json_fallback_enabled") is False, "legacy JSON fallback disabled by default")
 
         conversations = request_json("GET", "/api/conversations", token)
@@ -148,7 +148,7 @@ def main() -> int:
             json={
                 "agent_type": "video_script_breakdown",
                 "mode": "mock",
-                "prompt": "smoke_test v1.6.5 agent persistence",
+                "prompt": "smoke_test v1.7 agent persistence",
                 "workflow_options": {"smoke_test": True, "export_json": False, "keep_debug_payload": True},
             },
         )

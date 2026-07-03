@@ -21,10 +21,10 @@ def _load_env_file() -> None:
 
 _load_env_file()
 
-from routers import admin_runtime, admin_users, agent_configs, agent_connectors, agent_runs, agents, artifacts, auth, chat, conversations, datasets, files, qa_chat, qa_knowledge, skills
-from services import app_sqlite, conversation_store, json_to_sqlite_migrator, security_config_service, service_events
+from routers import admin_runtime, admin_users, agent_blueprints, agent_configs, agent_connectors, agent_runs, agents, artifacts, auth, chat, conversations, datasets, files, qa_chat, qa_knowledge, skills
+from services import agent_blueprint_seed_service, agent_blueprint_service, app_sqlite, conversation_store, json_to_sqlite_migrator, security_config_service, service_events
 
-app = FastAPI(title="meizhaiseek-api", version="1.6.5")
+app = FastAPI(title="meizhaiseek-api", version="1.7")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(agents.router, prefix="/api", tags=["agents"])
+app.include_router(agent_blueprints.router, prefix="/api", tags=["agent-blueprints"])
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(agent_configs.router, prefix="/api", tags=["agent-configs"])
 app.include_router(agent_connectors.router, prefix="/api", tags=["agent-connectors"])
@@ -63,6 +64,8 @@ def startup_storage() -> None:
     if not os.getenv("AUTH_TOKEN_SECRET", "").strip():
         security_config_service.ensure_generated_secret()
     service_events.register_run_updated_handler(conversation_store.sync_run_to_conversation)
+    service_events.register_run_updated_handler(agent_blueprint_service.sync_test_run_result)
+    agent_blueprint_seed_service.safe_seed_video_blueprint()
     if os.getenv("APP_SQLITE_AUTO_MIGRATE", "true").lower() in {"1", "true", "yes", "on"}:
         try:
             json_to_sqlite_migrator.migrate_json_to_sqlite(force=False)

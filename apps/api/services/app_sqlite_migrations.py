@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import sqlite3
 
 
-SCHEMA_VERSION = "20260629_v158_storage_perf_dataset_sqlite"
+SCHEMA_VERSION = "20260702_v17_agent_blueprints"
 
 
 def _now() -> str:
@@ -223,6 +223,81 @@ CREATE TABLE IF NOT EXISTS app_kv (
   updated_at TEXT
 );
 
+CREATE TABLE IF NOT EXISTS agent_blueprints (
+  blueprint_id TEXT PRIMARY KEY,
+  agent_id TEXT,
+  name TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  description TEXT,
+  category TEXT,
+  icon TEXT,
+  status TEXT NOT NULL DEFAULT 'draft',
+  current_version_id TEXT,
+  published_version_id TEXT,
+  created_by TEXT NOT NULL,
+  updated_by TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  metadata_json TEXT,
+  CHECK(status IN ('draft', 'testing', 'published', 'disabled', 'deprecated'))
+);
+
+CREATE TABLE IF NOT EXISTS agent_blueprint_versions (
+  version_id TEXT PRIMARY KEY,
+  blueprint_id TEXT NOT NULL,
+  version_number INTEGER NOT NULL,
+  version_name TEXT,
+  change_summary TEXT,
+  input_schema_json TEXT,
+  methodology_json TEXT,
+  prompt_config_json TEXT,
+  execution_config_json TEXT,
+  output_schema_json TEXT,
+  result_ui_config_json TEXT,
+  acceptance_rules_json TEXT,
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  is_published INTEGER DEFAULT 0,
+  parent_version_id TEXT,
+  metadata_json TEXT,
+  UNIQUE(blueprint_id, version_number)
+);
+
+CREATE TABLE IF NOT EXISTS agent_blueprint_test_cases (
+  test_case_id TEXT PRIMARY KEY,
+  blueprint_id TEXT NOT NULL,
+  version_id TEXT,
+  name TEXT NOT NULL,
+  description TEXT,
+  input_json TEXT NOT NULL,
+  expected_status TEXT,
+  expected_result_rules_json TEXT,
+  expected_artifacts_json TEXT,
+  max_duration_seconds INTEGER,
+  requires_connector INTEGER DEFAULT 0,
+  is_enabled INTEGER DEFAULT 1,
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  last_run_id TEXT,
+  last_result_json TEXT,
+  metadata_json TEXT
+);
+
+CREATE TABLE IF NOT EXISTS agent_blueprint_releases (
+  release_id TEXT PRIMARY KEY,
+  blueprint_id TEXT NOT NULL,
+  version_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  from_version_id TEXT,
+  to_version_id TEXT,
+  operator_user_id TEXT NOT NULL,
+  note TEXT,
+  created_at TEXT NOT NULL,
+  metadata_json TEXT,
+  CHECK(action IN ('publish', 'rollback', 'disable', 'enable', 'deprecate'))
+);
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   version TEXT PRIMARY KEY,
   applied_at TEXT,
@@ -244,6 +319,11 @@ CREATE INDEX IF NOT EXISTS idx_dataset_files_dataset ON dataset_files(dataset_id
 CREATE INDEX IF NOT EXISTS idx_dataset_files_user_created ON dataset_files(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_dataset_jobs_user_created ON dataset_jobs(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_dataset_jobs_dataset ON dataset_jobs(dataset_id);
+CREATE INDEX IF NOT EXISTS idx_agent_blueprints_status_updated ON agent_blueprints(status, updated_at);
+CREATE INDEX IF NOT EXISTS idx_agent_blueprints_agent_id ON agent_blueprints(agent_id);
+CREATE INDEX IF NOT EXISTS idx_blueprint_versions_blueprint_number ON agent_blueprint_versions(blueprint_id, version_number);
+CREATE INDEX IF NOT EXISTS idx_blueprint_test_cases_blueprint ON agent_blueprint_test_cases(blueprint_id);
+CREATE INDEX IF NOT EXISTS idx_blueprint_releases_blueprint_created ON agent_blueprint_releases(blueprint_id, created_at);
 """
 
 
@@ -251,6 +331,10 @@ def run_migrations(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA_SQL)
     conn.execute(
         "INSERT OR IGNORE INTO schema_migrations(version, applied_at, description) VALUES (?, ?, ?)",
-        (SCHEMA_VERSION, _now(), "v1.5.8 storage performance and dataset sqlite"),
+        ("20260629_v158_storage_perf_dataset_sqlite", _now(), "v1.5.8 storage performance and dataset sqlite"),
+    )
+    conn.execute(
+        "INSERT OR IGNORE INTO schema_migrations(version, applied_at, description) VALUES (?, ?, ?)",
+        (SCHEMA_VERSION, _now(), "v1.7 agent blueprint center"),
     )
     conn.commit()

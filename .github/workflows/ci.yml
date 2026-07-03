@@ -23,6 +23,9 @@ jobs:
       - name: Run API unit tests
         run: python -m unittest discover -s apps/api/tests
 
+      - name: Run API pytest suite
+        run: python -m pytest apps/api/tests
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"

@@ -37,6 +37,10 @@ export type AgentDefinition = {
   accepted_inputs: string[];
   default_options: Record<string, unknown>;
   icon?: AgentIconName;
+  blueprint_id?: string;
+  blueprint_status?: string;
+  blueprint_version?: number;
+  blueprint_published?: boolean;
 };
 
 export const agentList: AgentDefinition[] = [

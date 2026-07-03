@@ -1,6 +1,6 @@
 ﻿# meizhaiseek-platform
 
-meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 工作台。当前版本为 **meizhaiseek v1.6.5**，包含 Next.js 前端、FastAPI 后端、APP SQLite、RAG SQLite、AI 对话、AI 智能体、Dataset、Connector、Debug Payload、后台账号管理和视频拆解智能体产物闭环。
+meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 工作台。当前版本为 **meizhaiseek v1.7**，包含 Next.js 前端、FastAPI 后端、APP SQLite、RAG SQLite、AI 对话、AI 智能体、Dataset、Connector、Debug Payload、后台账号管理、视频拆解智能体产物闭环，以及智能体蓝图与方法论配置中心。
 
 模型展示名保持为 **meizhaiseek 2.0**。
 
@@ -46,6 +46,7 @@ npm.cmd run dev
 ```powershell
 python -m compileall apps/api
 python -m unittest discover -s apps/api/tests
+python -m pytest apps/api/tests
 cd apps/web
 $env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'
 npm.cmd run build

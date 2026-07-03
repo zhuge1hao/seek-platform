@@ -16,7 +16,11 @@ def _now() -> str:
 def _redact(value: Any) -> Any:
     if isinstance(value, dict):
         return {
-            key: "***REDACTED***" if any(token in str(key).lower() for token in ("password", "token", "secret", "api_key", "apikey")) else _redact(item)
+            key: "***REDACTED***" if (
+                any(token in str(key).lower() for token in ("password", "secret", "api_key", "apikey"))
+                or str(key).lower() == "token"
+                or str(key).lower().endswith("_token")
+            ) else _redact(item)
             for key, item in value.items()
         }
     if isinstance(value, list):

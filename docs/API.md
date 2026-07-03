@@ -1,6 +1,6 @@
 ﻿# API
 
-本文档记录 meizhaiseek v1.6.5 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
+本文档记录 meizhaiseek v1.7 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
 
 ## Health
 
@@ -12,12 +12,12 @@
 
 `GET /api/admin/runtime/health`
 
-仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.6.5 返回：
+仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.7 返回：
 
 ```json
 {
   "service": "meizhaiseek-api",
-  "version": "v1.6.5",
+  "version": "v1.7",
   "legacy_json_fallback_enabled": false,
   "warnings": []
 }
@@ -56,12 +56,42 @@
 
 ## AI 智能体
 
-- `GET /api/agents`: 智能体注册信息。
+- `GET /api/agents`: 智能体注册信息。v1.7 增加 `blueprint_id`、`blueprint_status`、`blueprint_version`、`blueprint_published`；没有蓝图的现有智能体返回 `blueprint_status=unmanaged`。
 - `GET /api/agent-configs`: 智能体配置列表。
 - `GET /api/agent-configs/{agent_type}`: 单个智能体配置。
 - `POST /api/agent-configs/{agent_type}`: 更新智能体配置。
 - `GET /api/skills/templates`: 技能模板列表。
 - `POST /api/skills/templates`: 创建或更新技能模板。
+
+## Agent Blueprint API
+
+蓝图接口默认需要登录。`admin` 可执行全部操作；`operator` 可查看、创建草稿、编辑草稿、创建版本、运行测试、复制和导出；`viewer` 只能查看已发布蓝图和已发布版本，且不能查看未发布 Prompt。
+
+- `GET /api/agent-blueprints`: 蓝图列表。
+- `POST /api/agent-blueprints`: 创建 draft 蓝图并创建初始版本。
+- `GET /api/agent-blueprints/{blueprint_id}`: 蓝图详情、当前版本、发布版本、测试用例和 release 记录。
+- `PATCH /api/agent-blueprints/{blueprint_id}`: 更新未发布蓝图基础信息。
+- `DELETE /api/agent-blueprints/{blueprint_id}`: 删除未发布 draft。
+- `POST /api/agent-blueprints/{blueprint_id}/versions`: 创建新版本。
+- `GET /api/agent-blueprints/{blueprint_id}/versions`: 版本列表。
+- `GET /api/agent-blueprints/{blueprint_id}/versions/{version_id}`: 指定版本。
+- `POST /api/agent-blueprints/{blueprint_id}/validate`: 返回 `{valid, errors, warnings}`。
+- `POST /api/agent-blueprints/{blueprint_id}/publish`: 管理员发布版本。
+- `POST /api/agent-blueprints/{blueprint_id}/rollback`: 管理员回滚到历史已发布版本，并生成新版本。
+- `POST /api/agent-blueprints/{blueprint_id}/clone`: 复制为 draft 蓝图。
+- `POST /api/agent-blueprints/{blueprint_id}/disable`: 停用蓝图。
+- `POST /api/agent-blueprints/{blueprint_id}/enable`: 重新启用蓝图。
+- `POST /api/agent-blueprints/{blueprint_id}/deprecate`: 废弃蓝图。
+- `GET /api/agent-blueprints/{blueprint_id}/test-cases`: 测试用例列表。
+- `POST /api/agent-blueprints/{blueprint_id}/test-cases`: 创建测试用例。
+- `PATCH /api/agent-blueprints/{blueprint_id}/test-cases/{test_case_id}`: 更新测试用例。
+- `POST /api/agent-blueprints/{blueprint_id}/test-cases/{test_case_id}/run`: 复用 Agent Run 创建真实测试 run。
+- `GET /api/agent-blueprints/{blueprint_id}/releases`: 发布、回滚、停用、启用、废弃记录。
+- `GET /api/agent-blueprints/{blueprint_id}/export`: 导出脱敏 JSON。
+- `POST /api/agent-blueprints/import/preview`: 导入预览，不写库。
+- `POST /api/agent-blueprints/import`: 正式导入；冲突时默认生成新蓝图 ID。
+
+蓝图状态枚举：`draft | testing | published | disabled | deprecated`。执行类型枚举：`internal | http_connector | cli_connector | mock`。结果 renderer 枚举：`generic_text | generic_structured | video_breakdown | table_report | dataset_report`。
 
 ## 会话与任务
 

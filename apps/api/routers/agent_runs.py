@@ -12,7 +12,7 @@ from schemas.agent_runs import (
     default_generic_session_id,
     default_video_script_session_id,
 )
-from services import async_store_utils, audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
+from services import agent_blueprint_store, async_store_utils, audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
 from services.agent_config_store import get_config
 from services.agent_registry import get_agent_by_type
 from services.auth_service import require_admin, require_operator_or_admin, require_viewer_or_above
@@ -38,6 +38,9 @@ def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks,
     config = get_config(payload.agent_type)
     if agent is None and config is None:
         raise HTTPException(status_code=400, detail=f"不支持的智能体类型：{payload.agent_type}")
+    blueprint = agent_blueprint_store.get_blueprint_by_agent(payload.agent_type)
+    if blueprint and blueprint.get("status") in {"disabled", "deprecated"}:
+        raise HTTPException(status_code=403, detail="该智能体蓝图已停用或废弃，不能创建新任务。")
 
     prompt = payload.prompt.strip()
     if not prompt:

@@ -12,6 +12,8 @@ export const queryKeys = {
   qaModelStatus: (includeLoadCheck = false) => ["qa-model-status", includeLoadCheck] as const,
   knowledgeDocuments: ["knowledge-documents"] as const,
   agentConnectors: ["agent-connectors"] as const,
+  agentBlueprints: ["agent-blueprints"] as const,
+  agentBlueprint: (blueprintId?: string | null) => ["agent-blueprint", blueprintId || ""] as const,
   debugPayloads: (params: { limit?: number; agent_type?: string; status?: string } = {}) => [
     "debug-payloads",
     params.limit || 50,

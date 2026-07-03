@@ -115,7 +115,9 @@ def health_check() -> dict[str, Any]:
     tables = [
         "users", "audit_logs", "qa_conversations", "qa_messages", "agent_conversations",
         "agent_messages", "agent_runs", "local_agent_connectors", "debug_payloads",
-        "files", "artifacts", "datasets", "dataset_files", "dataset_jobs", "app_kv", "schema_migrations",
+        "files", "artifacts", "datasets", "dataset_files", "dataset_jobs",
+        "agent_blueprints", "agent_blueprint_versions", "agent_blueprint_test_cases", "agent_blueprint_releases",
+        "app_kv", "schema_migrations",
     ]
     result = {
         "status": "ok",
