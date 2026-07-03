@@ -117,6 +117,7 @@ def health_check() -> dict[str, Any]:
         "agent_messages", "agent_runs", "local_agent_connectors", "debug_payloads",
         "files", "artifacts", "datasets", "dataset_files", "dataset_jobs",
         "agent_blueprints", "agent_blueprint_versions", "agent_blueprint_test_cases", "agent_blueprint_releases",
+        "agent_blueprint_test_runs", "agent_blueprint_validation_results",
         "app_kv", "schema_migrations",
     ]
     result = {

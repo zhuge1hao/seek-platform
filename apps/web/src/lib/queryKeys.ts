@@ -14,6 +14,9 @@ export const queryKeys = {
   agentConnectors: ["agent-connectors"] as const,
   agentBlueprints: ["agent-blueprints"] as const,
   agentBlueprint: (blueprintId?: string | null) => ["agent-blueprint", blueprintId || ""] as const,
+  agentBlueprintValidations: (blueprintId?: string | null) => ["agent-blueprint-validations", blueprintId || ""] as const,
+  agentBlueprintTestRuns: (blueprintId?: string | null) => ["agent-blueprint-test-runs", blueprintId || ""] as const,
+  agentBlueprintDiff: (blueprintId?: string | null, fromVersionId?: string | null, toVersionId?: string | null) => ["agent-blueprint-diff", blueprintId || "", fromVersionId || "", toVersionId || ""] as const,
   debugPayloads: (params: { limit?: number; agent_type?: string; status?: string } = {}) => [
     "debug-payloads",
     params.limit || 50,

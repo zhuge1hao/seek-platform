@@ -41,6 +41,9 @@ export type AgentDefinition = {
   blueprint_status?: string;
   blueprint_version?: number;
   blueprint_published?: boolean;
+  blueprint_last_test_status?: string | null;
+  blueprint_methodology_summary?: { step_count?: number; steps?: string[] };
+  blueprint_output_summary?: { section_count?: number; sections?: string[] };
 };
 
 export const agentList: AgentDefinition[] = [

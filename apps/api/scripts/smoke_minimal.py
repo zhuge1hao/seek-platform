@@ -132,7 +132,7 @@ def main() -> int:
         check(bool(token), "admin login returns token")
 
         runtime = request_json("GET", "/api/admin/runtime/health", token)
-        check(runtime.get("version") == "v1.7", "runtime health version is v1.7")
+        check(runtime.get("version") == "v1.7.1", "runtime health version is v1.7.1")
         check(runtime.get("legacy_json_fallback_enabled") is False, "legacy JSON fallback disabled by default")
 
         conversations = request_json("GET", "/api/conversations", token)

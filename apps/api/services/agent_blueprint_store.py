@@ -9,6 +9,7 @@ from services import app_sqlite
 
 STATUSES = {"draft", "testing", "published", "disabled", "deprecated"}
 RELEASE_ACTIONS = {"publish", "rollback", "disable", "enable", "deprecate"}
+TEST_RUN_STATUSES = {"pending", "running", "passed", "failed", "error", "cancelled"}
 
 
 class BlueprintError(RuntimeError):
@@ -114,6 +115,47 @@ def _row_release(row: Any) -> dict[str, Any]:
     }
 
 
+def _row_test_run(row: Any) -> dict[str, Any]:
+    return {
+        "test_run_id": row["test_run_id"],
+        "blueprint_id": row["blueprint_id"],
+        "version_id": row["version_id"],
+        "test_case_id": row["test_case_id"],
+        "agent_run_id": row["agent_run_id"],
+        "status": row["status"],
+        "expected_status": row["expected_status"],
+        "actual_status": row["actual_status"],
+        "started_at": row["started_at"],
+        "completed_at": row["completed_at"],
+        "duration_ms": row["duration_ms"],
+        "result_summary": _load_json(row["result_summary_json"], {}),
+        "validation_result": _load_json(row["validation_result_json"], {}),
+        "missing_result_fields": _load_json(row["missing_result_fields_json"], []),
+        "missing_artifacts": _load_json(row["missing_artifacts_json"], []),
+        "error_message": row["error_message"] or "",
+        "created_by": row["created_by"],
+        "metadata": _load_json(row["metadata_json"], {}),
+    }
+
+
+def _row_validation(row: Any) -> dict[str, Any]:
+    return {
+        "validation_id": row["validation_id"],
+        "blueprint_id": row["blueprint_id"],
+        "version_id": row["version_id"],
+        "is_valid": bool(row["is_valid"]),
+        "valid": bool(row["is_valid"]),
+        "error_count": row["error_count"],
+        "warning_count": row["warning_count"],
+        "errors": _load_json(row["errors_json"], []),
+        "warnings": _load_json(row["warnings_json"], []),
+        "checked_at": row["checked_at"],
+        "checked_by": row["checked_by"],
+        "validator_version": row["validator_version"] or "",
+        "metadata": _load_json(row["metadata_json"], {}),
+    }
+
+
 def list_blueprints(include_unpublished: bool = True) -> list[dict[str, Any]]:
     clause = "" if include_unpublished else "WHERE status='published'"
     with app_sqlite.connection() as conn:
@@ -207,6 +249,8 @@ def delete_blueprint(blueprint_id: str) -> bool:
         row = conn.execute("SELECT published_version_id FROM agent_blueprints WHERE blueprint_id=?", (blueprint_id,)).fetchone()
         if not row or row["published_version_id"]:
             return False
+        conn.execute("DELETE FROM agent_blueprint_validation_results WHERE blueprint_id=?", (blueprint_id,))
+        conn.execute("DELETE FROM agent_blueprint_test_runs WHERE blueprint_id=?", (blueprint_id,))
         conn.execute("DELETE FROM agent_blueprint_releases WHERE blueprint_id=?", (blueprint_id,))
         conn.execute("DELETE FROM agent_blueprint_test_cases WHERE blueprint_id=?", (blueprint_id,))
         conn.execute("DELETE FROM agent_blueprint_versions WHERE blueprint_id=?", (blueprint_id,))
@@ -345,6 +389,124 @@ def set_test_case_run_result(test_case_id: str, run_id: str, result: dict[str, A
             "UPDATE agent_blueprint_test_cases SET last_run_id=?, last_result_json=?, updated_at=? WHERE test_case_id=?",
             (run_id, _json(result), _now(), test_case_id),
         )
+
+
+def create_test_run(blueprint_id: str, version_id: str, test_case_id: str, user_id: str, expected_status: str = "", metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+    test_run_id = _new_id("bptr")
+    now = _now()
+    with app_sqlite.connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO agent_blueprint_test_runs(test_run_id, blueprint_id, version_id, test_case_id, agent_run_id,
+              status, expected_status, started_at, created_by, metadata_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (test_run_id, blueprint_id, version_id, test_case_id, None, "pending", expected_status, now, user_id, _json(metadata or {})),
+        )
+    return get_test_run(test_run_id) or {}
+
+
+def update_test_run(test_run_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
+    existing = get_test_run(test_run_id)
+    if not existing:
+        return None
+    item = {**existing, **updates}
+    if item["status"] not in TEST_RUN_STATUSES:
+        raise BlueprintError("invalid test run status")
+    with app_sqlite.connection() as conn:
+        conn.execute(
+            """
+            UPDATE agent_blueprint_test_runs SET agent_run_id=?, status=?, expected_status=?, actual_status=?,
+              completed_at=?, duration_ms=?, result_summary_json=?, validation_result_json=?,
+              missing_result_fields_json=?, missing_artifacts_json=?, error_message=?, metadata_json=?
+            WHERE test_run_id=?
+            """,
+            (
+                item.get("agent_run_id"), item["status"], item.get("expected_status"), item.get("actual_status"),
+                item.get("completed_at"), item.get("duration_ms"), _json(item.get("result_summary") or {}),
+                _json(item.get("validation_result") or {}), _json(item.get("missing_result_fields") or []),
+                _json(item.get("missing_artifacts") or []), item.get("error_message") or "",
+                _json(item.get("metadata") or {}), test_run_id,
+            ),
+        )
+    return get_test_run(test_run_id)
+
+
+def list_test_runs(blueprint_id: str, limit: int = 20, test_case_id: str | None = None, version_id: str | None = None) -> list[dict[str, Any]]:
+    clauses = ["blueprint_id=?"]
+    params: list[Any] = [blueprint_id]
+    if test_case_id:
+        clauses.append("test_case_id=?")
+        params.append(test_case_id)
+    if version_id:
+        clauses.append("version_id=?")
+        params.append(version_id)
+    safe_limit = max(1, min(int(limit or 20), 100))
+    with app_sqlite.connection() as conn:
+        rows = conn.execute(
+            f"SELECT * FROM agent_blueprint_test_runs WHERE {' AND '.join(clauses)} ORDER BY started_at DESC LIMIT ?",
+            (*params, safe_limit),
+        ).fetchall()
+    return [_row_test_run(row) for row in rows]
+
+
+def get_test_run(test_run_id: str) -> dict[str, Any] | None:
+    with app_sqlite.connection() as conn:
+        row = conn.execute("SELECT * FROM agent_blueprint_test_runs WHERE test_run_id=?", (test_run_id,)).fetchone()
+    return _row_test_run(row) if row else None
+
+
+def get_test_run_by_agent_run_id(agent_run_id: str) -> dict[str, Any] | None:
+    with app_sqlite.connection() as conn:
+        row = conn.execute("SELECT * FROM agent_blueprint_test_runs WHERE agent_run_id=? ORDER BY started_at DESC LIMIT 1", (agent_run_id,)).fetchone()
+    return _row_test_run(row) if row else None
+
+
+def latest_test_run_for_version(blueprint_id: str, version_id: str) -> dict[str, Any] | None:
+    items = list_test_runs(blueprint_id, limit=1, version_id=version_id)
+    return items[0] if items else None
+
+
+def create_validation_result(blueprint_id: str, version_id: str, result: dict[str, Any], user_id: str, validator_version: str = "v1") -> dict[str, Any]:
+    validation_id = _new_id("bpval")
+    now = _now()
+    errors = result.get("errors") or []
+    warnings = result.get("warnings") or []
+    with app_sqlite.connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO agent_blueprint_validation_results(validation_id, blueprint_id, version_id, is_valid,
+              error_count, warning_count, errors_json, warnings_json, checked_at, checked_by, validator_version, metadata_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (validation_id, blueprint_id, version_id, 1 if result.get("valid") else 0, len(errors), len(warnings), _json(errors), _json(warnings), now, user_id, validator_version, _json(result.get("metadata") or {})),
+        )
+    return get_validation_result(validation_id) or {}
+
+
+def list_validation_results(blueprint_id: str, limit: int = 50) -> list[dict[str, Any]]:
+    safe_limit = max(1, min(int(limit or 50), 200))
+    with app_sqlite.connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM agent_blueprint_validation_results WHERE blueprint_id=? ORDER BY checked_at DESC LIMIT ?",
+            (blueprint_id, safe_limit),
+        ).fetchall()
+    return [_row_validation(row) for row in rows]
+
+
+def get_validation_result(validation_id: str) -> dict[str, Any] | None:
+    with app_sqlite.connection() as conn:
+        row = conn.execute("SELECT * FROM agent_blueprint_validation_results WHERE validation_id=?", (validation_id,)).fetchone()
+    return _row_validation(row) if row else None
+
+
+def latest_validation_for_version(blueprint_id: str, version_id: str) -> dict[str, Any] | None:
+    with app_sqlite.connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM agent_blueprint_validation_results WHERE blueprint_id=? AND version_id=? ORDER BY checked_at DESC LIMIT 1",
+            (blueprint_id, version_id),
+        ).fetchone()
+    return _row_validation(row) if row else None
 
 
 def create_release(blueprint_id: str, version_id: str, action: str, user_id: str, note: str = "", from_version_id: str | None = None, to_version_id: str | None = None, metadata: dict[str, Any] | None = None) -> dict[str, Any]:

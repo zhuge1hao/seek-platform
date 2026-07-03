@@ -3,7 +3,7 @@
 ## 项目名称与当前版本
 
 - 项目：meizhaiseek-platform
-- 当前版本：meizhaiseek v1.7
+- 当前版本：meizhaiseek v1.7.1
 - 版本名称：智能体蓝图与方法论配置中心
 - 仓库：https://github.com/zhuge1hao/seek-platform.git
 - 本地路径：`E:\USE\codexhome\agents-cowork\meizhaiseek-platform`
@@ -154,13 +154,13 @@ v1.6.4/v1.6.5 关键代码文件包括：
 API：
 
 - `/health` 返回 `meizhaiseek-api`。
-- `/api/admin/runtime/health` 应返回 `version=v1.7`。
+- `/api/admin/runtime/health` 应返回 `version=v1.7.1`。
 - `/api/agents/video-script/status` 能识别 8001 connected/disconnected。
 - `/api/agent-runs/{run_id}/events` 提供 SSE 状态流，失败后前端回退 polling。
 
 前端：
 
-- 版本展示为 `meizhaiseek v1.7`。
+- 版本展示为 `meizhaiseek v1.7.1`。
 - 模型名展示为 `meizhaiseek 2.0`。
 - 左侧主导航保留“美宅BI”“万能美虾”。
 - `/agent` 会话列表走 SWR，run 状态由 SSE/polling 处理。
@@ -204,4 +204,10 @@ API：
 
 ## 新窗口启动提示词
 
-请继续接手 `E:\USE\codexhome\agents-cowork\meizhaiseek-platform`。当前版本是 meizhaiseek v1.7，GitHub 仓库是 `https://github.com/zhuge1hao/seek-platform.git`。请先完整读取 `AGENTS.md`、`docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md`、`docs/API.md`、`docs/PRD.md`、`docs/STORAGE_SQLITE.md`、`docs/AGENT_BLUEPRINTS.md`、`docs/AGENT_PERFORMANCE_NOTES.md`，再读取相关代码，不要只依赖历史对话或 Git 状态。当前最优先回归 `/agent` 和 Agent Blueprint：任务提交后左侧聊天记录必须新增并持久保存；切换路由再回来任务和聊天不能消失；视频/脚本拆解智能体必须真实调用后端和 local agent；`bp_video_script_breakdown` 必须保持 published 且继续绑定现有 workflow/Connector/renderer；其他未完成智能体不要伪造成 published。不要破坏 v1.2-v1.7 已有鉴权、Connector、Debug、管理员、Dataset、QA/RAG、SQLite、视频拆解、SSE/polling 和蓝图能力。
+请继续接手 `E:\USE\codexhome\agents-cowork\meizhaiseek-platform`。当前版本是 meizhaiseek v1.7.1，GitHub 仓库是 `https://github.com/zhuge1hao/seek-platform.git`。请先完整读取 `AGENTS.md`、`docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md`、`docs/API.md`、`docs/PRD.md`、`docs/STORAGE_SQLITE.md`、`docs/AGENT_BLUEPRINTS.md`、`docs/AGENT_PERFORMANCE_NOTES.md`，再读取相关代码，不要只依赖历史对话或 Git 状态。当前最优先回归 `/agent` 和 Agent Blueprint：任务提交后左侧聊天记录必须新增并持久保存；切换路由再回来任务和聊天不能消失；视频/脚本拆解智能体必须真实调用后端和 local agent；`bp_video_script_breakdown` 必须保持 published 且继续绑定现有 workflow/Connector/renderer；其他未完成智能体不要伪造成 published。不要破坏 v1.2-v1.7.1 已有鉴权、Connector、Debug、管理员、Dataset、QA/RAG、SQLite、视频拆解、SSE/polling 和蓝图能力。
+
+
+## v1.7.1 交接重点
+
+v1.7.1 已把蓝图中心补成发布闭环：结构化编辑、验证历史、测试运行历史、版本差异、发布门禁、输入/结果预览和 `/agent` 轻量摘要均已接入。继续接手时仍需优先保护 `/agent` 持久化、视频拆解真实 8001 链路、Connector、Debug Payload、Dataset、QA/RAG 和双 SQLite 架构。
+

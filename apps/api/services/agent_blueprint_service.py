@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import BackgroundTasks
 
 from schemas.agent_runs import AgentRunCreate
-from services import agent_blueprint_store as store
+from services import agent_blueprint_diff_service, agent_blueprint_store as store
 from services import audit_log_service, orchestrator
-from services.agent_blueprint_validator import validate_blueprint
+from services.agent_blueprint_release_gate import ReleaseGateError, assert_release_allowed, check_release_gate
+from services.agent_blueprint_validator import VALIDATOR_VERSION, validate_blueprint
 
 
 class BlueprintServiceError(RuntimeError):
@@ -20,6 +22,10 @@ SENSITIVE_TOKENS = ("password", "secret", "api_key", "apikey")
 
 def _user_id(user: dict[str, Any]) -> str:
     return str(user.get("user_id") or user.get("username") or "system")
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _current_version(blueprint: dict[str, Any], include_prompt: bool = True) -> dict[str, Any] | None:
@@ -42,10 +48,44 @@ def _assert_no_sensitive(value: Any, path: str = "") -> None:
 
 def _assert_can_view(blueprint: dict[str, Any] | None, user: dict[str, Any]) -> dict[str, Any]:
     if not blueprint:
-        raise BlueprintServiceError("蓝图不存在")
+        raise BlueprintServiceError("蓝图不存在。")
     if user.get("role") == "viewer" and blueprint.get("status") != "published":
-        raise PermissionError("当前账号无权访问该蓝图")
+        raise PermissionError("当前账号无权访问该蓝图。")
     return blueprint
+
+
+def _duration_ms(started_at: str | None, completed_at: str | None) -> int | None:
+    if not started_at or not completed_at:
+        return None
+    try:
+        return max(0, int((datetime.fromisoformat(completed_at) - datetime.fromisoformat(started_at)).total_seconds() * 1000))
+    except ValueError:
+        return None
+
+
+def _get_path(value: Any, path: str) -> Any:
+    current = value
+    for part in path.split("."):
+        if isinstance(current, dict) and part in current:
+            current = current[part]
+        else:
+            return None
+    return current
+
+
+def _artifact_types(result: Any) -> set[str]:
+    files = (result or {}).get("files") if isinstance(result, dict) else []
+    types: set[str] = set()
+    for item in files if isinstance(files, list) else []:
+        if not isinstance(item, dict):
+            continue
+        types.add(str(item.get("file_type") or item.get("type") or "").lower())
+        name = str(item.get("filename") or item.get("name") or item.get("path") or "").lower()
+        if name.endswith((".xlsx", ".xls", ".csv")):
+            types.add("excel")
+        if name.endswith(".json"):
+            types.add("json")
+    return types
 
 
 def list_blueprints(user: dict[str, Any]) -> list[dict[str, Any]]:
@@ -120,8 +160,12 @@ def create_version(blueprint_id: str, payload: dict[str, Any], user: dict[str, A
 
 def validate(blueprint_id: str, user: dict[str, Any]) -> dict[str, Any]:
     blueprint = _assert_can_view(store.get_blueprint(blueprint_id), user)
-    result = validate_blueprint(blueprint, _current_version(blueprint), store.list_test_cases(blueprint_id))
-    audit_log_service.write_log("agent_blueprint.validate", "success" if result["valid"] else "failed", user, blueprint_id, {"blueprint_id": blueprint_id, "validation_error_count": len(result["errors"]), "validation_warning_count": len(result["warnings"])})
+    version = _current_version(blueprint)
+    result = validate_blueprint(blueprint, version, store.list_test_cases(blueprint_id))
+    if version:
+        saved = store.create_validation_result(blueprint_id, version["version_id"], result, _user_id(user), VALIDATOR_VERSION)
+        result.update({"validation_id": saved["validation_id"], "version_id": version["version_id"]})
+    audit_log_service.write_log("agent_blueprint.validation.run", "success" if result["valid"] else "failed", user, blueprint_id, {"blueprint_id": blueprint_id, "version_id": result.get("version_id"), "validation_id": result.get("validation_id"), "validation_error_count": len(result["errors"]), "validation_warning_count": len(result["warnings"])})
     return result
 
 
@@ -131,14 +175,15 @@ def publish(blueprint_id: str, payload: dict[str, Any], user: dict[str, Any]) ->
     version = store.get_version_for_blueprint(blueprint_id, version_id)
     if not version:
         raise BlueprintServiceError("发布版本不存在。")
-    result = validate_blueprint(blueprint, version, store.list_test_cases(blueprint_id))
-    if not result["valid"]:
-        raise BlueprintServiceError("蓝图校验失败，禁止发布。")
+    try:
+        gate = assert_release_allowed(blueprint_id, version_id, bool(payload.get("confirm_warnings")))
+    except ReleaseGateError:
+        raise
     previous = blueprint.get("published_version_id")
     store.mark_version_published(blueprint_id, version_id)
     store.update_blueprint(blueprint_id, {"status": "published", "published_version_id": version_id, "current_version_id": version_id}, _user_id(user))
-    store.create_release(blueprint_id, version_id, "publish", _user_id(user), str(payload.get("note") or ""), from_version_id=previous, to_version_id=version_id, metadata={"warning_count": len(result["warnings"])})
-    audit_log_service.write_log("agent_blueprint.publish", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "version_id": version_id, "validation_warning_count": len(result["warnings"])})
+    store.create_release(blueprint_id, version_id, "publish", _user_id(user), str(payload.get("note") or ""), from_version_id=previous, to_version_id=version_id, metadata={"validation_id": gate.get("validation_id"), "test_run_id": gate.get("test_run_id"), "release_gate_summary": gate})
+    audit_log_service.write_log("agent_blueprint.publish", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "version_id": version_id, "validation_id": gate.get("validation_id"), "test_run_id": gate.get("test_run_id")})
     return get_detail(blueprint_id, user)
 
 
@@ -147,6 +192,11 @@ def rollback(blueprint_id: str, payload: dict[str, Any], user: dict[str, Any]) -
     target = store.get_version_for_blueprint(blueprint_id, str(payload.get("version_id") or ""))
     if not target or not target.get("is_published"):
         raise BlueprintServiceError("只能回滚到历史已发布版本。")
+    result = validate_blueprint(blueprint, target, store.list_test_cases(blueprint_id))
+    if result.get("errors"):
+        raise BlueprintServiceError("回滚目标版本校验失败，禁止回滚。")
+    previous = blueprint.get("published_version_id")
+    diff = agent_blueprint_diff_service.compare_blueprint_versions(blueprint_id, str(previous or target["version_id"]), target["version_id"]) if previous else {"summary": {}}
     copied = store.create_version(blueprint_id, {
         "version_name": f"Rollback to v{target['version_number']}",
         "change_summary": payload.get("note") or "回滚发布",
@@ -160,18 +210,17 @@ def rollback(blueprint_id: str, payload: dict[str, Any], user: dict[str, Any]) -
         "parent_version_id": target["version_id"],
         "is_published": True,
     }, _user_id(user))
-    previous = blueprint.get("published_version_id")
     store.mark_version_published(blueprint_id, copied["version_id"])
     store.update_blueprint(blueprint_id, {"status": "published", "published_version_id": copied["version_id"], "current_version_id": copied["version_id"]}, _user_id(user))
-    store.create_release(blueprint_id, copied["version_id"], "rollback", _user_id(user), str(payload.get("note") or ""), from_version_id=previous, to_version_id=copied["version_id"])
-    audit_log_service.write_log("agent_blueprint.rollback", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "version_id": copied["version_id"]})
+    store.create_release(blueprint_id, copied["version_id"], "rollback", _user_id(user), str(payload.get("note") or ""), from_version_id=previous, to_version_id=copied["version_id"], metadata={"rollback_target_version_id": target["version_id"], "diff_summary": diff.get("summary")})
+    audit_log_service.write_log("agent_blueprint.rollback", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "version_id": copied["version_id"], "diff_summary": diff.get("summary")})
     return get_detail(blueprint_id, user)
 
 
 def set_state(blueprint_id: str, action: str, status: str, user: dict[str, Any], note: str = "") -> dict[str, Any]:
     blueprint = _assert_can_view(store.get_blueprint(blueprint_id), user)
     version_id = blueprint.get("published_version_id") or blueprint.get("current_version_id")
-    updated = store.update_blueprint(blueprint_id, {"status": status}, _user_id(user))
+    store.update_blueprint(blueprint_id, {"status": status}, _user_id(user))
     store.create_release(blueprint_id, str(version_id or ""), action, _user_id(user), note, from_version_id=blueprint.get("published_version_id"), to_version_id=version_id)
     audit_log_service.write_log(f"agent_blueprint.{action}", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "status": status})
     return get_detail(blueprint_id, user)
@@ -214,6 +263,11 @@ def run_test_case(blueprint_id: str, test_case_id: str, background_tasks: Backgr
     case = store.get_test_case(test_case_id)
     if not case or case["blueprint_id"] != blueprint_id:
         raise BlueprintServiceError("测试用例不存在。")
+    version = _current_version(blueprint)
+    if not version:
+        raise BlueprintServiceError("蓝图版本不存在。")
+    version_id = str(case.get("version_id") or version["version_id"])
+    test_run = store.create_test_run(blueprint_id, version_id, test_case_id, _user_id(user), case.get("expected_status") or "completed")
     data = case.get("input") or {}
     agent_type = str(data.get("agent_type") or blueprint.get("agent_id") or "")
     payload = AgentRunCreate(
@@ -224,10 +278,15 @@ def run_test_case(blueprint_id: str, test_case_id: str, background_tasks: Backgr
         video_url=data.get("video_url"),
         workflow_options={key: value for key, value in data.items() if key not in {"agent_type", "mode", "prompt", "video_path", "video_file", "video_url"}},
     )
-    created = orchestrator.start_run(payload, background_tasks, user)
-    store.set_test_case_run_result(test_case_id, created["run_id"], {"status": "running", "run_id": created["run_id"]})
-    audit_log_service.write_log("agent_blueprint.test_case.run", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "test_case_id": test_case_id, "run_id": created["run_id"]})
-    return {"test_case": store.get_test_case(test_case_id), "run": created}
+    try:
+        created = orchestrator.start_run(payload, background_tasks, user)
+    except Exception as exc:
+        store.update_test_run(test_run["test_run_id"], {"status": "error", "completed_at": _now(), "error_message": str(exc)})
+        raise
+    store.update_test_run(test_run["test_run_id"], {"status": "running", "agent_run_id": created["run_id"]})
+    store.set_test_case_run_result(test_case_id, created["run_id"], {"status": "running", "run_id": created["run_id"], "test_run_id": test_run["test_run_id"]})
+    audit_log_service.write_log("agent_blueprint.test_run.create", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "test_case_id": test_case_id, "test_run_id": test_run["test_run_id"], "run_id": created["run_id"]})
+    return {"test_case": store.get_test_case(test_case_id), "test_run": store.get_test_run(test_run["test_run_id"]), "run": created}
 
 
 def sync_test_run_result(run: dict[str, Any]) -> None:
@@ -235,18 +294,77 @@ def sync_test_run_result(run: dict[str, Any]) -> None:
     run_id = str(run.get("run_id") or "")
     if status not in TERMINAL or not run_id:
         return
-    case = store.get_test_case_by_run_id(run_id)
+    test_run = store.get_test_run_by_agent_run_id(run_id)
+    case = store.get_test_case(test_run["test_case_id"]) if test_run else store.get_test_case_by_run_id(run_id)
     if not case:
         return
     expected = case.get("expected_status") or "completed"
-    passed = status == expected
+    result = run.get("result") if isinstance(run.get("result"), dict) else {}
+    required_fields = (case.get("expected_result_rules") or {}).get("required_result_fields") or []
+    required_artifacts = (case.get("expected_artifacts") or {}).get("required_artifact_types") or []
+    missing_fields = [path for path in required_fields if _get_path(result, str(path)) is None]
+    missing_artifacts = [kind for kind in required_artifacts if str(kind).lower() not in _artifact_types(result)]
+    passed = status == expected and not missing_fields and not missing_artifacts
+    completed_at = run.get("completed_at") or _now()
+    if test_run:
+        store.update_test_run(test_run["test_run_id"], {
+            "status": "passed" if passed else ("cancelled" if status == "cancelled" else "failed"),
+            "actual_status": status,
+            "completed_at": completed_at,
+            "duration_ms": _duration_ms(test_run.get("started_at"), completed_at),
+            "result_summary": result,
+            "missing_result_fields": missing_fields,
+            "missing_artifacts": missing_artifacts,
+            "error_message": run.get("error") or "",
+        })
     store.set_test_case_run_result(case["test_case_id"], run_id, {
         "status": "PASS" if passed else "FAIL",
         "run_status": status,
         "error": run.get("error"),
-        "summary": (run.get("result") or {}).get("summary") if isinstance(run.get("result"), dict) else None,
+        "summary": result.get("summary") if isinstance(result, dict) else None,
+        "missing_result_fields": missing_fields,
+        "missing_artifacts": missing_artifacts,
+        "test_run_id": test_run.get("test_run_id") if test_run else None,
         "run_id": run_id,
     })
+
+
+def list_validations(blueprint_id: str, user: dict[str, Any]) -> list[dict[str, Any]]:
+    _assert_can_view(store.get_blueprint(blueprint_id), user)
+    if user.get("role") == "viewer":
+        raise PermissionError("viewer cannot view validation history")
+    return store.list_validation_results(blueprint_id)
+
+
+def get_validation(blueprint_id: str, validation_id: str, user: dict[str, Any]) -> dict[str, Any]:
+    _assert_can_view(store.get_blueprint(blueprint_id), user)
+    item = store.get_validation_result(validation_id)
+    if not item or item["blueprint_id"] != blueprint_id:
+        raise BlueprintServiceError("validation not found")
+    return item
+
+
+def list_test_runs(blueprint_id: str, user: dict[str, Any], limit: int = 20) -> list[dict[str, Any]]:
+    _assert_can_view(store.get_blueprint(blueprint_id), user)
+    if user.get("role") == "viewer":
+        raise PermissionError("viewer cannot view test runs")
+    return store.list_test_runs(blueprint_id, limit=limit)
+
+
+def get_test_run(blueprint_id: str, test_run_id: str, user: dict[str, Any]) -> dict[str, Any]:
+    _assert_can_view(store.get_blueprint(blueprint_id), user)
+    item = store.get_test_run(test_run_id)
+    if not item or item["blueprint_id"] != blueprint_id:
+        raise BlueprintServiceError("test run not found")
+    return item
+
+
+def release_gate(blueprint_id: str, payload: dict[str, Any], user: dict[str, Any]) -> dict[str, Any]:
+    blueprint = _assert_can_view(store.get_blueprint(blueprint_id), user)
+    version_id = str(payload.get("version_id") or blueprint.get("current_version_id") or "")
+    gate = check_release_gate(blueprint_id, version_id)
+    audit_log_service.write_log("agent_blueprint.release_gate.check", "success" if gate.get("allowed") else "failed", user, blueprint_id, {"blueprint_id": blueprint_id, "version_id": version_id, "gate_allowed": gate.get("allowed")})
+    return gate
 
 
 def delete_blueprint(blueprint_id: str, user: dict[str, Any]) -> bool:

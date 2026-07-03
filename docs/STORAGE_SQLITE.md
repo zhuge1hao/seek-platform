@@ -36,3 +36,5 @@ APP_LEGACY_JSON_FALLBACK=false
 - `apps/api/runtime/logs/web-dev.log`
 
 历史日志归档到 `apps/api/runtime/logs/archive/`。日志目录不提交 Git。
+
+v1.7.1 追加 APP SQLite 表：`agent_blueprint_test_runs`、`agent_blueprint_validation_results`。它们只保存蓝图测试运行历史和验证历史，不改变 APP SQLite 与 RAG SQLite 的边界。

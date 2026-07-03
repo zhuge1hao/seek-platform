@@ -1,6 +1,19 @@
 ﻿# API
 
-本文档记录 meizhaiseek v1.7 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
+本文档记录 meizhaiseek v1.7.1 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
+
+## Agent Blueprint v1.7.1 增强接口
+
+- `GET /api/agent-blueprints/{blueprint_id}/versions/diff?from_version_id=&to_version_id=`：返回稳定 JSON 版本差异，Prompt 差异仅作为响应展示，不写入审计明细。
+- `GET /api/agent-blueprints/{blueprint_id}/validations`：查询验证历史。viewer 不可访问。
+- `GET /api/agent-blueprints/{blueprint_id}/validations/{validation_id}`：查询单次验证结果。
+- `POST /api/agent-blueprints/{blueprint_id}/release-gate`：检查当前版本发布门禁，返回 `allowed`、`blocking_errors`、`warnings`、`validation_id`、`test_run_id`。
+- `GET /api/agent-blueprints/{blueprint_id}/test-runs?limit=20`：查询测试运行历史。
+- `GET /api/agent-blueprints/{blueprint_id}/test-runs/{test_run_id}`：查询单次测试运行详情。
+- `POST /api/agent-blueprints/{blueprint_id}/preview/input`：根据 input schema 返回结构预览，不读取本地文件、不提交任务。
+- `POST /api/agent-blueprints/{blueprint_id}/preview/result`：根据 output schema 和 result UI config 返回结构预览。
+- `POST /api/agent-blueprints/{blueprint_id}/publish`：新增 `confirm_warnings` 参数；后端重新执行发布门禁，blocking error 返回 `409`。
+- `GET /api/agents`：增加轻量蓝图字段 `blueprint_last_test_status`、`blueprint_methodology_summary`、`blueprint_output_summary`；不返回 Prompt、完整 methodology 或 execution config。
 
 ## Health
 
@@ -12,12 +25,12 @@
 
 `GET /api/admin/runtime/health`
 
-仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.7 返回：
+仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.7.1 返回：
 
 ```json
 {
   "service": "meizhaiseek-api",
-  "version": "v1.7",
+  "version": "v1.7.1",
   "legacy_json_fallback_enabled": false,
   "warnings": []
 }
@@ -164,3 +177,5 @@ data: {"run_id":"run_xxx","status":"running","progress":20}
 - `POST /api/datasets/{dataset_id}/clean`: 执行清洗。
 - `GET /api/datasets/{dataset_id}/files`: Dataset 输出文件。
 - `GET /api/agent-runs/{run_id}/artifacts/{artifact_id}/download`: 按 user/run 校验下载 artifact。
+
+

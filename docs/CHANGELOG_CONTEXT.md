@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-- 当前版本：meizhaiseek v1.7
+- 当前版本：meizhaiseek v1.7.1
 - 当前分支：main
 - 最近提交：`dd1a9e9 fix: restore UI docs encoding`
 - 本轮新增能力：智能体蓝图与方法论配置中心、视频拆解样板蓝图、蓝图测试/发布/回滚/导入导出。
@@ -19,7 +19,7 @@
 - 视频拆解智能体 seeded 为第一份 published 蓝图，继续绑定 `video_script_workflow`、`video_script_agent` 和 `video_breakdown` renderer。
 - 后台管理新增“智能体蓝图”入口，支持列表、详情、JSON 编辑、验证、测试、发布、回滚、复制、导入导出。
 - 新增自动化测试覆盖 store、service、validator、import/export、API 权限。
-- runtime health 和前端展示升级为 `meizhaiseek v1.7`，模型名继续 `meizhaiseek 2.0`。
+- runtime health 和前端展示升级为 `meizhaiseek v1.7.1`，模型名继续 `meizhaiseek 2.0`。
 
 ## v1.6.5：架构评估 P1-P3 二轮优化、回归测试与服务启动
 
@@ -132,3 +132,13 @@
 - 8001 不可达时必须 failed；8001 可达时必须真实 `/run`。
 - smoke 缺 admin 凭据时失败是正常保护，不要改成默认通过。
 - 未跟踪 `ARCHITECTURE_EVALUATION_REPORT.md` 不要误提交。
+
+
+## v1.7.1
+
+- 新增 `agent_blueprint_test_runs` 和 `agent_blueprint_validation_results`。
+- 新增蓝图验证历史、测试运行历史、版本差异、发布门禁、输入预览和结果预览 API。
+- 蓝图发布必须基于当前版本有效验证和通过的真实测试记录；warning 需要确认。
+- 后台蓝图页面增加结构化编辑、历史、diff、门禁和预览；高级 JSON 模式保留。
+- `/api/agents` 和 `/agent` 增加已发布蓝图的轻量摘要，不返回 Prompt 或完整执行配置。
+- 版本展示升级为 `meizhaiseek v1.7.1`，模型名继续 `meizhaiseek 2.0`。

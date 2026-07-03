@@ -15,6 +15,7 @@ WORKFLOWS = {"video_script_workflow", "competitor_analysis_workflow", "smart_sel
 RENDERERS = {"generic_text", "generic_structured", "video_breakdown", "table_report", "dataset_report"}
 SENSITIVE_TOKENS = ("password", "secret", "api_key", "apikey")
 VAR_RE = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}|\{([A-Za-z_][A-Za-z0-9_]*)\}")
+VALIDATOR_VERSION = "v1.7.1"
 
 
 def _issue(field: str, message: str) -> dict[str, str]:

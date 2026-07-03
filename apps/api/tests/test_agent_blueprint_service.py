@@ -45,12 +45,21 @@ class AgentBlueprintServiceTest(unittest.TestCase):
         blueprint_id = detail["blueprint"]["blueprint_id"]
         case = agent_blueprint_service.save_test_case(blueprint_id, {"name": "case", "input": {"prompt": "hello"}}, OPERATOR)
 
+        agent_blueprint_service.validate(blueprint_id, OPERATOR)
+        with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+            run = agent_blueprint_service.run_test_case(blueprint_id, case["test_case_id"], BackgroundTasks(), OPERATOR)
+        agent_blueprint_service.sync_test_run_result({"run_id": run["run"]["run_id"], "status": "completed", "result": {"summary": {"ok": True}}})
+
         published = agent_blueprint_service.publish(blueprint_id, {}, ADMIN)
         self.assertEqual(published["blueprint"]["status"], "published")
         with self.assertRaises(Exception):
             agent_blueprint_service.update_basic(blueprint_id, {"display_name": "Nope"}, ADMIN)
 
         v2 = agent_blueprint_service.create_version(blueprint_id, {"change_summary": "second"}, OPERATOR)
+        agent_blueprint_service.validate(blueprint_id, OPERATOR)
+        with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+            run_v2 = agent_blueprint_service.run_test_case(blueprint_id, case["test_case_id"], BackgroundTasks(), OPERATOR)
+        agent_blueprint_service.sync_test_run_result({"run_id": run_v2["run"]["run_id"], "status": "completed", "result": {"summary": {"ok": True}}})
         agent_blueprint_service.publish(blueprint_id, {"version_id": v2["version_id"]}, ADMIN)
         rolled = agent_blueprint_service.rollback(blueprint_id, {"version_id": published["blueprint"]["published_version_id"]}, ADMIN)
         self.assertEqual(rolled["blueprint"]["status"], "published")
@@ -60,10 +69,7 @@ class AgentBlueprintServiceTest(unittest.TestCase):
         self.assertEqual(cloned["blueprint"]["status"], "draft")
         self.assertIsNone(cloned["blueprint"]["published_version_id"])
 
-        with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
-            run = agent_blueprint_service.run_test_case(blueprint_id, case["test_case_id"], BackgroundTasks(), OPERATOR)
-        self.assertTrue(run["run"]["run_id"].startswith("run_"))
-        agent_blueprint_service.sync_test_run_result({"run_id": run["run"]["run_id"], "status": "completed", "result": {"summary": {"ok": True}}})
+        self.assertTrue(run_v2["run"]["run_id"].startswith("run_"))
         self.assertEqual(agent_blueprint_store.get_test_case(case["test_case_id"])["last_result"]["status"], "PASS")
 
         agent_blueprint_seed_service.safe_seed_video_blueprint()

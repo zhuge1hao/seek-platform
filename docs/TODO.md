@@ -1,4 +1,27 @@
 ﻿# TODO
+## v1.7.1 已完成目标
+
+- 蓝图结构化编辑器。
+- 输入协议编辑器。
+- 方法论步骤编辑器。
+- Prompt 编辑器。
+- 执行配置编辑器。
+- 输出协议编辑器。
+- 高级 JSON 编辑保留。
+- 输入表单预览。
+- 结果结构预览。
+- `agent_blueprint_test_runs`。
+- `agent_blueprint_validation_results`。
+- 测试运行历史。
+- 验证结果历史。
+- 蓝图版本差异。
+- 发布质量门禁。
+- 回滚差异确认。
+- 视频拆解蓝图发布闭环。
+- `/agent` 蓝图信息轻量展示。
+- Blueprint SWR hooks。
+- Blueprint 自动化测试。
+- 文档更新。
 
 ## v1.7 已完成目标
 
@@ -57,3 +80,4 @@
 - 观察 Agent Run SSE 的稳定性，再决定是否降低 polling 频率。
 - legacy JSON fallback 保持关闭，确认长时间稳定后再考虑移除更多旧路径。
 - 视频拆解链路继续补充更多失败样例和 artifact 边界测试。
+

@@ -132,6 +132,53 @@ export type AgentBlueprintRelease = {
   operator_user_id: string;
   note?: string;
   created_at: string;
+  metadata?: Record<string, unknown>;
+};
+export type AgentBlueprintValidationRecord = {
+  validation_id: string;
+  blueprint_id: string;
+  version_id: string;
+  valid: boolean;
+  is_valid: boolean;
+  error_count: number;
+  warning_count: number;
+  errors: Array<{ field: string; message: string }>;
+  warnings: Array<{ field: string; message: string }>;
+  checked_at: string;
+  checked_by: string;
+  validator_version?: string;
+};
+export type AgentBlueprintTestRun = {
+  test_run_id: string;
+  blueprint_id: string;
+  version_id: string;
+  test_case_id: string;
+  agent_run_id?: string | null;
+  status: string;
+  expected_status?: string;
+  actual_status?: string;
+  started_at: string;
+  completed_at?: string | null;
+  duration_ms?: number | null;
+  result_summary?: Record<string, unknown>;
+  missing_result_fields?: string[];
+  missing_artifacts?: string[];
+  error_message?: string;
+  created_by: string;
+};
+export type AgentBlueprintReleaseGate = {
+  allowed: boolean;
+  blocking_errors: Array<{ code: string; message: string }>;
+  warnings: Array<{ code: string; message: string }>;
+  validation_id?: string | null;
+  test_run_id?: string | null;
+  version_id?: string;
+};
+export type AgentBlueprintDiff = {
+  blueprint_id: string;
+  has_changes: boolean;
+  summary: Record<string, number>;
+  sections: Array<{ section: string; label: string; has_changes: boolean; changes: Array<Record<string, unknown>> }>;
 };
 export type AgentBlueprintDetail = {
   blueprint: AgentBlueprint;
@@ -145,6 +192,8 @@ export type AgentBlueprintValidation = {
   valid: boolean;
   errors: Array<{ field: string; message: string }>;
   warnings: Array<{ field: string; message: string }>;
+  validation_id?: string;
+  version_id?: string;
 };
 
 export type ConnectorTestResult = { status: string; connector_id: string; mode: string; duration_ms: number; http_status?: number | null; response_preview?: unknown; error?: string | null };
@@ -678,8 +727,8 @@ export async function validateAgentBlueprint(blueprintId: string): Promise<Agent
   return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/validate`, { method: "POST" }));
 }
 
-export async function publishAgentBlueprint(blueprintId: string, versionId?: string): Promise<AgentBlueprintDetail> {
-  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/publish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version_id: versionId }) }));
+export async function publishAgentBlueprint(blueprintId: string, versionId?: string, confirmWarnings = false): Promise<AgentBlueprintDetail> {
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/publish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version_id: versionId, confirm_warnings: confirmWarnings }) }));
 }
 
 export async function rollbackAgentBlueprint(blueprintId: string, versionId: string): Promise<AgentBlueprintDetail> {
@@ -701,6 +750,31 @@ export async function saveAgentBlueprintTestCase(blueprintId: string, payload: R
 
 export async function runAgentBlueprintTestCase(blueprintId: string, testCaseId: string): Promise<Record<string, unknown>> {
   return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/test-cases/${encodeURIComponent(testCaseId)}/run`, { method: "POST" }));
+}
+
+export async function listAgentBlueprintValidations(blueprintId: string): Promise<{ items: AgentBlueprintValidationRecord[] }> {
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/validations`));
+}
+
+export async function listAgentBlueprintTestRuns(blueprintId: string, limit = 20): Promise<{ items: AgentBlueprintTestRun[] }> {
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/test-runs?limit=${limit}`));
+}
+
+export async function checkAgentBlueprintReleaseGate(blueprintId: string, versionId?: string): Promise<AgentBlueprintReleaseGate> {
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/release-gate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version_id: versionId }) }));
+}
+
+export async function diffAgentBlueprintVersions(blueprintId: string, fromVersionId: string, toVersionId: string): Promise<AgentBlueprintDiff> {
+  const query = new URLSearchParams({ from_version_id: fromVersionId, to_version_id: toVersionId });
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/versions/diff?${query.toString()}`));
+}
+
+export async function previewAgentBlueprintInput(blueprintId: string, inputSchema: Record<string, unknown>): Promise<Record<string, unknown>> {
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/preview/input`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ input_schema: inputSchema }) }));
+}
+
+export async function previewAgentBlueprintResult(blueprintId: string, outputSchema: Record<string, unknown>, resultUiConfig: Record<string, unknown>): Promise<Record<string, unknown>> {
+  return parseJsonResponse(await apiFetch(`${API_BASE_URL}/api/agent-blueprints/${encodeURIComponent(blueprintId)}/preview/result`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ output_schema: outputSchema, result_ui_config: resultUiConfig }) }));
 }
 
 export async function exportAgentBlueprint(blueprintId: string): Promise<Record<string, unknown>> {

@@ -73,6 +73,17 @@ class AgentBlueprintApiTest(unittest.TestCase):
             self.assertEqual(viewer_list.status_code, 200)
             self.assertNotIn("bp_api", [item["blueprint_id"] for item in viewer_list.json()["items"]])
 
+            publish_blocked = client.post("/api/agent-blueprints/bp_api/publish", headers=admin_headers, json={})
+            self.assertEqual(publish_blocked.status_code, 409)
+            client.post("/api/agent-blueprints/bp_api/test-cases", headers=op_headers, json={"name": "case", "input": {"prompt": "ok"}})
+            validation = client.post("/api/agent-blueprints/bp_api/validate", headers=op_headers)
+            self.assertEqual(validation.status_code, 200, validation.text)
+            from services import agent_blueprint_store
+            detail = client.get("/api/agent-blueprints/bp_api", headers=admin_headers).json()
+            version_id = detail["current_version"]["version_id"]
+            case = agent_blueprint_store.list_test_cases("bp_api")[0]
+            run = agent_blueprint_store.create_test_run("bp_api", version_id, case["test_case_id"], "operator", "completed")
+            agent_blueprint_store.update_test_run(run["test_run_id"], {"status": "passed", "actual_status": "completed"})
             publish_by_admin = client.post("/api/agent-blueprints/bp_api/publish", headers=admin_headers, json={})
             self.assertEqual(publish_by_admin.status_code, 200, publish_by_admin.text)
             viewer_detail = client.get("/api/agent-blueprints/bp_api", headers=viewer_headers)

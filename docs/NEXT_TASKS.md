@@ -1,6 +1,6 @@
 ﻿# Next Tasks
 
-当前版本：meizhaiseek v1.7
+当前版本：meizhaiseek v1.7.1
 
 ## v1.7.1：视频拆解蓝图迁移与发布闭环优化
 
@@ -202,7 +202,7 @@
 目标：
 
 - `AGENTS.md`、`docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md` 保持 UTF-8。
-- 文档版本与 runtime health 保持 v1.7。
+- 文档版本与 runtime health 保持 v1.7.1。
 - 不把 archive 里的历史备份当当前文档来源。
 
 涉及文件：
@@ -217,5 +217,14 @@
 验收标准：
 
 - active docs 乱码扫描无命中。
-- `/api/admin/runtime/health` 返回 `version=v1.7`。
+- `/api/admin/runtime/health` 返回 `version=v1.7.1`。
 - 新窗口可以只靠交接文档接手项目。
+
+
+## v1.7.1 完成后的下一步
+
+- v1.8：参考项目拆解与蓝图生成助手。
+- v1.8.1：蓝图人工审查和修订流程。
+- v1.9：基于蓝图实现首个非视频业务智能体。
+- v2.0：多智能体工作流编排。
+

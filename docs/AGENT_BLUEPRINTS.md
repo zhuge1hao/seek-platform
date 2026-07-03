@@ -113,3 +113,13 @@ v1.7 自动幂等创建 `bp_video_script_breakdown`，绑定：
 ### 视频拆解是否改成动态工作流？
 
 没有。视频拆解仍使用稳定的 `video_script_workflow`、`video_agent_payload_builder`、`video_breakdown_result_normalizer`、8001 Connector 和 `VideoBreakdownResultPanel`。
+
+## v1.7.1 发布闭环
+
+v1.7.1 增加表单模式和高级 JSON 模式。表单模式覆盖输入协议、方法论步骤、Prompt、执行配置、输出协议和验收规则；高级 JSON 模式继续用于批量编辑。
+
+每次验证都会写入 `agent_blueprint_validation_results`，每次运行测试都会写入 `agent_blueprint_test_runs`。发布门禁要求当前版本存在有效验证、启用测试用例和最近一次通过的测试运行；warning 需要管理员确认，blocking error 会阻止发布。
+
+版本差异接口支持当前草稿与已发布版本、历史版本之间、回滚目标与当前发布版本之间的对比。输入预览和结果预览只展示结构，不提交任务、不读取本地文件。
+
+视频拆解蓝图仍是 `bp_video_script_breakdown`，继续绑定 `video_script_workflow`、`video_script_agent` 和 `video_breakdown` renderer。蓝图只描述现有链路，不修改本地 8001 Agent，也不复制本地 Agent 内部 Prompt。

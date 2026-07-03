@@ -5,6 +5,7 @@ import sqlite3
 
 
 SCHEMA_VERSION = "20260702_v17_agent_blueprints"
+SCHEMA_VERSION_V171 = "20260703_v171_blueprint_release_loop"
 
 
 def _now() -> str:
@@ -298,6 +299,43 @@ CREATE TABLE IF NOT EXISTS agent_blueprint_releases (
   CHECK(action IN ('publish', 'rollback', 'disable', 'enable', 'deprecate'))
 );
 
+CREATE TABLE IF NOT EXISTS agent_blueprint_test_runs (
+  test_run_id TEXT PRIMARY KEY,
+  blueprint_id TEXT NOT NULL,
+  version_id TEXT NOT NULL,
+  test_case_id TEXT NOT NULL,
+  agent_run_id TEXT,
+  status TEXT NOT NULL,
+  expected_status TEXT,
+  actual_status TEXT,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  duration_ms INTEGER,
+  result_summary_json TEXT,
+  validation_result_json TEXT,
+  missing_result_fields_json TEXT,
+  missing_artifacts_json TEXT,
+  error_message TEXT,
+  created_by TEXT NOT NULL,
+  metadata_json TEXT,
+  CHECK(status IN ('pending', 'running', 'passed', 'failed', 'error', 'cancelled'))
+);
+
+CREATE TABLE IF NOT EXISTS agent_blueprint_validation_results (
+  validation_id TEXT PRIMARY KEY,
+  blueprint_id TEXT NOT NULL,
+  version_id TEXT NOT NULL,
+  is_valid INTEGER NOT NULL,
+  error_count INTEGER NOT NULL DEFAULT 0,
+  warning_count INTEGER NOT NULL DEFAULT 0,
+  errors_json TEXT,
+  warnings_json TEXT,
+  checked_at TEXT NOT NULL,
+  checked_by TEXT NOT NULL,
+  validator_version TEXT,
+  metadata_json TEXT
+);
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   version TEXT PRIMARY KEY,
   applied_at TEXT,
@@ -324,6 +362,13 @@ CREATE INDEX IF NOT EXISTS idx_agent_blueprints_agent_id ON agent_blueprints(age
 CREATE INDEX IF NOT EXISTS idx_blueprint_versions_blueprint_number ON agent_blueprint_versions(blueprint_id, version_number);
 CREATE INDEX IF NOT EXISTS idx_blueprint_test_cases_blueprint ON agent_blueprint_test_cases(blueprint_id);
 CREATE INDEX IF NOT EXISTS idx_blueprint_releases_blueprint_created ON agent_blueprint_releases(blueprint_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_blueprint_test_runs_blueprint_created ON agent_blueprint_test_runs(blueprint_id, started_at);
+CREATE INDEX IF NOT EXISTS idx_blueprint_test_runs_test_case_created ON agent_blueprint_test_runs(test_case_id, started_at);
+CREATE INDEX IF NOT EXISTS idx_blueprint_test_runs_version_status ON agent_blueprint_test_runs(version_id, status);
+CREATE INDEX IF NOT EXISTS idx_blueprint_test_runs_agent_run ON agent_blueprint_test_runs(agent_run_id);
+CREATE INDEX IF NOT EXISTS idx_blueprint_validations_blueprint_checked ON agent_blueprint_validation_results(blueprint_id, checked_at);
+CREATE INDEX IF NOT EXISTS idx_blueprint_validations_version_checked ON agent_blueprint_validation_results(version_id, checked_at);
+CREATE INDEX IF NOT EXISTS idx_blueprint_validations_valid ON agent_blueprint_validation_results(is_valid);
 """
 
 
@@ -336,5 +381,9 @@ def run_migrations(conn: sqlite3.Connection) -> None:
     conn.execute(
         "INSERT OR IGNORE INTO schema_migrations(version, applied_at, description) VALUES (?, ?, ?)",
         (SCHEMA_VERSION, _now(), "v1.7 agent blueprint center"),
+    )
+    conn.execute(
+        "INSERT OR IGNORE INTO schema_migrations(version, applied_at, description) VALUES (?, ?, ?)",
+        (SCHEMA_VERSION_V171, _now(), "v1.7.1 blueprint release loop"),
     )
     conn.commit()

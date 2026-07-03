@@ -137,6 +137,7 @@ export function AgentWorkspace({
       ) : null}
 
       {notice ? <p className="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">{notice}</p> : null}
+      {selectedAgent ? <BlueprintSummary agent={selectedAgent} /> : null}
 
       {selectedAgentId === "video-script-breakdown" ? (
         <VideoScriptAgentPanel conversationId={conversationId} initialPrompt={inputValue} initialRun={initialRun} onConversationChange={onConversationChange} onOpenAgentSelector={handleOpenAgentSelector} onRunActiveChange={setHasRunningTask} onRunChange={onRunChange} selectedAgentId={selectedAgentId} />
@@ -165,5 +166,22 @@ export function AgentWorkspace({
         />
       )}
     </div>
+  );
+}
+
+function BlueprintSummary({ agent }: { agent: AgentDefinition }) {
+  if (agent.blueprint_status !== "published") return null;
+  const steps = agent.blueprint_methodology_summary?.steps || [];
+  const outputs = agent.blueprint_output_summary?.sections || [];
+  return (
+    <section className="mb-3 rounded-xl border border-violet-100 bg-violet-50/50 px-4 py-3 text-sm text-slate-700">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-semibold text-violet-700">蓝图 v{agent.blueprint_version || "-"}</span>
+        <span>最近测试：{agent.blueprint_last_test_status || "-"}</span>
+        <span>方法论步骤：{agent.blueprint_methodology_summary?.step_count || 0}</span>
+        <span>输出区块：{agent.blueprint_output_summary?.section_count || 0}</span>
+      </div>
+      {(steps.length || outputs.length) ? <p className="mt-2 text-xs text-slate-500">方法论：{steps.join(" / ") || "-"}；输出：{outputs.join(" / ") || "-"}</p> : null}
+    </section>
   );
 }

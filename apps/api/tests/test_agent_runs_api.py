@@ -33,7 +33,7 @@ class AgentRunsApiTest(unittest.TestCase):
             token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
             headers = {"Authorization": f"Bearer {token}"}
             runtime = client.get("/api/admin/runtime/health", headers=headers).json()
-            self.assertEqual(runtime["version"], "v1.7")
+            self.assertEqual(runtime["version"], "v1.7.1")
             self.assertFalse(runtime["legacy_json_fallback_enabled"])
             status = client.get("/api/agents/video-script/status", headers=headers)
             self.assertNotEqual(status.status_code, 500)

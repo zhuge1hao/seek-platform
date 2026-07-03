@@ -2,7 +2,11 @@
 
 ## 当前版本
 
-- 版本：meizhaiseek v1.7
+- 版本：meizhaiseek v1.7.1
+
+## v1.7.1：智能体蓝图发布闭环与可视化配置增强
+
+v1.7.1 在 v1.7 智能体蓝图基础能力上，补齐结构化配置、测试历史、验证历史、版本差异、发布门禁、预览和回滚确认能力。该版本将蓝图中心从 JSON 配置工具升级为可编辑、可验证、可测试、可发布、可回滚的完整管理闭环，同时继续保持 Blueprint 只描述和管理现有 Agent Registry、Workflow 与 Connector，不进行任意动态代码执行。
 - 名称：智能体蓝图与方法论配置中心
 - 模型展示名：meizhaiseek 2.0
 
@@ -70,3 +74,4 @@ v1.7 将平台从单独开发智能体功能升级为统一管理智能体方法
 ## v1.6.5 说明
 
 v1.6.5 根据 2026-07-01 架构评估报告继续处理 P1-P3 优化项。该版本扩大 SWR 数据层覆盖范围，增加 auth、conversation、agent-runs、video normalizer 等核心路径测试；治理残留日志与 legacy JSON fallback；补充 Docker Compose 生产模式；新增 SQLite async wrapper 第一阶段；新增 Agent Run SSE 状态推送并保留 polling fallback；强化视频拆解 E2E 测试，提升工程稳定性、可维护性和本地部署可靠性。
+
