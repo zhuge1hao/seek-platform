@@ -7,6 +7,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      APP_LEGACY_JSON_FALLBACK: "false"
+      APP_SQLITE_PATH: ${{ runner.temp }}/meizhaiseek-ci.sqlite3
+      APP_RUNTIME_DIR: ${{ runner.temp }}/meizhaiseek-runtime
+      AUTH_TOKEN_SECRET: ci-test-secret
+      MEIZHAISEEK_ADMIN_USERNAME: admin
+      MEIZHAISEEK_ADMIN_INITIAL_PASSWORD: admin123456
+      DEEPSEEK_API_KEY: ""
+      BGE_MODEL_PATH: ""
     steps:
       - uses: actions/checkout@v4
 
@@ -16,6 +25,9 @@ jobs:
 
       - name: Install API dependencies
         run: python -m pip install -r apps/api/requirements.txt
+
+      - name: Install API test dependencies
+        run: python -m pip install pytest
 
       - name: Compile API
         run: python -m compileall apps/api

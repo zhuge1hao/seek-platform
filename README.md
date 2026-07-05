@@ -1,8 +1,8 @@
 ﻿# meizhaiseek-platform
 
-meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 工作台。当前版本为 **meizhaiseek v1.7.1**，包含 Next.js 前端、FastAPI 后端、APP SQLite、RAG SQLite、AI 对话、AI 智能体、Dataset、Connector、Debug Payload、后台账号管理、视频拆解智能体产物闭环，以及智能体蓝图与方法论配置中心。
+meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 工作台。当前版本为 **meizhaiseek v1.7.2**，包含 Next.js 前端、FastAPI 后端、APP SQLite、RAG SQLite、AI 对话、AI 智能体、Dataset、Connector、Debug Payload、后台账号管理、视频拆解智能体产物闭环，以及智能体蓝图与方法论配置中心。
 
-v1.7.1 在 v1.7 蓝图中心上补齐发布闭环：结构化编辑、验证历史、测试运行历史、版本差异、发布门禁、输入/结果预览和 `/agent` 蓝图摘要。Blueprint 仍只描述现有 Agent Registry、Workflow 与 Connector，不执行任意代码。
+v1.7.2 在 v1.7 蓝图中心上补齐发布闭环：结构化编辑、验证历史、测试运行历史、版本差异、发布门禁、输入/结果预览和 `/agent` 蓝图摘要。Blueprint 仍只描述现有 Agent Registry、Workflow 与 Connector，不执行任意代码。
 
 模型展示名保持为 **meizhaiseek 2.0**。
 
@@ -91,3 +91,7 @@ http://host.docker.internal:8001
 
 这些运行时文件不应提交到 Git。
 
+
+## meizhaiseek v1.7.2
+
+v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.

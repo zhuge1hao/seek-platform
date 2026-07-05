@@ -1,5 +1,5 @@
-import { Bot, UserRound } from "lucide-react";
-import type { ConversationMessage } from "@/lib/api";
+import { Bot, Download, UserRound } from "lucide-react";
+import { downloadArtifact, type AgentRunFile, type ConversationMessage } from "@/lib/api";
 
 const statusLabels: Record<string, string> = {
   submitted: "已提交", running: "执行中", completed: "已完成", failed: "失败", cancelled: "已取消"
@@ -21,7 +21,38 @@ export function ConversationMessages({ messages }: { messages: ConversationMessa
             </div>
             <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">{message.content}</p>
             {message.error ? <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{message.error}</p> : null}
+            {message.role === "assistant" ? <MessageResult message={message} /> : null}
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MessageResult({ message }: { message: ConversationMessage }) {
+  const summary = Object.entries(message.result?.summary || {}).filter(([, value]) => value !== undefined && value !== null && value !== "");
+  const files = (message.result?.files || []) as AgentRunFile[];
+  if (!summary.length && !files.length) return null;
+  return (
+    <div className="mt-3 space-y-2">
+      {summary.length ? (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {summary.slice(0, 6).map(([key, value]) => (
+            <div className="rounded-xl bg-white px-3 py-2 text-xs" key={key}>
+              <p className="text-slate-400">{key}</p>
+              <p className="mt-1 break-words font-semibold text-slate-700">{typeof value === "object" ? JSON.stringify(value) : String(value)}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {files.slice(0, 5).map((file) => (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 text-xs" key={file.artifact_id || file.path || file.name}>
+          <span className="min-w-0 break-all font-medium text-slate-700">{file.filename || file.name || file.path}</span>
+          {file.download_url ? (
+            <button className="inline-flex items-center gap-1 rounded-full bg-violet-600 px-2 py-1 font-semibold text-white" onClick={() => void downloadArtifact(file.download_url!, file.filename || file.name)} type="button">
+              <Download className="h-3 w-3" />下载
+            </button>
+          ) : null}
         </div>
       ))}
     </div>

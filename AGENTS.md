@@ -18,8 +18,8 @@ cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
 后端单独启动：
 
 ```powershell
-cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
-python -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000 --reload
+cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 前端单独启动：
@@ -50,6 +50,7 @@ http://host.docker.internal:8001
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
 python -m compileall apps/api
 python -m unittest discover -s apps/api/tests
+python -m pytest apps/api/tests
 cd apps\web
 $env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'
 npm.cmd run build
@@ -123,6 +124,7 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 - `apps/api/routers`：HTTP API。
 - `apps/api/schemas`：Pydantic 请求/响应模型。
 - `apps/api/services`：存储、鉴权、Connector、Dataset、local agent、conversation、QA/RAG。
+- `apps/api/services/agent_blueprint_*.py`：Blueprint store/service/validator/import/export/diff/release gate/preview/seed。
 - `apps/api/workflows`：Agent workflow 分发。
 - `apps/api/tests`：标准 unittest。
 - `apps/api/runtime`：本地运行数据，不提交 Git。
@@ -154,4 +156,7 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 - 不要破坏 v1.5.7 APP SQLite 迁移和 APP/RAG SQLite 分离。
 - 不要破坏 v1.5.8 conversation 增量 upsert、Dataset SQLite、service_events。
 - 不要破坏 v1.6+ 视频拆解智能体生产化、真实执行、artifact 闭环。
+- 不要破坏 v1.7+ Blueprint 描述层、视频拆解 published 蓝图、验证历史、测试历史、发布门禁、导入导出和回滚能力。
+- 不要把 Blueprint 改成任意 Python、shell 或 JSON 动态执行器。
+- 不要把 draft/testing 蓝图伪造成正式可用能力。
 - 不要提交 `.env`、runtime、SQLite、uploads、models、logs、node_modules、`.next`。

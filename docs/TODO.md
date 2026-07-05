@@ -1,5 +1,5 @@
 ﻿# TODO
-## v1.7.1 已完成目标
+## v1.7.2 已完成目标
 
 - 蓝图结构化编辑器。
 - 输入协议编辑器。
@@ -72,7 +72,7 @@
 
 ## 后续建议
 
-- v1.7.1：视频拆解蓝图迁移与发布闭环优化。
+- v1.7.2：视频拆解蓝图迁移与发布闭环优化。
 - v1.8：参考项目拆解与蓝图生成助手。
 - v1.9：基于蓝图实现第一个非视频业务智能体。
 - v2.0：多智能体工作流编排。
@@ -81,3 +81,7 @@
 - legacy JSON fallback 保持关闭，确认长时间稳定后再考虑移除更多旧路径。
 - 视频拆解链路继续补充更多失败样例和 artifact 边界测试。
 
+
+## meizhaiseek v1.7.2
+
+v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.

@@ -32,3 +32,7 @@ v1.6.5 保留 `apps/web/src/lib/api.ts` 作为唯一 HTTP、鉴权和错误处�
 ## /agent 状态边界
 
 运行中的 run 优先使用 `useAgentRunEvents`。SSE 失败后才启用 `useAgentRunPolling`。SWR 不参与 run 状态高频刷新。
+
+## meizhaiseek v1.7.2
+
+v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.

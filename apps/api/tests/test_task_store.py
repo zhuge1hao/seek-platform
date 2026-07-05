@@ -2,6 +2,7 @@ import os
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta
 from pathlib import Path
 
 
@@ -43,6 +44,7 @@ class TaskStoreTest(unittest.TestCase):
         retry = task_store.clone_run_for_retry(run["run_id"], "user_a")
         self.assertIsNotNone(retry)
         self.assertNotEqual(retry["run_id"], run["run_id"])
+        self.assertEqual(retry["conversation_id"], conversation["conversation_id"])
 
         failed = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "video_script_breakdown", "prompt": "fail"})
         failed_conversation, _ = conversation_store.attach_run(failed)
@@ -55,6 +57,43 @@ class TaskStoreTest(unittest.TestCase):
         self.assertEqual(failed_loaded["summary"], "boom")
         self.assertEqual(failed_assistant["status"], "failed")
         self.assertEqual(failed_assistant["content"], "boom")
+
+    def test_summary_result_cancel_retry_options_and_stale_repair(self) -> None:
+        from services import agent_run_maintenance, app_sqlite, task_store
+
+        run = task_store.create_run_from_payload({
+            "user_id": "user_a",
+            "username": "user_a",
+            "role": "operator",
+            "agent_type": "title_writing",
+            "prompt": "do it",
+            "workflow_options": {"temperature": 0.2, "api_key": "not-in-summary"},
+        })
+        self.assertEqual(run["status"], "running")
+        completed = task_store.update_run(run["run_id"], {"status": "completed", "progress": 100, "result": {"answer": "ok", "raw_response": "x" * 9000}}, "user_a")
+        summary = task_store.summarize_run(completed)
+        self.assertTrue(summary["result_has_more"])
+        self.assertNotIn("raw_response", str(summary["result"]))
+        self.assertEqual(task_store.get_run(run["run_id"], "user_a", include_legacy=False)["result"]["raw_response"], "x" * 9000)
+
+        retry = task_store.clone_run_for_retry(run["run_id"], "user_a")
+        self.assertEqual(retry["workflow_options"], {"temperature": 0.2, "api_key": "not-in-summary"})
+
+        cancel = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "cancel"})
+        cancelled, error = task_store.cancel_run(cancel["run_id"], "user_a")
+        self.assertIsNone(error)
+        self.assertEqual(cancelled["status"], "cancelled")
+
+        stale = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "stale"})
+        old = (datetime.now() - timedelta(minutes=180)).strftime("%Y-%m-%d %H:%M:%S")
+        stale["updated_at"] = old
+        with app_sqlite.connection() as conn:
+            conn.execute("UPDATE agent_runs SET updated_at=?, metadata_json=? WHERE run_id=?", (old, app_sqlite.json_dump(stale), stale["run_id"]))
+        repaired = agent_run_maintenance.repair_stale(timeout_minutes=1)
+        self.assertGreaterEqual(repaired["repaired"], 1)
+        self.assertEqual(task_store.get_run(stale["run_id"], "user_a", include_legacy=False)["status"], "failed")
+        cleanup = agent_run_maintenance.cleanup(days=1, statuses=["completed", "failed", "running"], dry_run=True)
+        self.assertNotIn("running", cleanup["statuses"])
 
 
 if __name__ == "__main__":

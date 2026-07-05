@@ -146,6 +146,13 @@ def _proof_frames_from_timeline(timeline: list[dict[str, Any]]) -> list[dict[str
 
 
 def normalize_video_breakdown_result(raw_response: Any, run: dict[str, Any], output_dir: str, files: list[dict[str, Any]]) -> dict[str, Any]:
+    if isinstance(raw_response, str):
+        candidate = Path(raw_response)
+        if candidate.suffix.lower() == ".json" and candidate.exists() and candidate.is_file():
+            try:
+                raw_response = json.loads(candidate.read_text(encoding="utf-8"))
+            except Exception:
+                pass
     raw_text = str(raw_response) if not isinstance(raw_response, dict) else ""
     raw = raw_response if isinstance(raw_response, dict) else {"text": raw_text}
     data = _as_dict(raw.get("data"))

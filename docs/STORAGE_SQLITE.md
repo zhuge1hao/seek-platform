@@ -37,4 +37,8 @@ APP_LEGACY_JSON_FALLBACK=false
 
 历史日志归档到 `apps/api/runtime/logs/archive/`。日志目录不提交 Git。
 
-v1.7.1 追加 APP SQLite 表：`agent_blueprint_test_runs`、`agent_blueprint_validation_results`。它们只保存蓝图测试运行历史和验证历史，不改变 APP SQLite 与 RAG SQLite 的边界。
+v1.7.2 追加 APP SQLite 表：`agent_blueprint_test_runs`、`agent_blueprint_validation_results`。它们只保存蓝图测试运行历史和验证历史，不改变 APP SQLite 与 RAG SQLite 的边界。
+
+## meizhaiseek v1.7.2
+
+v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.

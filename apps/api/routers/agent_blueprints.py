@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 
-from services import agent_blueprint_diff_service, agent_blueprint_import_export, agent_blueprint_preview_service, agent_blueprint_service, agent_blueprint_store, audit_log_service
+from services import agent_blueprint_diff_service, agent_blueprint_import_export, agent_blueprint_preview_service, agent_blueprint_registry_sync_service, agent_blueprint_service, agent_blueprint_store, audit_log_service
 from services.agent_blueprint_release_gate import ReleaseGateError
 from services.agent_blueprint_service import BlueprintServiceError
 from services.auth_service import require_admin, require_operator_or_admin, require_viewer_or_above
@@ -50,6 +50,23 @@ def import_blueprint(payload: dict[str, Any], request: Request, user: dict[str, 
     except Exception as exc:
         _raise(exc)
     audit_log_service.write_log("agent_blueprint.import", "success", user, (result.get("blueprint") or {}).get("blueprint_id", "agent_blueprint_import"), {"action": result.get("action")}, audit_log_service.client_ip(request))
+    return result
+
+
+@router.get("/agent-blueprints/registry-sync/preview")
+def preview_registry_sync(user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, Any]:
+    return agent_blueprint_registry_sync_service.preview_registry_sync()
+
+
+@router.post("/agent-blueprints/registry-sync/apply")
+def apply_registry_sync(payload: dict[str, Any], request: Request, user: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
+    agent_ids = payload.get("agent_ids") if isinstance(payload, dict) else []
+    if not isinstance(agent_ids, list):
+        raise HTTPException(status_code=422, detail="agent_ids must be a list")
+    if payload.get("create_as") not in (None, "draft"):
+        raise HTTPException(status_code=422, detail="create_as must be draft")
+    result = agent_blueprint_registry_sync_service.apply_registry_sync([str(item) for item in agent_ids], user)
+    audit_log_service.write_log("agent_blueprint.registry_sync.apply", "success", user, "agent_blueprint_registry_sync", {"agent_ids": agent_ids, "created_count": len(result.get("created") or [])}, audit_log_service.client_ip(request))
     return result
 
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -34,6 +34,8 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
   const [draft, setDraft] = useState<Record<string, any>>({});
   const [jsonText, setJsonText] = useState("{}");
   const [error, setError] = useState("");
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const next = version ? {
@@ -59,7 +61,7 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
     try {
       const payload = mode === "json" ? JSON.parse(jsonText || "{}") : draft;
       setError("");
-      onSave({ ...payload, change_summary: "v1.7.1 visual editor update" });
+      onSave({ ...payload, change_summary: "v1.7.2 visual editor update" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "JSON 格式错误");
     }
@@ -88,6 +90,13 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
     [next[index], next[target]] = [next[target], next[index]];
     setter(next);
   };
+  const reorderSteps = (from: number, to: number) => {
+    if (readOnly || from === to || from < 0 || to < 0 || from >= steps.length || to >= steps.length) return;
+    const next = [...steps];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setPart("methodology", { ...(draft.methodology || {}), steps: next.map((item, order) => ({ ...item, order: order + 1 })) });
+  };
 
   return (
     <div className="space-y-4">
@@ -114,7 +123,31 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
           </Section>
 
           <Section title="方法论步骤">
-            {steps.map((step, index) => <div className="rounded-lg border p-3" key={index}>
+            {steps.map((step, index) => <div
+              className={`rounded-lg border p-3 ${dragOverIndex === index ? "border-violet-400 bg-violet-50" : ""}`}
+              draggable={!readOnly}
+              key={index}
+              onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+              onDragOver={(event) => {
+                if (readOnly) return;
+                event.preventDefault();
+                setDragOverIndex(index);
+              }}
+              onDragStart={(event) => {
+                if (readOnly) return;
+                setDragIndex(index);
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", String(index));
+              }}
+              onDrop={(event) => {
+                if (readOnly) return;
+                event.preventDefault();
+                const from = dragIndex ?? Number(event.dataTransfer.getData("text/plain"));
+                reorderSteps(from, index);
+                setDragIndex(null);
+                setDragOverIndex(null);
+              }}
+            >
               <Row><Text value={step.step_id} onChange={(value) => setStep(index, { step_id: value })} readOnly={readOnly} placeholder="step_id" /><Text value={step.name} onChange={(value) => setStep(index, { name: value })} readOnly={readOnly} placeholder="name" /></Row>
               <Text value={step.description} onChange={(value) => setStep(index, { description: value })} readOnly={readOnly} placeholder="description" />
               <Row><Text value={(step.input_fields || []).join(", ")} onChange={(value) => setStep(index, { input_fields: split(value) })} readOnly={readOnly} placeholder="input_fields" /><Text value={(step.output_fields || []).join(", ")} onChange={(value) => setStep(index, { output_fields: split(value) })} readOnly={readOnly} placeholder="output_fields" /></Row>

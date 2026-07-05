@@ -1,4 +1,4 @@
-MOCK_ANSWER = "已收到你的需求。当前是 meizhaiseek v1.7.1，AI 对话已接入真实问答能力。"
+MOCK_ANSWER = "已收到你的需求。当前是 meizhaiseek v1.7.2，AI 对话已接入真实问答能力。"
 
 
 def generate_mock_answer(prompt: str) -> str:

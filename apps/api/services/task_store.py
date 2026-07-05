@@ -152,6 +152,8 @@ def _write_run(run: dict[str, Any]) -> dict[str, Any]:
         )
     if run.get("conversation_id"):
         service_events.emit_run_updated(run)
+    from services import agent_run_event_hub
+    agent_run_event_hub.publish_run_event(run)
     return run
 
 

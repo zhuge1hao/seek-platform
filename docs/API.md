@@ -1,8 +1,8 @@
 ﻿# API
 
-本文档记录 meizhaiseek v1.7.1 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
+本文档记录 meizhaiseek v1.7.2 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
 
-## Agent Blueprint v1.7.1 增强接口
+## Agent Blueprint v1.7.2 增强接口
 
 - `GET /api/agent-blueprints/{blueprint_id}/versions/diff?from_version_id=&to_version_id=`：返回稳定 JSON 版本差异，Prompt 差异仅作为响应展示，不写入审计明细。
 - `GET /api/agent-blueprints/{blueprint_id}/validations`：查询验证历史。viewer 不可访问。
@@ -25,12 +25,12 @@
 
 `GET /api/admin/runtime/health`
 
-仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.7.1 返回：
+仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.7.2 返回：
 
 ```json
 {
   "service": "meizhaiseek-api",
-  "version": "v1.7.1",
+  "version": "v1.7.2",
   "legacy_json_fallback_enabled": false,
   "warnings": []
 }
@@ -179,3 +179,23 @@ data: {"run_id":"run_xxx","status":"running","progress":20}
 - `GET /api/agent-runs/{run_id}/artifacts/{artifact_id}/download`: 按 user/run 校验下载 artifact。
 
 
+
+## v1.7.2 API additions
+
+### Runtime health
+
+`GET /api/admin/runtime/health` returns `version: v1.7.2` and includes `legacy_json_fallback_enabled`, `legacy_json_fallback_usage_count`, `legacy_json_fallback_last_used_at`, `async_store: { enabled, max_concurrency }`, and `agent_run_events: { transport: "sse", polling_fallback: true, event_hub: true }`. Sensitive secrets are not returned.
+
+### Registry sync
+
+`GET /api/agent-blueprints/registry-sync/preview` is available to operator/admin users and reports registry-only, blueprint-only, matched, conflict, disabled, and deprecated bindings.
+
+`POST /api/agent-blueprints/registry-sync/apply` is admin-only. Body: `{ "agent_ids": ["..."], "create_as": "draft" }`. It only creates draft Blueprints for registry-only agents and never publishes or overwrites existing published Blueprints.
+
+### Agent Run events
+
+Agent Run SSE remains the primary realtime channel. v1.7.2 adds an in-process Event Hub so SSE can react to task_store updates before heartbeat polling. SQLite remains the source of truth and polling fallback remains supported.
+
+### Blueprint release E2E
+
+The default release E2E test uses mock/internal execution and does not require DeepSeek, BGE, or the local 8001 Connector. The optional video Blueprint E2E remains separate.

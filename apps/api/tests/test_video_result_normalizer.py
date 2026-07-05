@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -30,6 +31,29 @@ class VideoResultNormalizerTest(unittest.TestCase):
         self.assertEqual(text_result["summary"]["raw_shot_count"], 12)
         self.assertEqual(text_result["summary"]["model_optimized_shot_count"], 5)
         self.assertIn("normalization_warnings", text_result)
+
+    def test_json_path_missing_report_preview_and_artifacts(self) -> None:
+        from services.video_breakdown_result_normalizer import normalize_video_breakdown_result
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            xlsx = root / "demo_result.xlsx"
+            xlsx.write_text("x", encoding="utf-8")
+            data_path = root / "response.json"
+            data_path.write_text(
+                '{"status":"completed","data":{"excel_file":"' + str(xlsx).replace("\\", "\\\\") + '","shot_report":"missing.json"},"raw":"'
+                + ("x" * 6000)
+                + '"}',
+                encoding="utf-8",
+            )
+            result = normalize_video_breakdown_result(str(data_path), {"video_path": "demo.mp4"}, str(root), [])
+            self.assertEqual(result["summary"]["status"], "completed")
+            self.assertTrue(result["summary"]["excel_path"].endswith(".xlsx"))
+            self.assertIn("shot_report not found", " ".join(result["normalization_warnings"]))
+            self.assertTrue(result["raw_preview"].endswith("..."))
+            types = {item.get("file_type") or item.get("type") for item in result["files"]}
+            self.assertIn("excel", types)
+            self.assertIn("json", types)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -24,7 +24,7 @@ _load_env_file()
 from routers import admin_runtime, admin_users, agent_blueprints, agent_configs, agent_connectors, agent_runs, agents, artifacts, auth, chat, conversations, datasets, files, qa_chat, qa_knowledge, skills
 from services import agent_blueprint_seed_service, agent_blueprint_service, app_sqlite, conversation_store, json_to_sqlite_migrator, security_config_service, service_events
 
-app = FastAPI(title="meizhaiseek-api", version="1.7.1")
+app = FastAPI(title="meizhaiseek-api", version="1.7.2")
 
 app.add_middleware(
     CORSMiddleware,

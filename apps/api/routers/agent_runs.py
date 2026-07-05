@@ -12,7 +12,7 @@ from schemas.agent_runs import (
     default_generic_session_id,
     default_video_script_session_id,
 )
-from services import agent_blueprint_store, async_store_utils, audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
+from services import agent_blueprint_store, agent_run_event_hub, async_store_utils, audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
 from services.agent_config_store import get_config
 from services.agent_registry import get_agent_by_type
 from services.auth_service import require_admin, require_operator_or_admin, require_viewer_or_above
@@ -138,32 +138,44 @@ def _sse(event: str, data: dict[str, Any]) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+async def iter_agent_run_events(run_id: str, user: dict[str, Any], sleep_func=asyncio.sleep, max_events: int | None = None):
+    await _async_read_run_or_404(run_id, user)
+    last_payload = ""
+    heartbeat_count = 0
+    emitted = 0
+    last_hub_sequence = agent_run_event_hub.latest_sequence(run_id)
+    while True:
+        run = await _async_read_run_or_404(run_id, user)
+        summary = await async_store_utils.async_summarize_run(run) or {}
+        payload = json.dumps(summary, ensure_ascii=False, sort_keys=True)
+        status = str(summary.get("status") or "")
+        if payload != last_payload:
+            last_payload = payload
+            event = status if status in {"completed", "failed", "cancelled"} else "status"
+            yield _sse(event, summary)
+            emitted += 1
+            if status in {"completed", "failed", "cancelled"}:
+                break
+        else:
+            heartbeat_count += 1
+            if heartbeat_count >= 8:
+                heartbeat_count = 0
+                yield _sse("heartbeat", {"run_id": run_id, "status": status})
+                emitted += 1
+        if max_events is not None and emitted >= max_events:
+            break
+        if sleep_func is asyncio.sleep:
+            event = await agent_run_event_hub.wait_for_event(run_id, last_hub_sequence, timeout=2)
+            if event:
+                last_hub_sequence = event[0]
+        else:
+            await sleep_func(2)
+
+
 @router.get("/agent-runs/{run_id}/events")
 async def get_agent_run_events(run_id: str, user: dict[str, Any] = Depends(require_viewer_or_above)) -> StreamingResponse:
     await _async_read_run_or_404(run_id, user)
-
-    async def stream():
-        last_payload = ""
-        heartbeat_count = 0
-        while True:
-            run = await _async_read_run_or_404(run_id, user)
-            summary = await async_store_utils.async_summarize_run(run) or {}
-            payload = json.dumps(summary, ensure_ascii=False, sort_keys=True)
-            status = str(summary.get("status") or "")
-            if payload != last_payload:
-                last_payload = payload
-                event = status if status in {"completed", "failed", "cancelled"} else "status"
-                yield _sse(event, summary)
-                if status in {"completed", "failed", "cancelled"}:
-                    break
-            else:
-                heartbeat_count += 1
-                if heartbeat_count >= 8:
-                    heartbeat_count = 0
-                    yield _sse("heartbeat", {"run_id": run_id, "status": status})
-            await asyncio.sleep(2)
-
-    return StreamingResponse(stream(), media_type="text/event-stream")
+    return StreamingResponse(iter_agent_run_events(run_id, user), media_type="text/event-stream")
 
 
 @router.get("/agent-runs/{run_id}")

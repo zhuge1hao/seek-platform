@@ -1,12 +1,10 @@
 import json
 import os
-import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from services import task_store
-from services.config_backup_service import resolve_runtime_path
 
 
 def _parse_time(value: str | None) -> datetime | None:
@@ -62,9 +60,7 @@ def repair_stale(timeout_minutes: int = 120) -> dict[str, Any]:
 def cleanup(days: int, statuses: list[str], dry_run: bool = True) -> dict[str, Any]:
     allowed_statuses = set(statuses or ["completed", "failed", "cancelled"]) - {"running"}
     threshold = datetime.now() - timedelta(days=max(1, days))
-    archive_dir = resolve_runtime_path("runtime/archived_agent_runs")
-    archive_dir.mkdir(parents=True, exist_ok=True)
-    candidates: list[Path] = []
+    candidates: list[str] = []
     for summary in task_store.list_runs(100000, include_legacy=True, include_all_users=True):
         if summary.get("status") not in allowed_statuses:
             continue
@@ -73,11 +69,5 @@ def cleanup(days: int, statuses: list[str], dry_run: bool = True) -> dict[str, A
             continue
         run_id = summary.get("run_id")
         if run_id:
-            path = task_store._run_path(run_id, summary.get("user_id"))  # type: ignore[attr-defined]
-            if path.exists():
-                candidates.append(path)
-    if not dry_run:
-        for path in candidates:
-            owner = path.parents[1].name if path.parent.name == "agent_runs" and path.parents[1].name != "runtime" else "legacy"
-            shutil.move(str(path), str(archive_dir / f"{owner}_{path.name}"))
+            candidates.append(str(run_id))
     return {"days": days, "statuses": sorted(allowed_statuses), "dry_run": dry_run, "count": len(candidates)}

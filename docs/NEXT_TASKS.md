@@ -1,87 +1,46 @@
 ﻿# Next Tasks
 
-当前版本：meizhaiseek v1.7.1
+褰撳墠鐗堟湰锛歮eizhaiseek v1.7.2
 
-## v1.7.1：视频拆解蓝图迁移与发布闭环优化
+褰撳墠鍘熷垯锛氬厛鍥炲綊鐪熷疄閾捐矾锛屽啀鍋?UI 澧炲己銆備笉瑕佺敤鍓嶇鐘舵€佹浛浠ｅ悗绔换鍔°€佷細璇濄€佺粨鏋滃拰閿欒鎸佷箙鍖栥€?
+## P0锛氬畧浣?`/agent` 鐪熷疄浠诲姟閾捐矾
 
-目标：
+### P0.1 鎻愪氦浠诲姟鍚庡乏渚ц亰澶╄褰曞繀椤绘柊澧炲苟鎸佷箙淇濆瓨
 
-- 在不改写 `video_script_workflow` 的前提下，继续验证 `bp_video_script_breakdown` 的测试用例、发布记录、回滚记录和 `/agent` 真实提交链路。
-- 补充蓝图管理页的结构化输入预览和更细的版本 diff 展示。
-- 增强导入冲突处理和测试结果摘要展示。
-
-验收标准：
-
-- 视频拆解蓝图保持 `published`。
-- 8001 不可达时蓝图测试真实 FAIL；8001 可达时生成真实 run_id 和 artifacts。
-- `/agent`、`/chat`、Dataset、Connector、Debug Payload、用户管理继续正常。
-
-## P0：回归并守住 `/agent` 真实任务链路
-
-### P0.1 任务执行后左侧聊天记录必须新增并持久保存
-
-目标：
-
-- 用户在 `/agent` 智能体界面提交任务后，后端必须创建或更新 agent conversation。
-- 左侧聊天记录必须出现真实记录。
-- 会话必须写入 APP SQLite，不能只存在前端 state 或 localStorage。
-- 用户隔离必须按 `user_id` 生效。
-
-涉及文件：
-
+鐩爣锛?
+- 鐢ㄦ埛鍦?`/agent` 鏅鸿兘浣撶晫闈㈡彁浜や换鍔″悗锛屽悗绔繀椤诲垱寤烘垨鏇存柊 Agent Conversation銆?- 宸︿晶鑱婂ぉ璁板綍蹇呴』鏂板鐪熷疄浼氳瘽銆?- 浼氳瘽銆佹秷鎭€乺un 蹇呴』鍐欏叆 APP SQLite銆?- localStorage 鍙兘淇濆瓨 active id锛屼笉鑳戒繚瀛樺畬鏁?messages 鍏呭綋浜嬪疄鏉ユ簮銆?
+娑夊強鏂囦欢锛?
 - `apps/web/src/app/agent/page.tsx`
+- `apps/web/src/components/AgentWorkspace.tsx`
 - `apps/web/src/hooks/useAgentConversations.ts`
-- `apps/api/routers/conversations.py`
 - `apps/api/routers/agent_runs.py`
+- `apps/api/routers/conversations.py`
 - `apps/api/services/conversation_store.py`
 - `apps/api/services/task_store.py`
 - `apps/api/services/service_events.py`
 
-验收标准：
-
-- `POST /api/agent-runs` 返回 `run_id` 和 `conversation_id`。
-- `GET /api/conversations` 能看到新会话。
-- SQLite `agent_conversations`、`agent_messages`、`agent_runs` 有对应记录。
-- 刷新页面后记录仍存在。
-- 用户 A 不能看到用户 B 的会话。
-
-### P0.2 切换路由再回来，任务和聊天不能消失
-
-目标：
-
-- 从 `/agent` 切到 `/chat`、`/board` 或其他路由，再回 `/agent`，恢复 active conversation、messages、latest run、status、result preview。
-- 刷新页面也能恢复。
-- localStorage 只保存 active conversation id，不保存完整 messages。
-
-涉及文件：
-
+楠屾敹鏍囧噯锛?
+- `POST /api/agent-runs` 杩斿洖鐪熷疄 `run_id` 鍜?`conversation_id`銆?- `GET /api/conversations` 绔嬪嵆鑳界湅鍒版柊浼氳瘽銆?- SQLite `agent_conversations`銆乣agent_messages`銆乣agent_runs` 鍧囨湁瀵瑰簲璁板綍銆?- 鍒锋柊椤甸潰鍚庡乏渚ц褰曚粛瀛樺湪銆?- 鐢ㄦ埛 A 涓嶈兘鐪嬪埌鐢ㄦ埛 B 鐨勪細璇濄€?
+### P0.2 鍒囨崲璺敱鍐嶅洖鏉ワ紝浠诲姟鍜岃亰澶╀笉鑳芥秷澶?
+鐩爣锛?
+- 浠?`/agent` 鍒囧埌 `/chat`銆佸悗鍙版垨鍏朵粬璺敱锛屽啀鍥?`/agent`锛岃兘鎭㈠ active conversation銆乵essages銆乴atest run銆乻tatus銆乺esult/error銆?- 鍒锋柊椤甸潰涔熻兘鎭㈠銆?- running run 鎭㈠鍚庣户缁?SSE锛孲SE 澶辫触鍐?polling銆?
+娑夊強鏂囦欢锛?
 - `apps/web/src/app/agent/page.tsx`
+- `apps/web/src/components/AgentWorkspace.tsx`
 - `apps/web/src/hooks/useAgentRunEvents.ts`
 - `apps/web/src/hooks/useAgentRunPolling.ts`
-- `apps/web/src/components/AgentWorkspace.tsx`
 - `apps/api/services/conversation_store.py`
 - `apps/api/services/task_store.py`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- 鎭㈠浼樺厛绾э細URL `conversation_id` -> localStorage active id -> 鍚庣鏈€杩戜細璇?-> 绌虹姸鎬併€?- running run 鎭㈠鍚庣户缁洿鏂扮姸鎬併€?- completed/failed/cancelled 涓嶉噸澶嶈疆璇€?- 浼氳瘽涓嶅瓨鍦ㄣ€佸凡褰掓。鎴栨棤鏉冮檺鏃朵笉鐧藉睆锛屾樉绀虹┖鐘舵€佸苟娓呯悊鏃犳晥 active id銆?- 蹇€熷垏鎹細璇濇椂鏈€缁堟樉绀烘渶鍚庝竴娆￠€夋嫨鐨勪細璇濄€?
+### P0.3 鑴氭湰/瑙嗛鎷嗚В鏅鸿兘浣撴彁浜ゅ悗蹇呴』鐪熷疄鎵ц
 
-- 恢复优先级：URL `conversation_id` -> localStorage active id -> 空状态。
-- running run 恢复后继续 SSE 或 polling。
-- completed/failed/cancelled 不再重复轮询。
-- 不存在或已归档 conversation 不白屏，显示中文空状态并清理无效 active id。
-- 快速切换会话最终显示最后一次点击的会话。
-
-### P0.3 脚本/视频拆解智能体提交后必须真实执行
-
-目标：
-
-- 视频拆解提交后只调用平台后端 `POST /api/agent-runs`。
-- 后端根据 `agent_type=video_script_breakdown` 进入 `video_script_workflow`。
-- 8001 未启动时任务真实 failed，不伪造成 completed。
-- 8001 可达时真实 POST `/run`，保存 request/response Debug Payload 和 artifacts。
-
-涉及文件：
-
+鐩爣锛?
+- `/agent` 椤甸潰鍙皟鐢ㄥ钩鍙板悗绔?`POST /api/agent-runs`銆?- 鍚庣鎸?`agent_type=video_script_breakdown` 杩涘叆 `video_script_workflow`銆?- 8001 鏈惎鍔ㄦ椂浠诲姟鐪熷疄 failed銆?- 8001 鍙揪鏃剁湡瀹?POST `/run`锛屼繚瀛?Debug Payload銆乺esult_json 鍜?artifacts銆?
+娑夊強鏂囦欢锛?
 - `apps/web/src/components/VideoScriptAgentPanel.tsx`
+- `apps/api/routers/agent_runs.py`
 - `apps/api/workflows/video_script_workflow.py`
 - `apps/api/services/video_agent_payload_builder.py`
 - `apps/api/services/local_agent_client.py`
@@ -89,25 +48,13 @@
 - `apps/api/services/artifact_service.py`
 - `apps/api/scripts/smoke_minimal.py`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- Payload 鍖呭惈 `video_file`銆乣output_dir`銆乣mode`銆乣subtitle_region`銆乣ocr_workers`銆?- `standard` / `shot_text_excel` 鏈€缁堟槧灏勫埌鏈湴 Agent 鍙帴鍙楁ā寮忋€?- 8001 涓嶅彲杈炬椂 run.status 涓?`failed`锛岄敊璇俊鎭竻妤氥€?- 8001 鍙揪鏃?run 鐪熷疄 running/completed锛宺esult_json 鍜?artifacts 鎸佷箙鍖栥€?- Debug Payload request 鏄湡瀹炲彂缁?8001 鐨?`/run` payload銆?
+### P0.4 浠诲姟鐘舵€併€佺粨鏋溿€侀敊璇繀椤诲洖鏄惧埌瀵瑰簲鑱婂ぉ璁板綍
 
-- Payload 使用 `video_file`、`output_dir`、`subtitle_region`、`ocr_workers`。
-- `standard` / `shot_text_excel` 最终映射为 `shot_text_excel`。
-- 8001 不可达时 run.status 为 `failed`，错误信息清楚。
-- 8001 可达时 run 能进入 running/completed，result_json 和 artifacts 持久化。
-- Debug Payload request 是真实发给 8001 的 `/run` payload。
-
-### P0.4 状态、结果、错误必须回显到对应聊天记录
-
-目标：
-
-- `running/completed/failed/cancelled` 通过 `service_events` 同步到对应 conversation 的 assistant message。
-- completed 显示 summary、files、download URL。
-- failed 显示清晰中文错误。
-- retry 追加新 user/assistant messages 和新 run id，不覆盖旧 run。
-
-涉及文件：
-
+鐩爣锛?
+- `running/completed/failed/cancelled` 閫氳繃 `service_events` 鍚屾鍒板搴?conversation 鐨?assistant message銆?- completed 鏄剧ず summary銆乤rtifact銆乨ownload URL銆?- failed 鏄剧ず娓呮櫚閿欒銆?- retry 杩藉姞鏂?user/assistant messages 鍜屾柊 run id锛屼笉瑕嗙洊鏃?run銆?
+娑夊強鏂囦欢锛?
 - `apps/api/services/service_events.py`
 - `apps/api/services/conversation_store.py`
 - `apps/api/services/task_store.py`
@@ -115,116 +62,65 @@
 - `apps/web/src/components/AgentRunStatus.tsx`
 - `apps/web/src/components/VideoBreakdownResultPanel.tsx`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- running 鐘舵€佽兘鍦ㄨ亰澶╄褰曚腑鐪嬪埌浠诲姟杩涜涓€?- completed 鍚庡搴?assistant message 鏄剧ず缁撴灉鎽樿銆?- failed 鍚庡搴?assistant message 鏄剧ず閿欒鎽樿銆?- cancelled 鍚庢樉绀轰换鍔″凡鍙栨秷銆?- 澶氫細璇濄€佸 run 骞跺瓨鏃剁姸鎬佷笉涓茬嚎銆?
+## P1锛氳摑鍥惧彂甯冮棴鐜洖褰?
+### P1.1 瑙嗛鎷嗚В Blueprint 淇濇寔鐪熷疄鏍锋澘
 
-- running 状态能在聊天记录中看到任务进行中。
-- completed 后对应 assistant message 显示结果摘要。
-- failed 后对应 assistant message 显示错误摘要。
-- cancelled 后显示任务已取消。
-- 多会话、多 run 并存时状态不串线。
+鐩爣锛?
+- `bp_video_script_breakdown` 淇濇寔 `published`銆?- 缁х画缁戝畾 `video_script_workflow`銆乣video_script_agent`銆乣video_breakdown`銆?- 钃濆浘娴嬭瘯浠嶅鐢ㄧ湡瀹?Agent Run銆?
+娑夊強鏂囦欢锛?
+- `apps/api/services/agent_blueprint_seed_service.py`
+- `apps/api/services/agent_blueprint_service.py`
+- `apps/api/services/agent_blueprint_release_gate.py`
+- `apps/api/routers/agent_blueprints.py`
+- `apps/web/src/components/AgentBlueprintPanel.tsx`
 
-## P1：回归测试与 UI 稳定
-
-### P1.1 前端 UI 不再因乱码或热编译状态掉页
-
-目标：
-
-- active docs、README、前端源码保持 UTF-8。
-- `/agent`、`/chat`、后台面板 build 和运行时都不白屏。
-- 视频结果 tab 不闪屏，长文本可查看完整内容。
-
-涉及文件：
-
-- `apps/web/src/components/VideoBreakdownResultPanel.tsx`
-- `apps/web/src/components/ArtifactList.tsx`
-- `apps/web/src/components/AdminConsolePanel.tsx`
-- `docs/*.md`
-- `README.md`
-
-验收标准：
-
-- `npm.cmd run build` 通过。
-- `/agent` 返回 200。
-- 乱码扫描 active docs 和 `apps/web/src` 无命中。
-- 点击“镜头时间轴 / 字幕 OCR / 视觉证明帧 / 质量警告 / 输出文件”不闪屏。
-- 长路径 hover 可看完整内容，横向滚动可查看全部文本。
-
-### P1.2 保持测试链路可运行
-
-目标：
-
-- compileall、unittest、build 保持通过。
-- smoke 缺凭据时清晰失败，不误报通过。
-- 8001 E2E 可选执行，不影响默认 CI。
-
-涉及文件：
-
+楠屾敹鏍囧噯锛?
+- 钃濆浘瀛樺湪涓旂姸鎬佷负 `published`銆?- 8001 涓嶅彲杈炬椂钃濆浘娴嬭瘯鐪熷疄 failed锛宼est_run 璁板綍閿欒銆?- 8001 鍙揪鏃惰摑鍥炬祴璇曠敓鎴愮湡瀹?`agent_run_id` 鍜?artifacts銆?- release gate 涓嶅厑璁告棤楠岃瘉銆佹棤娴嬭瘯銆佹祴璇曞け璐ユ垨鐗堟湰涓嶅尮閰嶇殑鍙戝竷銆?
+### P1.2 淇濇寔鏋勫缓銆佹祴璇曞拰 smoke 鍙繍琛?
+鐩爣锛?
+- 鍚庣 compileall銆乽nittest銆乸ytest 閫氳繃銆?- 鍓嶇 build 閫氳繃銆?- smoke 缂哄嚟鎹椂娓呮櫚澶辫触锛屽甫鍑嵁鏃堕€氳繃銆?
+娑夊強鏂囦欢锛?
 - `apps/api/tests/*`
 - `apps/api/scripts/smoke_minimal.py`
-- `.github/workflows/ci.yml`
-- `docs/SMOKE_TESTS.md`
+- `apps/web/src/**/*`
 - `docs/TESTING.md`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- `python -m compileall apps/api` 閫氳繃銆?- `python -m unittest discover -s apps/api/tests` 閫氳繃銆?- `python -m pytest apps/api/tests` 閫氳繃銆?- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm.cmd run build` 閫氳繃銆?- `python apps/api/scripts/smoke_minimal.py` 甯︽湰鍦?admin 鍑嵁鏃堕€氳繃銆?
+## P2锛氬伐绋嬫不鐞嗕笌鏂囨。
 
-- `python -m compileall apps/api` 通过。
-- `python -m unittest discover -s apps/api/tests` 通过。
-- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm.cmd run build` 通过。
-- `python apps/api/scripts/smoke_minimal.py` 在缺凭据时返回非 0 并提示缺少凭据。
+### P2.1 鏈窡韪枃浠朵笌杩愯鏁版嵁娌荤悊
 
-## P2：工程治理
-
-### P2.1 日志与未跟踪文件治理
-
-目标：
-
-- 不提交 runtime、logs、uploads、models、node_modules、`.next`。
-- 历史日志移动到 `apps/api/runtime/logs/archive/`，不删除非空日志。
-- `ARCHITECTURE_EVALUATION_REPORT.md` 若只是参考资料，不提交。
-
-涉及文件：
-
+鐩爣锛?
+- 涓嶆彁浜?`.env`銆乺untime DB銆乬enerated secrets銆乴ogs銆乽ploads銆乵odels銆乶ode_modules銆乣.next`銆佽棰戣緭鍑恒€?- 鏍圭洰褰?`ARCHITECTURE_EVALUATION_REPORT.md` 鑻ュ彧鏄弬鑰冭祫鏂欙紝涓嶆彁浜ゃ€?- 鏃ュ織缁х画鍐欏叆 `apps/api/runtime/logs/`銆?
+娑夊強鏂囦欢锛?
 - `.gitignore`
 - `start-dev.ps1`
-- `start-dev.bat`
 - `apps/api/runtime/logs/`
-- `apps/api/api-8000.log.*`
-- `apps/web/web-3000.log.*`
+- `ARCHITECTURE_EVALUATION_REPORT.md`
 
-验收标准：
-
-- `git status --short` 不出现敏感或 runtime 数据。
-- 日志目录仍写入 `apps/api/runtime/logs/api-dev.log` 和 `web-dev.log`。
-- 非空历史日志如需归档，保留文件内容。
-
-### P2.2 文档保持可读并同步真实版本
-
-目标：
-
-- `AGENTS.md`、`docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md` 保持 UTF-8。
-- 文档版本与 runtime health 保持 v1.7.1。
-- 不把 archive 里的历史备份当当前文档来源。
-
-涉及文件：
-
+楠屾敹鏍囧噯锛?
+- `git status --short` 涓嶅嚭鐜版晱鎰熸垨杩愯鏁版嵁銆?- 闇€瑕佹彁浜ゆ椂鍙?stage 鏈鐩稿叧鏂囦欢锛屼笉浣跨敤鏃犺剳 `git add .`銆?- 闈炵┖鏃ュ織濡傞渶娌荤悊锛屽厛褰掓。锛屼笉鐩存帴鍒犻櫎銆?
+### P2.2 鏂囨。涓庣増鏈繚鎸佷竴鑷?
+鐩爣锛?
+- 褰撳墠鏂囨。淇濇寔 UTF-8 鍙銆?- 鏂囨。銆佸墠绔睍绀哄拰 runtime health 鍧囦负 `meizhaiseek v1.7.2`銆?- 鏂扮獥鍙ｅ彲浠ュ彧闈犱氦鎺ユ枃妗ｆ帴鎵嬨€?
+娑夊強鏂囦欢锛?
 - `AGENTS.md`
 - `docs/CODEX_HANDOFF.md`
 - `docs/NEXT_TASKS.md`
 - `docs/CHANGELOG_CONTEXT.md`
 - `docs/API.md`
 - `docs/PRD.md`
+- `docs/AGENT_BLUEPRINTS.md`
+- `README.md`
 
-验收标准：
+楠屾敹鏍囧噯锛?
+- `/api/admin/runtime/health` 杩斿洖 `version=v1.7.2`銆?- 鍓嶇鏄剧ず `meizhaiseek v1.7.2` 鍜?`meizhaiseek 2.0`銆?- 绂佺敤璇嶆壂鎻忔棤鍛戒腑銆?- 鏂囨。涓嶆妸 archive 閲岀殑鏃у唴瀹瑰綋褰撳墠浜嬪疄銆?
+## 鍚庣画璺嚎
 
-- active docs 乱码扫描无命中。
-- `/api/admin/runtime/health` 返回 `version=v1.7.1`。
-- 新窗口可以只靠交接文档接手项目。
+- v1.8锛氬弬鑰冮」鐩媶瑙ｄ笌钃濆浘鐢熸垚鍔╂墜銆?- v1.8.1锛氳摑鍥句汉宸ュ鏌ュ拰淇娴佺▼銆?- v1.9锛氬熀浜庤摑鍥惧疄鐜伴涓潪瑙嗛涓氬姟鏅鸿兘浣撱€?- v2.0锛氬鏅鸿兘浣撳伐浣滄祦缂栨帓銆?
+## meizhaiseek v1.7.2
 
-
-## v1.7.1 完成后的下一步
-
-- v1.8：参考项目拆解与蓝图生成助手。
-- v1.8.1：蓝图人工审查和修订流程。
-- v1.9：基于蓝图实现首个非视频业务智能体。
-- v2.0：多智能体工作流编排。
-
+v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.

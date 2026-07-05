@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -15,7 +15,9 @@ import {
   createAgentBlueprintVersion,
   exportAgentBlueprint,
   importAgentBlueprint,
+  applyAgentBlueprintRegistrySync,
   previewAgentBlueprintInput,
+  previewAgentBlueprintRegistrySync,
   previewAgentBlueprintResult,
   previewImportAgentBlueprint,
   publishAgentBlueprint,
@@ -25,6 +27,7 @@ import {
   setAgentBlueprintState,
   updateAgentBlueprint,
   validateAgentBlueprint,
+  type AgentBlueprintRegistrySyncPreview,
   type AgentBlueprintVersion
 } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
@@ -56,6 +59,7 @@ export function AgentBlueprintPanel() {
   const [gate, setGate] = useState<Record<string, unknown> | null>(null);
   const [inputPreview, setInputPreview] = useState<Record<string, unknown> | null>(null);
   const [resultPreview, setResultPreview] = useState<Record<string, unknown> | null>(null);
+  const [registryPreview, setRegistryPreview] = useState<AgentBlueprintRegistrySyncPreview | null>(null);
 
   const items = listData?.items || [];
   const blueprint = detail?.blueprint || null;
@@ -161,6 +165,15 @@ export function AgentBlueprintPanel() {
     setInputPreview(await previewAgentBlueprintInput(blueprint.blueprint_id, version.input_schema || {}));
     setResultPreview(await previewAgentBlueprintResult(blueprint.blueprint_id, version.output_schema || {}, version.result_ui_config || {}));
   });
+  const loadRegistryPreview = () => runAction("Registry 对账", async () => {
+    setRegistryPreview(await previewAgentBlueprintRegistrySync());
+  });
+  const createRegistryDrafts = () => runAction("创建 Registry 草稿", async () => {
+    if (!registryPreview) return;
+    const agentIds = registryPreview.registry_only.map((item) => String(item.agent_type || "")).filter(Boolean);
+    await applyAgentBlueprintRegistrySync(agentIds);
+    setRegistryPreview(await previewAgentBlueprintRegistrySync());
+  });
 
   return (
     <div className="grid min-h-[620px] gap-4 lg:grid-cols-[280px_1fr]">
@@ -169,6 +182,11 @@ export function AgentBlueprintPanel() {
           <h3 className="font-bold text-slate-900">智能体蓝图</h3>
           {canWrite ? <button className="rounded-lg bg-violet-600 p-2 text-white disabled:opacity-50" disabled={busy} onClick={() => void createDefaultBlueprint()} type="button"><Plus className="h-4 w-4" /></button> : null}
         </div>
+        {canWrite ? <button className="mb-3 w-full rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={busy} onClick={() => void loadRegistryPreview()} type="button">Registry 对账</button> : null}
+        {registryPreview ? <div className="mb-3 rounded-lg border bg-white p-3 text-xs text-slate-600">
+          <p>已关联 {registryPreview.matched.length}，Registry 未建蓝图 {registryPreview.registry_only.length}，蓝图找不到 Registry {registryPreview.blueprint_only.length}</p>
+          {isAdmin && registryPreview.registry_only.length ? <button className="mt-2 rounded-md bg-violet-600 px-2 py-1 font-semibold text-white" onClick={() => void createRegistryDrafts()} type="button">创建草稿</button> : null}
+        </div> : null}
         {isLoading ? <LoadingState label="正在读取蓝图..." /> : null}
         {listError ? <ErrorState message={listError instanceof Error ? listError.message : "蓝图列表读取失败。"} /> : null}
         <div className="max-h-[560px] space-y-2 overflow-y-auto pr-1">
@@ -187,7 +205,7 @@ export function AgentBlueprintPanel() {
           <div className="space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold text-violet-700">meizhaiseek v1.7.1</p>
+                <p className="text-xs font-semibold text-violet-700">meizhaiseek v1.7.2</p>
                 <h2 className="mt-1 text-2xl font-bold text-slate-950">{blueprint.display_name}</h2>
                 <p className="mt-1 text-sm text-slate-500">{blueprint.description || "暂无描述"}</p>
               </div>

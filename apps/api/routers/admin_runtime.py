@@ -1,11 +1,11 @@
-import csv
+﻿import csv
 import io
 import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from services import agent_config_store, agent_connector_store, agent_run_maintenance, app_sqlite, audit_log_service, debug_payload_service, file_preview_service, file_store, json_to_sqlite_migrator, legacy_json_fallback, local_agent_client, payload_preview_service, security_config_service, skill_template_service
+from services import agent_config_store, agent_connector_store, agent_run_maintenance, app_sqlite, async_store_utils, audit_log_service, debug_payload_service, file_preview_service, file_store, json_to_sqlite_migrator, legacy_json_fallback, local_agent_client, payload_preview_service, security_config_service, skill_template_service
 from services.auth_service import require_admin
 from services.config_backup_service import backup_file, list_backups
 from services.config_guard import guard_file_store, validate_json_file
@@ -19,11 +19,16 @@ def runtime_health() -> dict[str, Any]:
     agent_report = agent_config_store.guard_configs()
     skill_report = skill_template_service.guard_templates()
     warnings = [*agent_report.get("warnings", []), *skill_report.get("warnings", []), *security_config_service.get_security_warnings()]
+    fallback_stats = legacy_json_fallback.usage_stats()
     return {
         "status": "ok" if not warnings else "warning",
-        "version": "v1.7.1",
+        "version": "v1.7.2",
         "service": "meizhaiseek-api",
         "legacy_json_fallback_enabled": legacy_json_fallback.enabled(),
+        "legacy_json_fallback_usage_count": fallback_stats["usage_count"],
+        "legacy_json_fallback_last_used_at": fallback_stats["last_used_at"],
+        "async_store": {"enabled": True, "max_concurrency": async_store_utils.max_concurrency()},
+        "agent_run_events": {"transport": "sse", "polling_fallback": True, "event_hub": True},
         "configs_valid": True,
         "agent_run_store_valid": True,
         "warnings": warnings,
@@ -43,7 +48,7 @@ def migrate_json_storage(request: Request, user: dict[str, Any] = Depends(requir
         result = json_to_sqlite_migrator.migrate_json_to_sqlite(force=True)
     except Exception as exc:
         audit_log_service.write_log("storage.migrate_json.failed", "failed", user, "storage", {"error": str(exc)}, audit_log_service.client_ip(request))
-        raise HTTPException(status_code=500, detail=f"JSON 迁移失败：{exc}") from exc
+        raise HTTPException(status_code=500, detail=f"JSON migration failed: {exc}") from exc
     audit_log_service.write_log("storage.migrate_json", result.get("status", "success"), user, "storage", {"migrated": result.get("migrated"), "error_count": len(result.get("errors") or [])}, audit_log_service.client_ip(request))
     return result
 
@@ -154,10 +159,9 @@ def list_debug_payloads(limit: int = 50, agent_type: str | None = None, status: 
 def get_debug_payload(run_id: str, request: Request, user: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
     result = debug_payload_service.read_debug_payload(run_id)
     if not result.get("request_exists") and not result.get("response_exists") and not result.get("error_exists"):
-        raise HTTPException(status_code=404, detail="联调记录不存在。")
+        raise HTTPException(status_code=404, detail="debug payload not found")
     audit_log_service.write_log("debug_payload.view", "success", user, run_id, {}, audit_log_service.client_ip(request))
     return result
-    return debug_payload_service.read_debug_payload(run_id)
 
 
 @router.post("/admin/debug-payloads/{run_id}/replay")
@@ -165,7 +169,7 @@ def replay_debug_payload(run_id: str, http_request: Request, user: dict[str, Any
     debug_payload = debug_payload_service.read_debug_payload(run_id)
     saved_request = debug_payload.get("request")
     if not saved_request:
-        raise HTTPException(status_code=404, detail="request.json 不存在。")
+        raise HTTPException(status_code=404, detail="request.json not found")
     agent_type = str(saved_request.get("agent_type") or "")
     try:
         connector, _ = payload_preview_service.resolve_connector(agent_type)
@@ -190,7 +194,7 @@ def get_audit_logs(action: str | None = None, user: str | None = None, status: s
 @router.get("/admin/audit-logs/export")
 def export_audit_logs(request: Request, format: str = "csv", action: str | None = None, user: str | None = None, status: str | None = None, start_time: str | None = None, end_time: str | None = None, limit: int = 500, current_user: dict[str, Any] = Depends(require_admin)) -> Response:
     if format not in {"csv", "jsonl"}:
-        raise HTTPException(status_code=400, detail="导出格式只能是 csv 或 jsonl。")
+        raise HTTPException(status_code=400, detail="export format must be csv or jsonl")
     logs = audit_log_service.list_logs(action=action, user=user, status=status, start_time=start_time, end_time=end_time, limit=limit)
     if format == "jsonl":
         content = "\n".join(json.dumps(item, ensure_ascii=False) for item in logs)

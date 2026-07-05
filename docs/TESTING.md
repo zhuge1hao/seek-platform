@@ -38,7 +38,7 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 - 8001 未启动但指定了 `--require-video-agent`。
 - 前端 build 未设置 `NEXT_PUBLIC_API_BASE_URL`。
 
-## v1.7.1 验证命令
+## v1.7.2 验证命令
 
 - `python -m compileall apps/api`
 - `python -m unittest discover -s apps/api/tests`
@@ -47,3 +47,7 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 - `python apps/api/scripts/smoke_minimal.py`
 
 默认测试使用临时 SQLite，不依赖 8001、DeepSeek 或 BGE。真实视频 E2E 仍通过 `python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent` 手动执行。
+
+## meizhaiseek v1.7.2
+
+v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.

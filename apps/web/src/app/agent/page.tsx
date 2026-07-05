@@ -162,11 +162,13 @@ export default function AgentPage() {
     let active = true;
     const restore = async () => {
       try {
-        await refreshConversations();
+        const items = await refreshConversations();
         if (!active) return;
         const queryId = new URLSearchParams(window.location.search).get("conversation_id");
         const storedId = localStorage.getItem(ACTIVE_CONVERSATION_KEY);
-        const targetId = queryId || storedId;
+        const latestId = items[0]?.conversation_id || null;
+        const targetId = queryId || (storedId && items.some((item) => item.conversation_id === storedId) ? storedId : latestId);
+        if (!queryId && storedId && storedId !== targetId) localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
         if (targetId) await loadConversationRef.current(targetId);
       } catch (error) {
         if (active) setConversationError(error instanceof Error ? error.message : "聊天记录加载失败。");
@@ -216,6 +218,7 @@ export default function AgentPage() {
   const handleRunChange = useCallback((run: AgentRunStatus) => {
     setCurrentRun(run);
     setConversations((items) => items.map((item) => item.conversation_id === run.conversation_id ? { ...item, latest_run_id: run.run_id, status: run.status, summary: run.error || run.result?.answer || item.summary } : item));
+    if (run.conversation_id && !conversations.some((item) => item.conversation_id === run.conversation_id)) void refreshConversations();
     setCurrentConversation((conversation) => {
       if (!conversation || conversation.conversation_id !== run.conversation_id) return conversation;
       return {
@@ -227,7 +230,7 @@ export default function AgentPage() {
       };
     });
     if (["completed", "failed", "cancelled"].includes(run.status) && run.conversation_id) void refreshConversations();
-  }, [refreshConversations]);
+  }, [conversations, refreshConversations]);
 
   const { pollingError, startPolling, stopPolling } = useAgentRunPolling(handleRunChange);
   const { eventsState, eventsError, startEvents, stopEvents } = useAgentRunEvents(handleRunChange);
