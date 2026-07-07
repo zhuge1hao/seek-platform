@@ -93,21 +93,26 @@ def process_document(user_id: str, doc_id: str) -> dict[str, Any]:
     document = qa_rag_store.get_document(doc_id, user_id)
     if not document:
         raise QAIngestError("document not found")
+    if document.get("status") == "cancelled":
+        return {"doc_id": doc_id, "title": document["title"], "status": "cancelled", "chunk_count": document.get("chunk_count") or 0, "message": "document ingest cancelled"}
     source_path = Path(str(document.get("source_path") or ""))
     if not source_path.exists():
         qa_rag_store.update_document_status(user_id, doc_id, "failed", chunk_count=0, metadata={"error": "source file missing"})
         raise QAIngestError("source file missing")
-    qa_rag_store.update_document_status(user_id, doc_id, "indexing", chunk_count=0)
+    qa_rag_store.update_document_status(user_id, doc_id, "processing", chunk_count=0)
     try:
         text, parser = qa_document_parser.parse_document(source_path)
         chunks = qa_text_splitter.split_text(text)
         embeddings = embed_texts([str(chunk["content"]) for chunk in chunks])
+        latest = qa_rag_store.get_document(doc_id, user_id)
+        if latest and latest.get("status") == "cancelled":
+            return {"doc_id": doc_id, "title": document["title"], "status": "cancelled", "chunk_count": latest.get("chunk_count") or 0, "message": "document ingest cancelled"}
         qa_rag_store.delete_chunks_by_doc(user_id, doc_id)
         for chunk, embedding in zip(chunks, embeddings):
             chunk_id = f"chunk_{doc_id}_{chunk['chunk_index']}"
             qa_rag_store.add_chunk(chunk_id, doc_id, int(chunk["chunk_index"]), str(chunk["content"]), embedding, {"user_id": user_id, "parser": parser}, user_id=user_id)
-        qa_rag_store.update_document_status(user_id, doc_id, "ready", chunk_count=len(chunks), metadata={"parser": parser, "error": ""})
-        return {"doc_id": doc_id, "title": document["title"], "status": "ready", "chunk_count": len(chunks), "message": "document indexed"}
+        qa_rag_store.update_document_status(user_id, doc_id, "completed", chunk_count=len(chunks), metadata={"parser": parser, "error": ""})
+        return {"doc_id": doc_id, "title": document["title"], "status": "completed", "chunk_count": len(chunks), "message": "document indexed"}
     except (QAIngestError, qa_document_parser.QADocumentParseError, QAEmbeddingError, Exception) as exc:
         qa_rag_store.delete_chunks_by_doc(user_id, doc_id)
         qa_rag_store.update_document_status(user_id, doc_id, "failed", chunk_count=0, metadata={"error": str(exc)})
@@ -117,5 +122,5 @@ def process_document(user_id: str, doc_id: str) -> dict[str, Any]:
 
 
 def reindex(user_id: str, document: dict[str, Any]) -> dict[str, Any]:
-    qa_rag_store.update_document_status(user_id, document["doc_id"], "indexing", chunk_count=0)
+    qa_rag_store.update_document_status(user_id, document["doc_id"], "pending", chunk_count=0)
     return process_document(user_id, document["doc_id"])

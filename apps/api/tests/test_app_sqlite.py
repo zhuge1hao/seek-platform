@@ -13,15 +13,34 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 class FakeRawConnection:
     def __init__(self) -> None:
         self.closed = False
+        self.commits = 0
+        self.rollbacks = 0
+        self.cursor = FakeRawCursor()
 
     def execute(self, *_args):
-        return None
+        return self.cursor
 
     def commit(self) -> None:
-        pass
+        self.commits += 1
 
     def rollback(self) -> None:
-        pass
+        self.rollbacks += 1
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class FakeRawCursor:
+    rowcount = 1
+
+    def __init__(self) -> None:
+        self.closed = False
+
+    def fetchone(self):
+        return {"ok": True}
+
+    def fetchall(self):
+        return [{"ok": True}]
 
     def close(self) -> None:
         self.closed = True
@@ -44,7 +63,7 @@ class AppSQLiteTest(unittest.TestCase):
 
         app_sqlite._INIT_DONE = False
         app_sqlite._PG_POOL = None
-        for key in ("APP_DB_BACKEND", "APP_SQLITE_PATH", "APP_DB_POOL_SIZE", "APP_DB_MAX_OVERFLOW", "APP_DB_POOL_TIMEOUT"):
+        for key in ("APP_DB_BACKEND", "APP_SQLITE_PATH", "APP_DB_POOL_SIZE", "APP_DB_MAX_OVERFLOW", "APP_DB_POOL_TIMEOUT", "APP_DB_POOL_RECYCLE"):
             os.environ.pop(key, None)
         self.tmp.cleanup()
 
@@ -102,6 +121,45 @@ class AppSQLiteTest(unittest.TestCase):
         self.assertLessEqual(pool._pool.qsize(), 1)
         self.assertTrue(any(conn.closed for conn in raw))
 
+    def test_postgres_pool_lifo_cursor_transactions_and_recycle(self) -> None:
+        from services import app_sqlite
+
+        os.environ["APP_DB_POOL_SIZE"] = "2"
+        os.environ["APP_DB_MAX_OVERFLOW"] = "0"
+        os.environ["APP_DB_POOL_RECYCLE"] = "0"
+        raw: list[FakeRawConnection] = []
+        pool = app_sqlite._PostgresPool()
+
+        def make_conn() -> FakeRawConnection:
+            conn = FakeRawConnection()
+            raw.append(conn)
+            return conn
+
+        with patch.object(pool, "_new_connection", side_effect=make_conn):
+            first = pool.acquire()
+            second = pool.acquire()
+            first_raw = first._conn
+            second_raw = second._conn
+            first.close()
+            second.close()
+            reused = pool.acquire()
+            self.assertIs(reused._conn, second_raw)
+            cursor = reused.execute("SELECT 1")
+            self.assertEqual(cursor.fetchone(), {"ok": True})
+            cursor.close()
+            reused.commit()
+            reused.rollback()
+            self.assertTrue(second_raw.cursor.closed)
+            self.assertEqual(second_raw.commits, 1)
+            self.assertEqual(second_raw.rollbacks, 1)
+
+            first_raw.closed = True
+            recycled = pool.acquire()
+            self.assertIsNot(recycled._conn, first_raw)
+            reused.close()
+            reused.close()
+            recycled.close()
+
     def test_postgres_pool_timeout_and_failed_connection_accounting(self) -> None:
         from services import app_sqlite
 
@@ -111,7 +169,8 @@ class AppSQLiteTest(unittest.TestCase):
         pool._timeout = 0.01
         with patch.object(pool, "_new_connection", return_value=FakeRawConnection()):
             first = pool.acquire()
-            self.assertRaises(Exception, pool.acquire)
+            with self.assertRaisesRegex(RuntimeError, "pool exhausted"):
+                pool.acquire()
             first.close()
 
         failing_pool = app_sqlite._PostgresPool()

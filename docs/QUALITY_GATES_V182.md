@@ -112,3 +112,39 @@ P2 distributed reliability validation: 部分执行 after P1.
 - Remaining queue, MinIO, pgvector, schema parity gates: 未执行.
 
 P3 200/300/500 user capacity validation: 未执行 because P2 has not yet been run.
+
+## 2026-07-07 P1 Checkpoint Update
+
+已执行：
+
+- Safety checkpoint commit pushed first: `91d232ecaf2d49c747c0d95b0cf35d036dd4886e` on `stabilization/v1.8.2`.
+- `ARCHITECTURE_EVALUATION_REPORT.md` remained unstaged and uncommitted.
+- PostgreSQL pool tests expanded to 5 tests: acquire/release, overflow, timeout, LIFO reuse, bad connection discard, reconnect, commit, rollback, cursor close, close idempotency.
+- QA document upload/reindex production path now returns a job and uses the `knowledge` queue; SQLite inline mode remains available.
+- Added `migrate_rag_sqlite_to_pgvector.py` with dry-run/execute/verify/resume/checkpoint/json-report flags.
+- Added `verify_schema_parity.py --json-report`.
+
+已验证：
+
+- `python -m compileall apps/api`: passed.
+- `python -m unittest discover -s apps/api/tests`: 54 tests OK.
+- `python -m pytest apps/api/tests`: 54 passed, 2 skipped.
+- `.venv\Scripts\python.exe -m ruff check apps/api`: passed.
+- `.venv\Scripts\python.exe -m mypy`: passed, 33 source files.
+- Bandit P1 JSON gate: High=0, Medium=0, Low=35.
+- pip-audit exception gate: passed with the three documented transformers exceptions.
+- `python apps/api/scripts/verify_schema_parity.py --json-report`: passed.
+- `python apps/api/scripts/migrate_rag_sqlite_to_pgvector.py --dry-run --json-report`: passed on current empty SQLite RAG source.
+- `cd apps/web; npm.cmd ci; npm.cmd run build`: passed.
+
+未执行：
+
+- sentence-transformers 5.x / transformers upgrade smoke.
+- pgvector execute/verify/resume against a non-empty production RAG dataset.
+- P2 full distributed queue and storage acceptance.
+- P3 200/300/500 user capacity tests.
+
+未通过：
+
+- Raw `pip-audit` without approved exceptions still reports the three transformers advisories.
+- Agent submit p95 <=500ms priority target remains not passed; last real 100-user result was 600ms.

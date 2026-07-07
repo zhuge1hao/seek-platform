@@ -118,3 +118,18 @@ P2 optional integration markers:
 - `apps/api/tests/integration/test_worker_recovery.py`
 
 These are skipped by default. Set `RUN_DISTRIBUTED_ACCEPTANCE_TESTS=1` only when a live Docker production topology and the required fault-injection setup are available.
+
+## meizhaiseek v1.8.2 P1 update, 2026-07-07
+
+- `python -m compileall apps/api`: passed.
+- `python -m unittest discover -s apps/api/tests`: 54 tests OK.
+- `python -m pytest apps/api/tests`: 54 passed, 2 skipped.
+- `.venv\Scripts\python.exe -m ruff check apps/api`: passed.
+- `.venv\Scripts\python.exe -m mypy`: passed for 33 scoped source files.
+- `.venv\Scripts\python.exe -m bandit -r apps/api -f json -o apps/api/runtime/logs/bandit-v182-p1.json`: executed; High=0, Medium=0, Low=35.
+- `.venv\Scripts\python.exe apps/api/scripts/check_bandit_report.py apps/api/runtime/logs/bandit-v182-p1.json`: passed.
+- `.venv\Scripts\python.exe -m pip_audit -f json -o apps/api/runtime/logs/pip-audit-v182-p1.json`: raw scan still reports 3 transformers advisories.
+- `.venv\Scripts\python.exe apps/api/scripts/check_pip_audit_report.py apps/api/runtime/logs/pip-audit-v182-p1.json`: passed with documented temporary exceptions.
+- `python apps/api/scripts/verify_schema_parity.py --json-report`: passed.
+- `python apps/api/scripts/migrate_rag_sqlite_to_pgvector.py --dry-run --json-report`: passed on current empty SQLite RAG source.
+- `cd apps/web; $env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'; npm.cmd ci; npm.cmd run build`: passed.

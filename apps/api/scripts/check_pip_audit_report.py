@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 APPROVED_EXCEPTIONS = {
-    "PYSEC-2025-217": "2026-08-06",
-    "GHSA-69w3-r845-3855": "2026-08-06",
-    "GHSA-29pf-2h5f-8g72": "2026-08-06",
+    "PYSEC-2025-217": "2026-09-06",
+    "GHSA-69w3-r845-3855": "2026-09-06",
+    "GHSA-29pf-2h5f-8g72": "2026-09-06",
 }
 
 

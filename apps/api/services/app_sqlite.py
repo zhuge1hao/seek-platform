@@ -52,6 +52,11 @@ class _PostgresCursor:
     def fetchall(self) -> list[Any]:
         return self._cursor.fetchall()
 
+    def close(self) -> None:
+        close = getattr(self._cursor, "close", None)
+        if callable(close):
+            close()
+
 
 class _PostgresConnection:
     def __init__(self, conn: Any, pool: "_PostgresPool"):
@@ -80,48 +85,76 @@ class _PostgresPool:
         self._pool: queue.LifoQueue[Any] = queue.LifoQueue(maxsize=max(1, int(os.getenv("APP_DB_POOL_SIZE", "5"))))
         self._max_total = self._pool.maxsize + max(0, int(os.getenv("APP_DB_MAX_OVERFLOW", "5")))
         self._timeout = max(1.0, float(os.getenv("APP_DB_POOL_TIMEOUT", "10")))
+        self._recycle_seconds = max(0, int(os.getenv("APP_DB_POOL_RECYCLE", "1800")))
         self._created = 0
+        self._created_at: dict[int, float] = {}
         self._lock = threading.Lock()
 
     def _new_connection(self) -> Any:
         import psycopg
         from psycopg.rows import dict_row
 
-        return psycopg.connect(_postgres_url(), row_factory=dict_row)
+        conn = psycopg.connect(_postgres_url(), row_factory=dict_row)
+        self._created_at[id(conn)] = time.monotonic()
+        return conn
+
+    def _remember(self, conn: Any) -> Any:
+        self._created_at.setdefault(id(conn), time.monotonic())
+        return conn
+
+    def _forget(self, conn: Any) -> None:
+        self._created_at.pop(id(conn), None)
+
+    def _expired_or_closed(self, conn: Any) -> bool:
+        if bool(getattr(conn, "closed", False)):
+            return True
+        if self._recycle_seconds <= 0:
+            return False
+        return time.monotonic() - self._created_at.get(id(conn), time.monotonic()) >= self._recycle_seconds
+
+    def _discard(self, conn: Any) -> None:
+        try:
+            conn.close()
+        finally:
+            self._forget(conn)
+            with self._lock:
+                self._created = max(0, self._created - 1)
 
     def acquire(self) -> _PostgresConnection:
         global _PG_LAST_WAIT_MS
         started = time.perf_counter()
-        try:
-            conn = self._pool.get_nowait()
-        except queue.Empty:
-            with self._lock:
-                if self._created < self._max_total:
-                    self._created += 1
-                    try:
-                        return _PostgresConnection(self._new_connection(), self)
-                    except Exception:
-                        self._created = max(0, self._created - 1)
-                        raise
-            conn = self._pool.get(timeout=self._timeout)
+        while True:
+            try:
+                conn = self._pool.get_nowait()
+            except queue.Empty:
+                with self._lock:
+                    if self._created < self._max_total:
+                        self._created += 1
+                        try:
+                            return _PostgresConnection(self._remember(self._new_connection()), self)
+                        except Exception:
+                            self._created = max(0, self._created - 1)
+                            raise
+                try:
+                    conn = self._pool.get(timeout=self._timeout)
+                except queue.Empty as exc:
+                    raise RuntimeError("PostgreSQL connection pool exhausted") from exc
+            if self._expired_or_closed(conn):
+                self._discard(conn)
+                continue
+            break
         wait_ms = round((time.perf_counter() - started) * 1000, 3)
         _PG_LAST_WAIT_MS = wait_ms
         return _PostgresConnection(conn, self)
 
     def release(self, conn: Any) -> None:
         try:
-            if self._pool.full():
-                conn.close()
-                with self._lock:
-                    self._created = max(0, self._created - 1)
+            if self._expired_or_closed(conn) or self._pool.full():
+                self._discard(conn)
             else:
                 self._pool.put_nowait(conn)
         except Exception:
-            try:
-                conn.close()
-            finally:
-                with self._lock:
-                    self._created = max(0, self._created - 1)
+            self._discard(conn)
 
 
 def _postgres_pool() -> _PostgresPool:

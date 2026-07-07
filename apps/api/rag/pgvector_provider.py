@@ -78,7 +78,7 @@ class PgVectorRagProvider:
                   source_type=excluded.source_type, status=excluded.status, chunk_count=excluded.chunk_count,
                   updated_at=excluded.updated_at, metadata_json=excluded.metadata_json
                 """,
-                (doc_id, user_id, title, source_path, source_type, "indexing", 0, now, now, json.dumps(metadata or {}, ensure_ascii=False)),
+                (doc_id, user_id, title, source_path, source_type, "pending", 0, now, now, json.dumps(metadata or {}, ensure_ascii=False)),
             )
         return self.get_document(doc_id, user_id) or {}
 
@@ -150,7 +150,7 @@ class PgVectorRagProvider:
     def list_chunks(self, user_id: str | None = None) -> list[dict[str, Any]]:
         self.init_db()
         params: list[Any] = []
-        where = "WHERE d.status='ready'"
+        where = "WHERE d.status IN ('ready', 'completed')"
         if user_id is not None:
             where += " AND c.user_id=%s"
             params.append(user_id)
@@ -190,7 +190,7 @@ class PgVectorRagProvider:
         with self._connect() as conn:
             rows = conn.execute("SELECT status, COUNT(*) AS count FROM rag_documents WHERE user_id=%s AND status != 'deleted' GROUP BY status", (user_id,)).fetchall()
         counts = {str(row["status"]): int(row["count"]) for row in rows}
-        return {"document_count": sum(counts.values()), "chunk_count": self.count_chunks(user_id), "ready_count": counts.get("ready", 0), "failed_count": counts.get("failed", 0), "rag_sqlite_exists": False}
+        return {"document_count": sum(counts.values()), "chunk_count": self.count_chunks(user_id), "ready_count": counts.get("ready", 0) + counts.get("completed", 0), "failed_count": counts.get("failed", 0), "rag_sqlite_exists": False}
 
     def search(self, user_id: str, embedding: list[float], limit: int = 5) -> list[dict[str, Any]]:
         self.init_db()
@@ -202,7 +202,7 @@ class PgVectorRagProvider:
                        1 - (c.embedding <=> %s::vector) AS score
                 FROM rag_chunks c
                 LEFT JOIN rag_documents d ON d.doc_id=c.doc_id AND d.user_id=c.user_id
-                WHERE c.user_id=%s AND d.status='ready'
+                WHERE c.user_id=%s AND d.status IN ('ready', 'completed')
                 ORDER BY c.embedding <=> %s::vector
                 LIMIT %s
                 """,

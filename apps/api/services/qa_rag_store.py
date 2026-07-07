@@ -116,7 +116,7 @@ def create_document(user_id: str, doc_id: str, title: str, source_path: str, sou
             (doc_id, user_id, title, source_path, source_type, status, chunk_count, created_at, updated_at, metadata_json)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (doc_id, user_id, title, source_path, source_type, "indexing", 0, now, now, json.dumps(metadata or {}, ensure_ascii=False)),
+            (doc_id, user_id, title, source_path, source_type, "pending", 0, now, now, json.dumps(metadata or {}, ensure_ascii=False)),
         )
     return get_document(doc_id, user_id) or {}
 
@@ -214,7 +214,7 @@ def list_chunks(user_id: str | None = None) -> list[dict[str, Any]]:
         return _pgvector().list_chunks(user_id)
     init_db()
     params: list[Any] = []
-    where = "WHERE documents.status = 'ready'"
+    where = "WHERE documents.status IN ('ready', 'completed')"
     if user_id is not None:
         where += " AND chunks.user_id = ?"
         params.append(user_id)
@@ -266,7 +266,7 @@ def get_stats(user_id: str) -> dict[str, Any]:
     return {
         "document_count": sum(counts.values()),
         "chunk_count": count_chunks(user_id),
-        "ready_count": counts.get("ready", 0),
+        "ready_count": counts.get("ready", 0) + counts.get("completed", 0),
         "failed_count": counts.get("failed", 0),
         "rag_sqlite_exists": db_path().exists(),
     }
