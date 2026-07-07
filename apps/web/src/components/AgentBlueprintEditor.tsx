@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -9,6 +9,33 @@ type Props = {
   version: AgentBlueprintVersion | null;
   readOnly?: boolean;
   onSave: (payload: Record<string, unknown>) => void;
+};
+
+type EditableItem = Record<string, unknown> & {
+  field_id?: string;
+  section_id?: string;
+  step_id?: string;
+  name?: string;
+  label?: string;
+  type?: string;
+  description?: string;
+  placeholder?: string;
+  required?: boolean;
+  failure_policy?: string;
+  timeout_seconds?: number | string;
+  input_fields?: string[];
+  output_fields?: string[];
+  order?: number;
+};
+
+type EditableDraft = Record<string, unknown> & {
+  input_schema?: Record<string, unknown> & { fields?: EditableItem[] };
+  methodology?: Record<string, unknown> & { steps?: EditableItem[] };
+  prompt_config?: Record<string, unknown> & { system_prompt?: string; user_prompt_template?: string; variables?: Array<string | { name?: string }> };
+  execution_config?: Record<string, unknown> & { execution_type?: string; agent_id?: string; workflow_type?: string; connector_id?: string; timeout_seconds?: number | string; output_dir_strategy?: string };
+  output_schema?: Record<string, unknown> & { sections?: EditableItem[] };
+  result_ui_config?: Record<string, unknown> & { renderer?: string; tabs?: string[] };
+  acceptance_rules?: Record<string, unknown> & { required_result_fields?: string[]; required_artifact_types?: string[]; max_duration_seconds?: number };
 };
 
 const inputTypes = ["text", "textarea", "number", "boolean", "select", "multi_select", "file", "image", "video", "excel", "word", "local_path", "dataset", "knowledge_base"];
@@ -31,7 +58,7 @@ function split(value: unknown) {
 
 export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
   const [mode, setMode] = useState<"form" | "json">("form");
-  const [draft, setDraft] = useState<Record<string, any>>({});
+  const [draft, setDraft] = useState<EditableDraft>({});
   const [jsonText, setJsonText] = useState("{}");
   const [error, setError] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -52,7 +79,7 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
     setError("");
   }, [version?.version_id]);
 
-  const syncJson = (next: Record<string, any>) => {
+  const syncJson = (next: EditableDraft) => {
     setDraft(next);
     setJsonText(pretty(next));
   };
@@ -61,17 +88,18 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
     try {
       const payload = mode === "json" ? JSON.parse(jsonText || "{}") : draft;
       setError("");
-      onSave({ ...payload, change_summary: "v1.7.2 visual editor update" });
+      onSave({ ...payload, change_summary: "v1.8 visual editor update" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "JSON 格式错误");
     }
   };
 
-  const fields = (draft.input_schema?.fields || []) as any[];
-  const steps = (draft.methodology?.steps || []) as any[];
-  const sections = (draft.output_schema?.sections || []) as any[];
+  const fields = draft.input_schema?.fields || [];
+  const steps = draft.methodology?.steps || [];
+  const sections = draft.output_schema?.sections || [];
+  const variables = draft.prompt_config?.variables || [];
 
-  const setPart = (key: string, value: any) => syncJson({ ...draft, [key]: value });
+  const setPart = (key: string, value: unknown) => syncJson({ ...draft, [key]: value });
   const setField = (index: number, patch: Record<string, unknown>) => {
     const next = [...fields]; next[index] = { ...next[index], ...patch };
     setPart("input_schema", { ...(draft.input_schema || {}), fields: next });
@@ -84,7 +112,7 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
     const next = [...sections]; next[index] = { ...next[index], ...patch };
     setPart("output_schema", { ...(draft.output_schema || {}), sections: next.map((section, order) => ({ ...section, order: order + 1 })) });
   };
-  const move = (items: any[], index: number, delta: number, setter: (items: any[]) => void) => {
+  const move = (items: EditableItem[], index: number, delta: number, setter: (items: EditableItem[]) => void) => {
     const next = [...items]; const target = index + delta;
     if (target < 0 || target >= next.length) return;
     [next[index], next[target]] = [next[target], next[index]];
@@ -160,7 +188,7 @@ export function AgentBlueprintEditor({ version, readOnly, onSave }: Props) {
           <Section title="Prompt">
             <Area value={draft.prompt_config?.system_prompt || ""} onChange={(value) => setPart("prompt_config", { ...(draft.prompt_config || {}), system_prompt: value })} readOnly={readOnly} placeholder="system_prompt" />
             <Area value={draft.prompt_config?.user_prompt_template || ""} onChange={(value) => setPart("prompt_config", { ...(draft.prompt_config || {}), user_prompt_template: value })} readOnly={readOnly} placeholder="user_prompt_template" />
-            <Text value={((draft.prompt_config?.variables || []) as any[]).map((item) => item.name || item).join(", ")} onChange={(value) => setPart("prompt_config", { ...(draft.prompt_config || {}), variables: split(value).map((name) => ({ name, required: true })) })} readOnly={readOnly} placeholder="variables: video_file, output_dir" />
+            <Text value={variables.map((item) => typeof item === "string" ? item : item.name || "").filter(Boolean).join(", ")} onChange={(value) => setPart("prompt_config", { ...(draft.prompt_config || {}), variables: split(value).map((name) => ({ name, required: true })) })} readOnly={readOnly} placeholder="variables: video_file, output_dir" />
           </Section>
 
           <Section title="执行配置">

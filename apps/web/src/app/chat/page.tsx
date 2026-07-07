@@ -7,6 +7,7 @@ import { ChatInput } from "@/components/ChatInput";
 import { ConversationPanel } from "@/components/ConversationPanel";
 import { KnowledgeBasePanel } from "@/components/KnowledgeBasePanel";
 import { QuickPrompts } from "@/components/QuickPrompts";
+import { ResultPanelErrorBoundary } from "@/components/ResultPanelErrorBoundary";
 import { getStoredUser, type AuthUser } from "@/lib/auth";
 import { chatQuickPrompts } from "@/lib/mockData";
 import { useQAConversations } from "@/hooks/useQAConversations";
@@ -330,7 +331,9 @@ export default function ChatPage() {
           <p className="mt-5 text-lg text-slate-500">数据驱动决策，智能赋能增长</p>
 
           <div className="mt-10 w-full pb-20">
-            <MessageList messages={messages} onCopy={(content) => void handleCopy(content)} onRegenerate={handleRegenerate} />
+            <ResultPanelErrorBoundary>
+              <MessageList messages={messages} onCopy={(content) => void handleCopy(content)} onRegenerate={handleRegenerate} />
+            </ResultPanelErrorBoundary>
             {notice ? <p className="mx-auto mb-4 max-w-3xl rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{notice}</p> : null}
             {isSending ? <div className="mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 rounded-2xl bg-violet-50 px-4 py-3 text-sm font-medium text-violet-700">
               <span>meizhaiseek 2.0 正在生成...</span>
@@ -344,7 +347,9 @@ export default function ChatPage() {
           </div>
         </div>
       </section>
-      <KnowledgeBasePanel onClose={() => setKnowledgeOpen(false)} onUploaded={setNotice} open={knowledgeOpen} />
+      <ResultPanelErrorBoundary>
+        <KnowledgeBasePanel onClose={() => setKnowledgeOpen(false)} onUploaded={setNotice} open={knowledgeOpen} />
+      </ResultPanelErrorBoundary>
     </AppShell>
   );
 }

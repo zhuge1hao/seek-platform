@@ -1,9 +1,10 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
 
 from services import audit_log_service, qa_document_ingest_service, qa_knowledge_service
 from services.auth_service import require_operator_or_admin, require_viewer_or_above
+from tasks.queue import backend as queue_backend, enqueue_call
 
 
 router = APIRouter()
@@ -24,11 +25,31 @@ def _summary(document: dict[str, Any]) -> dict[str, Any]:
 @router.post("/qa/knowledge/upload")
 def upload_knowledge_document(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     title: str | None = Form(default=None),
     user: dict[str, Any] = Depends(require_operator_or_admin),
 ) -> dict[str, Any]:
     try:
+        if queue_backend() == "redis":
+            document = qa_document_ingest_service.prepare_upload(user["user_id"], file, title)
+            doc_id = document["doc_id"]
+            enqueue_call(
+                "tasks.knowledge_tasks.execute_document_ingest",
+                [doc_id, user["user_id"]],
+                job_id=f"document_ingest:{doc_id}",
+                background_tasks=background_tasks,
+                timeout_seconds=1800,
+            )
+            audit_log_service.write_log(
+                "qa.knowledge.enqueue",
+                "success",
+                user,
+                doc_id,
+                {"title": document["title"], "status": "queued"},
+                audit_log_service.client_ip(request),
+            )
+            return {**document, "status": "queued", "job_id": f"document_ingest:{doc_id}"}
         result = qa_document_ingest_service.ingest_upload(user["user_id"], file, title)
     except qa_document_ingest_service.QAIngestError as exc:
         audit_log_service.write_log("qa.knowledge.failed", "failed", user, "upload", {"title": title or file.filename, "status": "failed"}, audit_log_service.client_ip(request))

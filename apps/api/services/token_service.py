@@ -9,8 +9,6 @@ from typing import Any
 
 from services import security_config_service
 
-DEFAULT_SECRET = security_config_service.DEFAULT_AUTH_TOKEN_SECRET
-
 
 class TokenError(RuntimeError):
     pass

@@ -24,7 +24,7 @@ class AgentBlueprintImportExportTest(unittest.TestCase):
     def test_export_redacts_and_import_conflict_creates_new_id(self) -> None:
         from services import agent_blueprint_import_export, agent_blueprint_service, agent_blueprint_store
 
-        detail = agent_blueprint_service.create_draft({
+        agent_blueprint_service.create_draft({
             "blueprint_id": "bp_export",
             "name": "export",
             "display_name": "Export",

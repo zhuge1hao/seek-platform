@@ -8,6 +8,7 @@ from urllib.parse import quote
 
 from services import app_sqlite
 from services.user_context import artifacts_dir, runtime_user_root, uploads_dir
+from storage.factory import provider as storage_provider
 
 
 API_ROOT = Path(__file__).resolve().parents[1]
@@ -116,7 +117,10 @@ def is_user_artifact_path(file_path: str, user: dict) -> bool:
 
 
 def artifact_path_for_download(file_path: str) -> Path:
-    return _safe_resolve(file_path)
+    path = _safe_resolve(file_path)
+    if not path.exists():
+        raise FileNotFoundError(file_path)
+    return path
 
 
 def normalize_artifact_file(file_path: str, file_type: str | None = None, name: str | None = None) -> dict[str, str]:
@@ -186,7 +190,10 @@ def register_run_artifacts(user_id: str, run_id: str, files: list[dict]) -> list
         if not path_value or path_value in seen:
             continue
         seen.add(path_value)
-        path = artifact_path_for_download(path_value)
+        try:
+            path = artifact_path_for_download(path_value)
+        except FileNotFoundError:
+            continue
         file_type = str(item.get("file_type") or item.get("type") or artifact_type_for_path(path_value))
         if path.is_dir():
             metadata = dict(item.get("metadata") or {})
@@ -217,12 +224,19 @@ def register_run_artifacts(user_id: str, run_id: str, files: list[dict]) -> list
         metadata.setdefault("file_type", file_type)
         metadata.setdefault("original_path", item.get("original_path") or path_value)
         metadata.setdefault("collected_at", now)
+        storage = storage_provider()
+        storage_info = storage.put_file(path, f"artifacts/{user_id}/{run_id}/{artifact_id}/{path.name}")
+        metadata.update(storage_info)
         record = {
             **normalized,
             "artifact_id": artifact_id,
             "filename": normalized["name"],
             "file_type": file_type,
             "storage_path": path_value,
+            "storage_backend": storage_info.get("storage_backend", "local"),
+            "object_key": storage_info.get("object_key") or path_value,
+            "original_filename": item.get("filename") or normalized["name"],
+            "checksum": storage_info.get("checksum"),
             "size_bytes": path.stat().st_size,
             "created_at": item.get("created_at") or now,
             "metadata": metadata,
@@ -230,16 +244,18 @@ def register_run_artifacts(user_id: str, run_id: str, files: list[dict]) -> list
         with app_sqlite.connection() as conn:
             conn.execute(
                 """
-                INSERT INTO artifacts(artifact_id, user_id, run_id, filename, storage_path, download_url, content_type, size_bytes, created_at, updated_at, metadata_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO artifacts(artifact_id, user_id, run_id, filename, storage_path, download_url, content_type, size_bytes, created_at, updated_at, metadata_json, storage_backend, object_key, original_filename, checksum)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(artifact_id) DO UPDATE SET filename=excluded.filename, storage_path=excluded.storage_path,
                   download_url=excluded.download_url, content_type=excluded.content_type, size_bytes=excluded.size_bytes,
-                  updated_at=excluded.updated_at, metadata_json=excluded.metadata_json
+                  updated_at=excluded.updated_at, metadata_json=excluded.metadata_json, storage_backend=excluded.storage_backend,
+                  object_key=excluded.object_key, original_filename=excluded.original_filename, checksum=excluded.checksum
                 """,
                 (
                     artifact_id, user_id, run_id, record["filename"], path_value, normalized["download_url"],
                     _content_type(path, file_type), record["size_bytes"], record["created_at"], now,
-                    app_sqlite.json_dump({**record, **metadata}),
+                    app_sqlite.json_dump({**record, **metadata}), record["storage_backend"], record["object_key"],
+                    record["original_filename"], record["checksum"],
                 ),
             )
         registered.append(record)

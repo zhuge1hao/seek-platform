@@ -1,4 +1,5 @@
 import re
+import threading
 from datetime import datetime, timezone
 from typing import Any
 
@@ -8,6 +9,7 @@ from services.password_service import hash_password
 
 USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 VALID_ROLES = {"admin", "operator", "viewer"}
+_CREATE_LOCK = threading.Lock()
 
 
 class UserAdminError(RuntimeError):
@@ -52,7 +54,7 @@ def get_user(user_id: str) -> dict[str, Any]:
     return user_store.public_user(user)
 
 
-def create_user(username: str, password: str, role: str, enabled: bool = True, remark: str = "") -> dict[str, Any]:
+def _create_user_legacy_unlocked(username: str, password: str, role: str, enabled: bool = True, remark: str = "") -> dict[str, Any]:
     username = username.strip()
     if not USERNAME_PATTERN.fullmatch(username):
         raise UserAdminError("用户名只能包含字母、数字、下划线和短横线。")
@@ -123,3 +125,34 @@ def reset_password(user_id: str, new_password: str) -> None:
     if user_store.get_user(user_id) is None:
         raise UserAdminError("用户不存在。", "not_found")
     user_store.update_password(user_id, hash_password(new_password))
+
+
+def create_user(username: str, password: str, role: str, enabled: bool = True, remark: str = "") -> dict[str, Any]:
+    username = username.strip()
+    if not USERNAME_PATTERN.fullmatch(username):
+        raise UserAdminError("invalid username")
+    if len(password) < 8:
+        raise UserAdminError("password too short")
+    if role not in VALID_ROLES:
+        raise UserAdminError("invalid role")
+    with _CREATE_LOCK:
+        document = user_store.load_users()
+        if username in document["users"] or any(item.get("username") == username for item in document["users"].values()):
+            raise UserAdminError("username already exists", "conflict")
+        now = _now()
+        entry = {
+            "user_id": username,
+            "username": username,
+            "role": role,
+            "enabled": bool(enabled),
+            "password_hash": hash_password(password),
+            "auth_version": 1,
+            "password_updated_at": now,
+            "created_at": now,
+            "updated_at": now,
+            "last_login_at": None,
+            "remark": remark.strip(),
+        }
+        document["users"][username] = entry
+        user_store.save_users(document)
+    return user_store.public_user(entry)

@@ -36,3 +36,24 @@ v1.6.5 保留 `apps/web/src/lib/api.ts` 作为唯一 HTTP、鉴权和错误处�
 ## meizhaiseek v1.7.2
 
 v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.
+
+## meizhaiseek v1.8.2
+
+已编码:
+
+- `apps/web/src/lib/api/index.ts` is a pure barrel export.
+- `apps/web/src/lib/api/core.ts` is the only place defining `API_BASE_URL`, `apiFetch`, token header injection, 401 cleanup, JSON error parsing, and blob download helpers.
+- `apps/web/src/lib/api/stream.ts` owns fetch-streaming helpers for agent run SSE and QA streaming. Bearer tokens stay in headers and are not placed in URLs.
+- Domain implementations are split across `auth`, `agents`, `agentRuns`, `blueprints`, `connectors`, `conversations`, `datasets`, `files`, `knowledge`, `qa`, and `admin`.
+- `apps/web/src/lib/authStorage.ts` isolates token/user localStorage helpers and avoids an auth/core import cycle.
+- `apps/web/src/hooks/useApiQuery.ts` wraps common SWR defaults while leaving business hooks responsible for keys and return types.
+- Root, agent result, chat stream, Blueprint, Dataset, and Knowledge high-risk render surfaces are protected by error boundaries.
+
+已验证:
+
+- `npm.cmd run build` passed with `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
+
+未执行:
+
+- Browser-level visual regression for every protected boundary.
+- Runtime SSE reconnect/fallback P2 fault tests.

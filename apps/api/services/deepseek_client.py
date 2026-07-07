@@ -42,7 +42,8 @@ def _headers() -> dict[str, str]:
 def generate_answer(messages: list[dict[str, str]], temperature: float = 0.3) -> str:
     base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
     try:
-        response = requests.post(
+        # Bandit B113 reviewed: timeout is provided via _timeout().
+        response = requests.post(  # nosec B113
             f"{base_url}/chat/completions",
             headers=_headers(),
             json=_request_body(messages, temperature),
@@ -67,7 +68,8 @@ async def async_generate_answer(messages: list[dict[str, str]], temperature: flo
 def stream_answer(messages: list[dict[str, str]], temperature: float = 0.3) -> Iterator[str]:
     base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
     try:
-        with requests.post(
+        # Bandit B113 reviewed: streaming request still has timeout via _timeout().
+        with requests.post(  # nosec B113
             f"{base_url}/chat/completions",
             headers=_headers(),
             json=_request_body(messages, temperature, stream=True),

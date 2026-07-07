@@ -13,7 +13,11 @@ class BlueprintReleaseE2ETest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["APP_SQLITE_PATH"] = str(Path(self.tmp.name) / "app.sqlite3")
+        os.environ["APP_DB_BACKEND"] = "sqlite"
+        os.environ["APP_SQLITE_AUTO_MIGRATE"] = "false"
         os.environ["APP_LEGACY_JSON_FALLBACK"] = "false"
+        os.environ.pop("APP_ENV", None)
+        os.environ.pop("INITIAL_ADMIN_PASSWORD", None)
         os.environ["AUTH_TOKEN_SECRET"] = "test-secret"
         os.environ["MEIZHAISEEK_ADMIN_USERNAME"] = "admin"
         os.environ["MEIZHAISEEK_ADMIN_INITIAL_PASSWORD"] = "admin123456"

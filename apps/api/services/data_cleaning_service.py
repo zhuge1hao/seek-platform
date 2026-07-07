@@ -1,7 +1,6 @@
 import re
 from collections import Counter
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from services import dataset_export_service, metrics_service

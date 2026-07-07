@@ -34,6 +34,10 @@ def _new_id() -> str:
     return f"dataset_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
 
 
+def _new_job_id() -> str:
+    return f"dataset_job_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+
+
 def _legacy_load(user_id: str) -> list[dict[str, Any]]:
     path = _store_path(user_id)
     if not path.exists():
@@ -125,7 +129,7 @@ def _record_file(conn: Any, dataset: dict[str, Any], file: dict[str, Any]) -> No
     if not storage_path:
         return
     path = Path(str(storage_path))
-    file_id = file.get("file_id") or hashlib.sha1(f"{dataset['dataset_id']}:{storage_path}".encode("utf-8")).hexdigest()
+    file_id = file.get("file_id") or hashlib.sha256(f"{dataset['dataset_id']}:{storage_path}".encode("utf-8")).hexdigest()
     conn.execute(
         """
         INSERT INTO dataset_files(file_id, dataset_id, user_id, file_type, filename, storage_path, content_type, size_bytes, created_at, metadata_json)
@@ -211,8 +215,8 @@ def list_datasets(user_id: str, status: str | None = None, limit: int = 50) -> l
         params.append(status)
     safe_limit = max(1, min(limit, 200))
     with app_sqlite.connection() as conn:
-        rows = conn.execute(
-            f"SELECT * FROM datasets WHERE {' AND '.join(clauses)} ORDER BY updated_at DESC LIMIT ?",
+        rows = conn.execute(  # nosec B608: clauses are fixed predicates, values are parameterized.
+            f"SELECT * FROM datasets WHERE {' AND '.join(clauses)} ORDER BY updated_at DESC LIMIT ?",  # nosec B608
             (*params, safe_limit),
         ).fetchall()
     return [_row_to_dataset(row) for row in rows]
@@ -228,8 +232,8 @@ def list_all_datasets(status: str | None = None, limit: int = 50, user_id: str |
         params.append(status)
     safe_limit = max(1, min(limit, 200))
     with app_sqlite.connection() as conn:
-        rows = conn.execute(
-            f"SELECT * FROM datasets WHERE {' AND '.join(clauses)} ORDER BY updated_at DESC LIMIT ?",
+        rows = conn.execute(  # nosec B608: clauses are fixed predicates, values are parameterized.
+            f"SELECT * FROM datasets WHERE {' AND '.join(clauses)} ORDER BY updated_at DESC LIMIT ?",  # nosec B608
             (*params, safe_limit),
         ).fetchall()
     return [_row_to_dataset(row) for row in rows]
@@ -328,3 +332,63 @@ def build_dataset_context(dataset_ids: list[str], user_id: str, include_all_user
             "data_profile_download_url": normalize_artifact_file(str(profile_path))["download_url"],
         })
     return profiles, files
+
+
+def create_dataset_job(dataset_id: str, user_id: str, job_type: str, input_data: dict[str, Any]) -> dict[str, Any]:
+    now = _now()
+    job_id = _new_job_id()
+    with app_sqlite.connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO dataset_jobs(job_id, dataset_id, user_id, job_type, status, input_json, result_json, error, created_at, updated_at, metadata_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (job_id, dataset_id, user_id, job_type, "pending", app_sqlite.json_dump(input_data), "{}", "", now, now, "{}"),
+        )
+    return get_dataset_job(job_id, user_id) or {"job_id": job_id, "dataset_id": dataset_id, "user_id": user_id, "job_type": job_type, "status": "pending", "input": input_data}
+
+
+def get_dataset_job(job_id: str, user_id: str | None = None) -> dict[str, Any] | None:
+    with app_sqlite.connection() as conn:
+        if user_id:
+            row = conn.execute("SELECT * FROM dataset_jobs WHERE job_id=? AND user_id=?", (job_id, user_id)).fetchone()
+        else:
+            row = conn.execute("SELECT * FROM dataset_jobs WHERE job_id=?", (job_id,)).fetchone()
+    if not row:
+        return None
+    return {
+        "job_id": row["job_id"],
+        "dataset_id": row["dataset_id"],
+        "user_id": row["user_id"],
+        "job_type": row["job_type"],
+        "status": row["status"],
+        "input": app_sqlite.json_load(row["input_json"], {}) or {},
+        "result": app_sqlite.json_load(row["result_json"], {}) or {},
+        "error": row["error"] or "",
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "metadata": app_sqlite.json_load(row["metadata_json"], {}) or {},
+    }
+
+
+def update_dataset_job(job_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
+    current = get_dataset_job(job_id)
+    if current is None:
+        return None
+    next_job = {**current, **updates, "updated_at": _now()}
+    with app_sqlite.connection() as conn:
+        conn.execute(
+            """
+            UPDATE dataset_jobs SET status=?, result_json=?, error=?, updated_at=?, metadata_json=?
+            WHERE job_id=?
+            """,
+            (
+                next_job.get("status"),
+                app_sqlite.json_dump(next_job.get("result") or {}),
+                next_job.get("error") or "",
+                next_job["updated_at"],
+                app_sqlite.json_dump(next_job.get("metadata") or {}),
+                job_id,
+            ),
+        )
+    return get_dataset_job(job_id)

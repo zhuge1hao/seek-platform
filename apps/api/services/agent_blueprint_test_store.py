@@ -133,8 +133,8 @@ def list_test_runs(blueprint_id: str, limit: int = 20, test_case_id: str | None 
         params.append(version_id)
     safe_limit = max(1, min(int(limit or 20), 100))
     with app_sqlite.connection() as conn:
-        rows = conn.execute(
-            f"SELECT * FROM agent_blueprint_test_runs WHERE {' AND '.join(clauses)} ORDER BY started_at DESC LIMIT ?",
+        rows = conn.execute(  # nosec B608: clauses are fixed predicates, values are parameterized.
+            f"SELECT * FROM agent_blueprint_test_runs WHERE {' AND '.join(clauses)} ORDER BY started_at DESC LIMIT ?",  # nosec B608
             (*params, safe_limit),
         ).fetchall()
     return [_row_test_run(row) for row in rows]

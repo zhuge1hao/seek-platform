@@ -144,7 +144,7 @@ def list_debug_payloads(limit: int = 50, agent_type: str | None = None, status: 
         params.append(status)
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     with app_sqlite.connection() as conn:
-        rows = conn.execute(f"SELECT * FROM debug_payloads {where} ORDER BY created_at DESC LIMIT ?", (*params, max(1, min(limit, 200)))).fetchall()
+        rows = conn.execute(f"SELECT * FROM debug_payloads {where} ORDER BY created_at DESC LIMIT ?", (*params, max(1, min(limit, 200)))).fetchall()  # nosec B608: where is built from fixed predicates; values are parameterized.
     items: list[dict[str, Any]] = []
     for row in rows:
         metadata = app_sqlite.json_load(row["metadata_json"], {}) or {}

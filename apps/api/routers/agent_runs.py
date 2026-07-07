@@ -1,5 +1,8 @@
 ﻿import asyncio
 import json
+import logging
+import os
+import time
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
@@ -12,7 +15,7 @@ from schemas.agent_runs import (
     default_generic_session_id,
     default_video_script_session_id,
 )
-from services import agent_blueprint_store, agent_run_event_hub, async_store_utils, audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
+from services import agent_blueprint_store, agent_run_event_bus, agent_run_event_hub, async_store_utils, audit_log_service, conversation_store, dataset_store, orchestrator, payload_preview_service, task_store
 from services.agent_config_store import get_config
 from services.agent_registry import get_agent_by_type
 from services.auth_service import require_admin, require_operator_or_admin, require_viewer_or_above
@@ -20,6 +23,15 @@ from services.user_context import can_access_owner
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def _submit_timing_enabled() -> bool:
+    return os.getenv("AGENT_RUN_SUBMIT_TIMING", "true").lower() in {"1", "true", "yes", "on"}
+
+
+def _write_audit_later(background_tasks: BackgroundTasks, event: str, status: str, user: dict[str, Any], target_id: str, details: dict[str, Any], ip: str) -> None:
+    background_tasks.add_task(audit_log_service.write_log, event, status, user, target_id, details, ip)
 
 
 @router.post("/agent-runs/preview-payload")
@@ -27,13 +39,15 @@ def preview_agent_run_payload(payload: AgentRunCreate, request: Request, user: d
     try:
         result = payload_preview_service.build_payload(payload.model_dump(), user)
     except payload_preview_service.PayloadPreviewError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(status_code=422, detail={"code": exc.code, "message": str(exc)}) from exc
     audit_log_service.write_log("payload.preview", "success", user, payload.agent_type, {"connector_id": result.get("connector_id")}, audit_log_service.client_ip(request))
     return {"connector_id": result.get("connector_id"), "payload": result["payload"]}
 
 
 @router.post("/agent-runs", response_model=AgentRunCreateResponse)
 def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks, request: Request, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, str]:
+    started = time.perf_counter()
+    marks: dict[str, float] = {}
     agent = get_agent_by_type(payload.agent_type)
     config = get_config(payload.agent_type)
     if agent is None and config is None:
@@ -41,6 +55,7 @@ def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks,
     blueprint = agent_blueprint_store.get_blueprint_by_agent(payload.agent_type)
     if blueprint and blueprint.get("status") in {"disabled", "deprecated"}:
         raise HTTPException(status_code=403, detail="该智能体蓝图已停用或废弃，不能创建新任务。")
+    marks["blueprint_guard_ms"] = (time.perf_counter() - started) * 1000
 
     prompt = payload.prompt.strip()
     if not prompt:
@@ -54,6 +69,7 @@ def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks,
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     if payload.conversation_id and conversation_store.get_conversation(payload.conversation_id, user["user_id"]) is None:
         raise HTTPException(status_code=404, detail="会话不存在。")
+    marks["input_guard_ms"] = (time.perf_counter() - started) * 1000
 
     default_mode = (config or agent or {}).get("default_mode") or "default"
     session_id = payload.session_id
@@ -78,15 +94,33 @@ def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks,
             "workflow_options": payload.workflow_options or (config or agent or {}).get("default_options") or {},
         }
     )
-    result = orchestrator.start_run(normalized_payload, background_tasks, user)
+    marks["normalize_ms"] = (time.perf_counter() - started) * 1000
+    try:
+        result = orchestrator.start_run(normalized_payload, background_tasks, user)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="任务入队失败，请稍后重试。") from exc
+    marks["orchestrator_ms"] = (time.perf_counter() - started) * 1000
+    ip = audit_log_service.client_ip(request)
     if not payload.conversation_id:
-        audit_log_service.write_log("conversation.create", "success", user, result["conversation_id"], {"agent_type": payload.agent_type}, audit_log_service.client_ip(request))
-    audit_log_service.write_log("conversation.attach_run", "success", user, result["conversation_id"], {"run_id": result["run_id"]}, audit_log_service.client_ip(request))
-    audit_log_service.write_log("agent_run.create", "success", user, payload.agent_type, {"run_id": result["run_id"], "dataset_ids": dataset_ids}, audit_log_service.client_ip(request))
+        _write_audit_later(background_tasks, "conversation.create", "success", user, result["conversation_id"], {"agent_type": payload.agent_type}, ip)
+    _write_audit_later(background_tasks, "conversation.attach_run", "success", user, result["conversation_id"], {"run_id": result["run_id"]}, ip)
+    _write_audit_later(background_tasks, "agent_run.create", "success", user, payload.agent_type, {"run_id": result["run_id"], "dataset_ids": dataset_ids}, ip)
     if dataset_ids:
-        audit_log_service.write_log("agent_run.use_dataset", "success", user, result["run_id"], {"dataset_ids": dataset_ids}, audit_log_service.client_ip(request))
+        _write_audit_later(background_tasks, "agent_run.use_dataset", "success", user, result["run_id"], {"dataset_ids": dataset_ids}, ip)
     if payload.agent_type == "video_script_breakdown":
-        audit_log_service.write_log("agent.video.submit", "success", user, result["run_id"], {"mode": normalized_payload.mode, "conversation_id": result["conversation_id"]}, audit_log_service.client_ip(request))
+        _write_audit_later(background_tasks, "agent.video.submit", "success", user, result["run_id"], {"mode": normalized_payload.mode, "conversation_id": result["conversation_id"]}, ip)
+    marks["audit_schedule_ms"] = (time.perf_counter() - started) * 1000
+    if _submit_timing_enabled():
+        logger.info(
+            "agent_run_submit_timing",
+            extra={
+                "agent_type": payload.agent_type,
+                "run_id": result.get("run_id"),
+                "queue_job_id": result.get("queue_job_id"),
+                "total_ms": round((time.perf_counter() - started) * 1000, 3),
+                **{key: round(value, 3) for key, value in marks.items()},
+            },
+        )
     return result
 
 
@@ -165,9 +199,16 @@ async def iter_agent_run_events(run_id: str, user: dict[str, Any], sleep_func=as
         if max_events is not None and emitted >= max_events:
             break
         if sleep_func is asyncio.sleep:
-            event = await agent_run_event_hub.wait_for_event(run_id, last_hub_sequence, timeout=2)
-            if event:
-                last_hub_sequence = event[0]
+            if agent_run_event_bus.backend() == "redis":
+                try:
+                    await asyncio.to_thread(agent_run_event_bus.wait_for_event, run_id, 2)
+                except Exception as exc:
+                    logger.warning("agent_run_sse_redis_wait_failed run_id=%s error_type=%s", run_id, type(exc).__name__)
+                    await asyncio.sleep(2)
+            else:
+                event = await agent_run_event_hub.wait_for_event(run_id, last_hub_sequence, timeout=2)
+                if event:
+                    last_hub_sequence = event[0]
         else:
             await sleep_func(2)
 
@@ -206,7 +247,7 @@ def retry_agent_run(run_id: str, background_tasks: BackgroundTasks, request: Req
     if run is None:
         raise HTTPException(status_code=404, detail="任务不存在。")
     conversation, _created = conversation_store.attach_run(run, include_user_message=True)
-    orchestrator.schedule_run(run["run_id"], background_tasks, run["user_id"])
+    queue_result = orchestrator.schedule_run(run["run_id"], background_tasks, run["user_id"])
     audit_log_service.write_log("agent_run.retry", "success", user, run_id, {"new_run_id": run["run_id"]}, audit_log_service.client_ip(request))
     audit_log_service.write_log("conversation.attach_run", "success", user, conversation["conversation_id"], {"run_id": run["run_id"], "retry_of": run_id}, audit_log_service.client_ip(request))
-    return {"run_id": run["run_id"], "conversation_id": conversation["conversation_id"], "status": run["status"], "message": "重试任务已创建，正在执行"}
+    return {"run_id": run["run_id"], "conversation_id": conversation["conversation_id"], "status": run["status"], "message": "重试任务已创建，正在执行", "queue_job_id": queue_result.get("job_id")}

@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 from uuid import uuid4
 
@@ -10,9 +11,13 @@ from services.user_context import artifacts_dir
 from services.dataset_store import DatasetError, build_dataset_context
 from services.video_agent_payload_builder import build_video_agent_run_payload
 
+LOGGER = logging.getLogger(__name__)
+
 
 class PayloadPreviewError(RuntimeError):
-    pass
+    def __init__(self, message: str, code: str = "payload_preview_failed") -> None:
+        super().__init__(message)
+        self.code = code
 
 
 def resolve_connector(agent_type: str, explicit_connector_id: str | None = None) -> tuple[dict[str, Any] | None, str | None]:
@@ -46,7 +51,8 @@ def build_payload(data: dict[str, Any], user: dict[str, Any], explicit_connector
         try:
             previews.append(file_preview_service.preview_file(str(file_id), user_id=user["user_id"]))
         except Exception as exc:
-            previews.append({"file_id": file_id, "error": str(exc)})
+            LOGGER.warning("payload_preview file preview failed: %s", type(exc).__name__)
+            previews.append({"file_id": file_id, "error": str(exc), "error_code": "file_preview_failed"})
     output_dir = str(artifacts_dir(user["user_id"]) / f"preview_{uuid4().hex[:10]}")
     try:
         dataset_profiles, dataset_files = build_dataset_context(dataset_ids, user["user_id"], include_all_users=user.get("role") == "admin")

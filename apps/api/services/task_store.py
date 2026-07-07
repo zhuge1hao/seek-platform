@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +12,8 @@ from services.user_context import agent_runs_dir
 
 
 API_ROOT = Path(__file__).resolve().parents[1]
+TERMINAL_STATUSES = {"completed", "failed", "cancelled"}
+LOGGER = logging.getLogger(__name__)
 
 
 def _now() -> str:
@@ -54,6 +57,7 @@ def _base_run(payload: dict[str, Any], logs: list[str] | None = None) -> dict[st
         "logs": logs or ["任务已创建"],
         "result": None,
         "error": None,
+        "row_version": 1,
         "created_at": now,
         "updated_at": now,
     }
@@ -73,6 +77,7 @@ def _row_to_run(row: Any) -> dict[str, Any]:
         "error": row["error"],
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
+        "row_version": int((row["row_version"] if "row_version" in row.keys() else metadata.get("row_version")) or 1),
     }
     run.setdefault("workflow_options", app_sqlite.json_load(row["workflow_options_json"], {}) or {})
     run.setdefault("logs", [])
@@ -93,7 +98,8 @@ def _limited_list(value: Any, limit: int) -> list[Any]:
 def summarize_run(run: dict[str, Any] | None) -> dict[str, Any] | None:
     if run is None:
         return None
-    result = run.get("result") if isinstance(run.get("result"), dict) else {}
+    raw_result = run.get("result")
+    result: dict[str, Any] = raw_result if isinstance(raw_result, dict) else {}
     files = _limited_list(result.get("files"), 30)
     steps = _limited_list(result.get("steps") or run.get("steps"), 20)
     has_more = False
@@ -132,28 +138,39 @@ def summarize_run(run: dict[str, Any] | None) -> dict[str, Any] | None:
 
 def _write_run(run: dict[str, Any]) -> dict[str, Any]:
     artifacts = (run.get("result") or {}).get("files") if isinstance(run.get("result"), dict) else []
+    run["row_version"] = int(run.get("row_version") or 1)
     with app_sqlite.connection() as conn:
         conn.execute(
             """
-            INSERT INTO agent_runs(run_id, user_id, conversation_id, agent_id, agent_type, status, mode, input_json, workflow_options_json, result_json, error, artifacts_json, created_at, updated_at, started_at, completed_at, metadata_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO agent_runs(run_id, user_id, conversation_id, agent_id, agent_type, status, mode, input_json, workflow_options_json, result_json, error, artifacts_json, created_at, updated_at, started_at, completed_at, metadata_json, row_version)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(run_id) DO UPDATE SET user_id=excluded.user_id, conversation_id=excluded.conversation_id, agent_type=excluded.agent_type,
               status=excluded.status, mode=excluded.mode, input_json=excluded.input_json, workflow_options_json=excluded.workflow_options_json,
               result_json=excluded.result_json, error=excluded.error, artifacts_json=excluded.artifacts_json, updated_at=excluded.updated_at,
-              completed_at=excluded.completed_at, metadata_json=excluded.metadata_json
+              completed_at=excluded.completed_at, metadata_json=excluded.metadata_json, row_version=excluded.row_version
             """,
             (
                 run["run_id"], run.get("user_id") or "admin", run.get("conversation_id"), run.get("agent_id"),
                 run.get("agent_type"), run.get("status"), run.get("mode"), app_sqlite.json_dump(run),
                 app_sqlite.json_dump(run.get("workflow_options") or {}), app_sqlite.json_dump(run.get("result")),
                 run.get("error"), app_sqlite.json_dump(artifacts or []), run.get("created_at"), run.get("updated_at"),
-                run.get("started_at"), run.get("completed_at"), app_sqlite.json_dump(run),
+                run.get("started_at"), run.get("completed_at"), app_sqlite.json_dump(run), run["row_version"],
             ),
         )
     if run.get("conversation_id"):
         service_events.emit_run_updated(run)
+        try:
+            from services import conversation_store
+            conversation_store.sync_run_to_conversation(run)
+        except Exception as exc:
+            LOGGER.warning("conversation_sync_failed operation=sync_run_to_conversation run_id=%s error_type=%s", run.get("run_id"), type(exc).__name__)
     from services import agent_run_event_hub
     agent_run_event_hub.publish_run_event(run)
+    try:
+        from services import agent_run_event_bus
+        agent_run_event_bus.publish_run_event(run)
+    except Exception as exc:
+        LOGGER.warning("distributed_event_publish_failed operation=publish_run_event run_id=%s error_type=%s", run.get("run_id"), type(exc).__name__)
     return run
 
 
@@ -231,7 +248,7 @@ def list_runs(limit: int = 20, user_id: str | None = None, include_legacy: bool 
         params.append(agent_type)
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     with app_sqlite.connection() as conn:
-        rows = conn.execute(f"SELECT * FROM agent_runs {where} ORDER BY updated_at DESC, created_at DESC LIMIT ?", (*params, safe_limit)).fetchall()
+        rows = conn.execute(f"SELECT * FROM agent_runs {where} ORDER BY updated_at DESC, created_at DESC LIMIT ?", (*params, safe_limit)).fetchall()  # nosec B608: where is built from fixed predicates; values are parameterized.
     runs = [_row_to_run(row) for row in rows]
     if include_legacy and len(runs) < safe_limit:
         known = {item["run_id"] for item in runs}
@@ -252,7 +269,17 @@ def update_run(run_id: str, updates: dict[str, Any], user_id: str | None = None)
     run = get_run(run_id, user_id)
     if run is None:
         return None
+    old_status = str(run.get("status") or "")
+    new_status = str(updates.get("status") or old_status)
+    if old_status in TERMINAL_STATUSES and new_status not in {old_status, *TERMINAL_STATUSES}:
+        run.setdefault("logs", []).append(f"ignored stale status update {new_status} after {old_status}")
+        blocked = {"status", "progress", "current_step", "result", "error", "completed_at", "started_at"}
+        updates = {key: value for key, value in updates.items() if key not in blocked}
+    if old_status == "cancelled" and new_status == "completed":
+        run.setdefault("logs", []).append("ignored completed update after cancelled")
+        updates = {key: value for key, value in updates.items() if key not in {"status", "result", "error", "completed_at"}}
     run.update(updates)
+    run["row_version"] = int(run.get("row_version") or 1) + 1
     run["updated_at"] = _now()
     return _write_run(run)
 

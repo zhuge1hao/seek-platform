@@ -4,6 +4,7 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { ArrowUp, Bot, Clipboard, Code2, PlugZap, RotateCcw, Settings2, Upload } from "lucide-react";
 import { AgentRunStatus } from "@/components/AgentRunStatus";
 import { PayloadPreviewModal } from "@/components/PayloadPreviewModal";
+import { ResultPanelErrorBoundary } from "@/components/ResultPanelErrorBoundary";
 import {
   cancelAgentRun,
   createAgentRun,
@@ -23,7 +24,7 @@ type Props = {
   onRunActiveChange?: (running: boolean) => void;
   conversationId?: string | null;
   initialRun?: AgentRunStatusType | null;
-  onConversationChange?: (conversationId: string) => void;
+  onConversationChange?: (conversationId: string) => void | Promise<void>;
   onRunChange?: (run: AgentRunStatusType) => void;
   initialPrompt?: string;
 };
@@ -132,7 +133,7 @@ export function VideoScriptAgentPanel({ selectedAgentId, onOpenAgentSelector, on
     setRunStatus(initialRun);
     setIsSubmitting(initialRun.status === "running");
     onRunActiveChange?.(initialRun.status === "running");
-  }, [initialRun?.run_id, initialRun?.status, onRunActiveChange, initialRun]);
+  }, [initialRun?.run_id, initialRun?.status, onRunActiveChange]);
 
   const updateOption = <K extends keyof VideoWorkflowOptions>(key: K, value: VideoWorkflowOptions[K]) => {
     setWorkflowOptions((current) => ({ ...current, [key]: value }));
@@ -216,10 +217,10 @@ export function VideoScriptAgentPanel({ selectedAgentId, onOpenAgentSelector, on
     setRunStatus(null);
     try {
       const created = await createAgentRun(runPayload());
-      onConversationChange?.(created.conversation_id);
       const nextRun = { run_id: created.run_id, conversation_id: created.conversation_id, agent_type: "video_script_breakdown", mode, status: created.status, progress: 10, current_step: created.message, logs: [created.message], result: null, error: null } as AgentRunStatusType;
       setRunStatus(nextRun);
       onRunChange?.(nextRun);
+      await onConversationChange?.(created.conversation_id);
       setNotice(created.message);
     } catch (err) {
       setIsSubmitting(false);
@@ -267,10 +268,10 @@ export function VideoScriptAgentPanel({ selectedAgentId, onOpenAgentSelector, on
     setError("");
     try {
       const retried = await retryAgentRun(runId);
-      onConversationChange?.(retried.conversation_id);
       const nextRun = { run_id: retried.run_id, conversation_id: retried.conversation_id, agent_type: "video_script_breakdown", mode, status: retried.status, progress: 10, current_step: retried.message, logs: [retried.message], result: null, error: null } as AgentRunStatusType;
       setRunStatus(nextRun);
       onRunChange?.(nextRun);
+      await onConversationChange?.(retried.conversation_id);
       setNotice(retried.message);
     } catch (err) {
       setIsSubmitting(false);
@@ -384,7 +385,7 @@ export function VideoScriptAgentPanel({ selectedAgentId, onOpenAgentSelector, on
         </div>
       </div>
 
-      {runStatus ? <AgentRunStatus isActionLoading={isRunActionLoading} onCancel={canOperate ? handleCancelRun : undefined} onRetry={canOperate ? handleRetryRun : undefined} run={runStatus} /> : null}
+      {runStatus ? <ResultPanelErrorBoundary><AgentRunStatus isActionLoading={isRunActionLoading} onCancel={canOperate ? handleCancelRun : undefined} onRetry={canOperate ? handleRetryRun : undefined} run={runStatus} /></ResultPanelErrorBoundary> : null}
       {previewOpen ? <PayloadPreviewModal connectorId={previewConnectorId} error={!payloadPreview && !previewLoading ? error : undefined} onClose={() => setPreviewOpen(false)} onCopied={() => setNotice("Payload 已复制。")} payload={payloadPreview} /> : null}
     </div>
   );

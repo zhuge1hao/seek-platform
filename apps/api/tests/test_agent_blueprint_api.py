@@ -9,15 +9,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 class AgentBlueprintApiTest(unittest.TestCase):
+    ADMIN_PASSWORD = "AdminBlueprint123!"
+
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
+        os.environ["APP_DB_BACKEND"] = "sqlite"
         os.environ["APP_SQLITE_PATH"] = str(Path(self.tmp.name) / "app.sqlite3")
+        os.environ["APP_SQLITE_AUTO_MIGRATE"] = "false"
         os.environ["APP_LEGACY_JSON_FALLBACK"] = "false"
+        os.environ.pop("APP_ENV", None)
+        os.environ.pop("INITIAL_ADMIN_PASSWORD", None)
         os.environ["AUTH_TOKEN_SECRET"] = "test-secret"
         os.environ["MEIZHAISEEK_ADMIN_USERNAME"] = "admin"
-        os.environ["MEIZHAISEEK_ADMIN_INITIAL_PASSWORD"] = "admin123"
+        os.environ["MEIZHAISEEK_ADMIN_INITIAL_PASSWORD"] = self.ADMIN_PASSWORD
         from services import app_sqlite
         app_sqlite._INIT_DONE = False
+        from services import rate_limit_service
+        rate_limit_service._WINDOWS.clear()
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -33,7 +41,13 @@ class AgentBlueprintApiTest(unittest.TestCase):
         from services.password_service import hash_password
 
         with TestClient(app) as client:
-            token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
+            users = user_store.load_users()
+            users["users"]["admin"]["password_hash"] = hash_password(self.ADMIN_PASSWORD)
+            users["users"]["admin"]["enabled"] = True
+            user_store.save_users(users)
+            login = client.post("/api/auth/login", json={"username": "admin", "password": self.ADMIN_PASSWORD})
+            self.assertEqual(login.status_code, 200, login.text)
+            token = login.json()["token"]
             admin_headers = {"Authorization": f"Bearer {token}"}
             users = user_store.load_users()
             users["users"]["operator"] = {

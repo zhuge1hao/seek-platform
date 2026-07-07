@@ -1,3 +1,6 @@
+import logging
+import os
+import time
 from typing import Any
 
 from fastapi import BackgroundTasks
@@ -16,29 +19,73 @@ from workflows import (
 )
 
 
-def start_run(payload: AgentRunCreate, background_tasks: BackgroundTasks, user: dict[str, Any]) -> dict[str, str]:
+logger = logging.getLogger(__name__)
+
+
+def _submit_timing_enabled() -> bool:
+    return os.getenv("AGENT_RUN_SUBMIT_TIMING", "true").lower() in {"1", "true", "yes", "on"}
+
+
+def start_run(payload: AgentRunCreate, background_tasks: BackgroundTasks, user: dict[str, Any]) -> dict[str, Any]:
+    started = time.perf_counter()
     run = task_store.create_run(payload, user=user)
+    after_run_insert = time.perf_counter()
     conversation, _created = conversation_store.attach_run(run)
+    after_conversation = time.perf_counter()
     run = task_store.update_run(run["run_id"], {"conversation_id": conversation["conversation_id"]}, run["user_id"]) or run
-    schedule_run(run["run_id"], background_tasks, run["user_id"])
-    return {"run_id": run["run_id"], "conversation_id": conversation["conversation_id"], "status": run["status"], "message": "任务已创建，正在执行"}
+    after_run_update = time.perf_counter()
+    try:
+        queue_result = schedule_run(run["run_id"], background_tasks, run["user_id"]) or {}
+    except Exception:
+        task_store.update_run(
+            run["run_id"],
+            {"status": "failed", "progress": 100, "current_step": "enqueue failed", "result": None, "error": "task enqueue failed"},
+            run["user_id"],
+        )
+        raise
+    after_enqueue = time.perf_counter()
+    if _submit_timing_enabled():
+        logger.info(
+            "agent_run_orchestrator_timing",
+            extra={
+                "agent_type": payload.agent_type,
+                "run_id": run.get("run_id"),
+                "conversation_id": conversation.get("conversation_id"),
+                "queue_job_id": queue_result.get("job_id"),
+                "run_insert_ms": round((after_run_insert - started) * 1000, 3),
+                "conversation_attach_ms": round((after_conversation - after_run_insert) * 1000, 3),
+                "run_update_ms": round((after_run_update - after_conversation) * 1000, 3),
+                "queue_enqueue_ms": round((after_enqueue - after_run_update) * 1000, 3),
+                "total_ms": round((after_enqueue - started) * 1000, 3),
+            },
+        )
+    return {
+        "run_id": run["run_id"],
+        "conversation_id": conversation["conversation_id"],
+        "status": run["status"],
+        "message": "task created",
+        "queue_job_id": queue_result.get("job_id"),
+    }
 
 
-def schedule_run(run_id: str, background_tasks: BackgroundTasks, user_id: str) -> None:
-    background_tasks.add_task(execute_run, run_id, user_id)
+def schedule_run(run_id: str, background_tasks: BackgroundTasks, user_id: str) -> dict[str, Any]:
+    from tasks.queue import enqueue_agent_run
+
+    return enqueue_agent_run(run_id, user_id, background_tasks)
 
 
 def _fail_unsupported(run_id: str, agent_type: str | None, user_id: str) -> None:
-    task_store.append_log(run_id, "不支持的智能体类型", user_id)
+    task_store.append_log(run_id, f"unsupported agent_type: {agent_type}", user_id)
     task_store.update_run(
         run_id,
         {
             "status": "failed",
             "progress": 100,
-            "current_step": "执行失败",
+            "current_step": "failed",
             "result": None,
-            "error": f"不支持的智能体类型：{agent_type}",
-        }, user_id,
+            "error": f"unsupported agent_type: {agent_type}",
+        },
+        user_id,
     )
 
 
@@ -48,7 +95,7 @@ def execute_run(run_id: str, user_id: str) -> None:
         return
 
     agent_type = run.get("agent_type")
-    task_store.append_log(run_id, f"当前 agent_type：{agent_type}", user_id)
+    task_store.append_log(run_id, f"agent_type: {agent_type}", user_id)
     if get_agent_by_type(agent_type or "") is None and get_config(agent_type or "") is None:
         _fail_unsupported(run_id, agent_type, user_id)
         return
@@ -67,5 +114,5 @@ def execute_run(run_id: str, user_id: str) -> None:
         else:
             generic_agent_workflow.run(run_id, user_id)
     except Exception as exc:
-        task_store.append_log(run_id, f"workflow 执行失败：{exc}", user_id)
-        task_store.update_run(run_id, {"status": "failed", "progress": 100, "current_step": "执行失败", "result": None, "error": str(exc)}, user_id)
+        task_store.append_log(run_id, f"workflow failed: {type(exc).__name__}", user_id)
+        task_store.update_run(run_id, {"status": "failed", "progress": 100, "current_step": "failed", "result": None, "error": str(exc)}, user_id)

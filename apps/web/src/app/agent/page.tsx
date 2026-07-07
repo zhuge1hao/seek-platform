@@ -10,6 +10,7 @@ import { AppShell } from "@/components/AppShell";
 import { ConversationMessages } from "@/components/ConversationMessages";
 import { ConversationPanel } from "@/components/ConversationPanel";
 import { QuickPrompts } from "@/components/QuickPrompts";
+import { ResultPanelErrorBoundary } from "@/components/ResultPanelErrorBoundary";
 import { getStoredUser, type AuthUser } from "@/lib/auth";
 import { findAgentByType, type AgentDefinition, type AgentToolId } from "@/lib/agents";
 import { deleteConversation, getConversation, type AgentRunStatus, type Conversation, type ConversationSummary } from "@/lib/api";
@@ -211,8 +212,12 @@ export default function AgentPage() {
   };
 
   const handleConversationChange = useCallback(async (conversationId: string) => {
-    await loadConversationRef.current(conversationId, { force: true });
-    await refreshConversations();
+    try {
+      await refreshConversations();
+      await loadConversationRef.current(conversationId, { force: true });
+    } catch (error) {
+      setConversationError(error instanceof Error ? error.message : "会话刷新失败。");
+    }
   }, [refreshConversations]);
 
   const handleRunChange = useCallback((run: AgentRunStatus) => {
@@ -277,8 +282,10 @@ export default function AgentPage() {
           <div className="mb-8 text-center"><p className="text-sm font-medium text-violet-700">AI 智能经营助手</p><h2 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">你好，meizhaiseek</h2></div>
           {conversationWarnings.length ? <div className="mb-4 w-full max-w-[880px] rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">{conversationWarnings.join("；")}</div> : null}
           {detailLoading ? <div className="mb-6 w-full max-w-[880px] rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 text-sm text-slate-500">正在切换会话...</div> : null}
-          {currentConversation && !detailLoading ? <ConversationMessages messages={currentConversation.messages} /> : !detailLoading ? <div className="mb-9 grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">{agentCards.map((card, index) => <AgentCard active={selectedAgentId === card.id} index={index} key={card.id} onClick={() => handleAgentSelect(card.id)} title={card.title} />)}</div> : null}
-          <AgentWorkspace configRefreshKey={configRefreshKey} inputValue={inputValue} isSending={false} onAgentSelect={handlePopoverAgentSelect} onInputChange={setInputValue} onSend={handleSend} selectedAgentId={selectedAgentId} conversationId={currentConversation?.conversation_id || null} initialRun={currentRun} onConversationChange={(id) => void handleConversationChange(id)} onRunChange={handleRunChange} />
+          <ResultPanelErrorBoundary>
+            {currentConversation && !detailLoading ? <ConversationMessages messages={currentConversation.messages} /> : !detailLoading ? <div className="mb-9 grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">{agentCards.map((card, index) => <AgentCard active={selectedAgentId === card.id} index={index} key={card.id} onClick={() => handleAgentSelect(card.id)} title={card.title} />)}</div> : null}
+            <AgentWorkspace configRefreshKey={configRefreshKey} inputValue={inputValue} isSending={false} onAgentSelect={handlePopoverAgentSelect} onInputChange={setInputValue} onSend={handleSend} selectedAgentId={selectedAgentId} conversationId={currentConversation?.conversation_id || null} initialRun={currentRun} onConversationChange={(id) => void handleConversationChange(id)} onRunChange={handleRunChange} />
+          </ResultPanelErrorBoundary>
           {!selectedAgentId ? <QuickPrompts onSelect={handleQuickPromptSelect} /> : null}
         </div>
       </section>

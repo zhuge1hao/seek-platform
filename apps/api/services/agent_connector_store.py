@@ -202,7 +202,7 @@ def _load() -> dict[str, dict[str, Any]]:
             backup_file(path, "before_connector_migration")
             _write(normalized)
         return normalized
-    except (OSError, UnicodeError, json.JSONDecodeError, ValueError, ConnectorStoreError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError, ConnectorStoreError):
         move_to_corrupted(path, "invalid_connector_config")
         defaults = default_connectors()
         _write(defaults)

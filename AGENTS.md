@@ -4,6 +4,8 @@
 
 GitHub：`https://github.com/zhuge1hao/seek-platform.git`
 
+当前交接版本：`meizhaiseek v1.8.1`，模型名保持 `meizhaiseek 2.0`。
+
 接手时必须先读磁盘代码和文档，不要只依赖历史对话、Git 状态或记忆。
 
 ## 项目运行命令
@@ -75,6 +77,22 @@ $env:SMOKE_ADMIN_PASSWORD='<local-password>'
 python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 ```
 
+生产 compose 验证：
+
+```powershell
+docker compose -f docker-compose.prod.yml config
+docker compose -f docker-compose.prod.yml up -d --build --scale worker-general=4 --scale worker-video=2
+docker compose -f docker-compose.prod.yml ps
+```
+
+质量/安全门禁：
+
+```powershell
+python -m ruff check apps/api
+python -m bandit -r apps/api -x apps/api/tests,apps/api/runtime,apps/api/models
+python -m pip_audit
+```
+
 健康检查：
 
 - `GET http://127.0.0.1:8000/health` 返回 `{"status":"ok","service":"meizhaiseek-api"}`。
@@ -104,15 +122,18 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 
 ## 后端约束
 
-- 不新增 MySQL、PostgreSQL、Redis、MongoDB 或其他外部数据库。
+- 本地开发默认继续支持 `APP_DB_BACKEND=sqlite`、memory events、inline queue、local artifacts。
+- 生产路径允许并推荐 PostgreSQL + Redis/RQ + Redis events + S3/MinIO + pgvector；不能让生产配置静默 fallback 到 SQLite。
 - APP SQLite 和 RAG SQLite 必须分开：
   - APP SQLite：`apps/api/runtime/app/meizhaiseek.sqlite3`
   - RAG SQLite：`apps/api/runtime/rag/rag.sqlite3`
 - 不把 embedding 合并进 APP SQLite。
+- SQLite 本地兼容不能被 PostgreSQL/RQ/S3/pgvector 改动破坏。
 - 所有业务 API 遵守登录鉴权、admin/operator/viewer 权限和 user_id 隔离。
 - 任务、会话、文件、Dataset、Artifact、Debug Payload 必须按 user_id 隔离。
 - DeepSeek API Key 只从后端环境变量读取，不进入前端、日志或审计。
 - Connector disabled/missing、HTTP 不可达、local agent 未启动时必须明确 failed。
+- Redis/RQ 模式下重任务必须真实入队并返回 `job_id`/`queue_job_id`，不能只创建前端 UI 状态。
 - Audit/Debug 不保存密码、token、secret、API key 或完整超大 prompt/answer/document。
 
 ## 重要目录说明
@@ -124,6 +145,11 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 - `apps/api/routers`：HTTP API。
 - `apps/api/schemas`：Pydantic 请求/响应模型。
 - `apps/api/services`：存储、鉴权、Connector、Dataset、local agent、conversation、QA/RAG。
+- `apps/api/db`：PostgreSQL/Alembic/SQLAlchemy schema 和 repository 基础。
+- `apps/api/tasks`：inline/RQ queue facade 和任务入口。
+- `apps/api/workers`：RQ worker entry。
+- `apps/api/storage`：artifact storage provider，local/local_shared/S3。
+- `apps/api/rag`：RAG provider，SQLite/pgvector。
 - `apps/api/services/agent_blueprint_*.py`：Blueprint store/service/validator/import/export/diff/release gate/preview/seed。
 - `apps/api/workflows`：Agent workflow 分发。
 - `apps/api/tests`：标准 unittest。
@@ -141,7 +167,9 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 4. 涉及 API 时做真实 API smoke，不用 UI 状态替代后端执行。
 5. 回归登录、角色权限、用户隔离、取消、重试、下载。
 6. 涉及页面时检查 loading/error/empty、长文本、滚动和小屏显示。
-7. 提交前确认不包含 `.env`、runtime DB、generated secrets、logs、uploads、models、node_modules、`.next`。
+7. 涉及 v1.8+ 生产路径时检查 `/health/ready` 和登录后的 `/api/admin/runtime/health`，确认 Postgres/Redis/queue/events/artifact/rag 状态真实。
+8. 提交前确认不包含 `.env`、`.venv`、runtime DB、generated secrets、logs、backups、uploads、models、node_modules、`.next`、Locust 大型原始结果。
+9. 保护 `ARCHITECTURE_EVALUATION_REPORT.md` 用户既有改动；不要为了清理 trailing whitespace 擅自修改或 stage。
 
 ## 禁止事项
 
@@ -157,6 +185,7 @@ python apps/api/scripts/smoke_minimal.py --video-agent-e2e --require-video-agent
 - 不要破坏 v1.5.8 conversation 增量 upsert、Dataset SQLite、service_events。
 - 不要破坏 v1.6+ 视频拆解智能体生产化、真实执行、artifact 闭环。
 - 不要破坏 v1.7+ Blueprint 描述层、视频拆解 published 蓝图、验证历史、测试历史、发布门禁、导入导出和回滚能力。
+- 不要破坏 v1.8+ PostgreSQL、Redis/RQ、distributed SSE、MinIO/S3、pgvector、metrics、runtime health 能力。
 - 不要把 Blueprint 改成任意 Python、shell 或 JSON 动态执行器。
 - 不要把 draft/testing 蓝图伪造成正式可用能力。
-- 不要提交 `.env`、runtime、SQLite、uploads、models、logs、node_modules、`.next`。
+- 不要提交 `.env`、`.venv`、runtime、SQLite、uploads、models、logs、backups、generated secrets、node_modules、`.next`、Locust 大型原始结果。

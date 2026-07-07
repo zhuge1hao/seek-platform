@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -105,7 +104,7 @@ def build_report() -> dict[str, Any]:
         indexes = _object_names(conn, "index")
         missing_tables = sorted(REQUIRED_TABLES - tables)
         missing_indexes = sorted(REQUIRED_INDEXES - indexes)
-        table_counts = {table: int(conn.execute(f"SELECT COUNT(*) AS count FROM {table}").fetchone()["count"]) for table in sorted(REQUIRED_TABLES & tables)}
+        table_counts = {table: int(conn.execute(f"SELECT COUNT(*) AS count FROM {table}").fetchone()["count"]) for table in sorted(REQUIRED_TABLES & tables)}  # nosec B608: table names are intersected with REQUIRED_TABLES whitelist.
 
     if missing_tables:
         report["failures"].append({"check": "required_tables", "missing": missing_tables})

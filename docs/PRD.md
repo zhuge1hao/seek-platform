@@ -2,7 +2,11 @@
 
 ## 当前版本
 
-- 版本：meizhaiseek v1.7.2
+- 版本：meizhaiseek v1.8
+
+## v1.8：500 用户并发扩展与分布式生产架构
+
+v1.8 将平台从单机本地部署拓展到可生产扩展的架构基线：本地开发继续默认 SQLite、memory events、inline queue 和 local artifacts；生产推荐 PostgreSQL、Redis、RQ workers、分布式 SSE wakeup 和共享 artifact storage。模型展示名继续为 meizhaiseek 2.0。
 
 ## v1.7.2：智能体蓝图发布闭环与可视化配置增强
 
@@ -16,9 +20,9 @@ meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 平台。平�
 
 ## 架构原则
 
-- 小团队本地部署优先。
-- APP SQLite 与 RAG SQLite 分离，不合并边界。
-- 不新增外部数据库服务。
+- 小团队本地部署优先，生产扩展路径明确。
+- APP SQLite 与 RAG SQLite 分离，不合并边界；生产 APP 数据推荐 PostgreSQL。
+- Redis 只用于 cache、rate limit、queue 和 event bus，业务真相仍在数据库。
 - 前端统一通过 `apps/web/src/lib/api.ts` 调用后端。
 - 读取型接口逐步接入 SWR；提交、删除、上传和下载仍走显式 API 调用。
 - `/chat` 流式问答稳定优先。
@@ -66,6 +70,11 @@ meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 平台。平�
 - v1.6.4：视频拆解智能体真实成功链路验收与产物闭环。
 - v1.6.5：架构评估 P1-P3 二轮优化、回归测试与服务启动。
 - v1.7：智能体蓝图与方法论配置中心。
+- v1.8：500 用户并发扩展与分布式生产架构。
+
+## v1.8 说明
+
+v1.8 新增 SQLAlchemy/Alembic/PostgreSQL 生产 schema、SQLite 到 PostgreSQL 迁移脚本、Redis 服务、登录限流、RQ/inline queue facade、Agent Run Redis Pub/Sub 事件总线、artifact storage provider、RAG provider facade、request id/metrics middleware、Docker production topology 和 Locust 基线脚本。500 用户结果必须以真实 Locust 报告为准；资源不足时只记录“未执行”。
 
 ## v1.7 说明
 

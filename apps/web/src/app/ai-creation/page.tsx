@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { ArrowUp, Clock, Home, Image, Shirt, Sparkles, Video, WandSparkles } from "lucide-react";
@@ -18,7 +18,7 @@ export default function AiCreationPage() {
   const [notice, setNotice] = useState("");
 
   const handleSubmit = () => {
-    setNotice("当前是 meizhaiseek v1.7.2，后续会接入生图、生视频和商品场景生成能力。");
+    setNotice("当前是 meizhaiseek v1.8，后续会接入生图、生视频和商品场景生成能力。");
   };
 
   return (

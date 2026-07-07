@@ -1,8 +1,8 @@
 ﻿# meizhaiseek-platform
 
-meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 工作台。当前版本为 **meizhaiseek v1.7.2**，包含 Next.js 前端、FastAPI 后端、APP SQLite、RAG SQLite、AI 对话、AI 智能体、Dataset、Connector、Debug Payload、后台账号管理、视频拆解智能体产物闭环，以及智能体蓝图与方法论配置中心。
+meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 工作台。当前版本为 **meizhaiseek v1.8**，包含 Next.js 前端、FastAPI 后端、APP SQLite、RAG SQLite、AI 对话、AI 智能体、Dataset、Connector、Debug Payload、后台账号管理、视频拆解智能体产物闭环，以及智能体蓝图与方法论配置中心。
 
-v1.7.2 在 v1.7 蓝图中心上补齐发布闭环：结构化编辑、验证历史、测试运行历史、版本差异、发布门禁、输入/结果预览和 `/agent` 蓝图摘要。Blueprint 仍只描述现有 Agent Registry、Workflow 与 Connector，不执行任意代码。
+v1.8 增加 500 用户并发扩展基础：PostgreSQL/Alembic 生产路径、Redis/RQ 队列、分布式 Agent Run 事件、artifact storage facade、RAG provider facade、request id/metrics、Locust 基线脚本和生产部署文档。本地开发默认仍使用 SQLite、memory events、inline queue 和 local artifacts。
 
 模型展示名保持为 **meizhaiseek 2.0**。
 
@@ -42,6 +42,17 @@ npm.cmd run dev
 如果未设置 `AUTH_TOKEN_SECRET`，后端会在 `apps/api/runtime/app/generated_secrets.json` 生成本地 secret。该文件不应提交到 Git。
 
 `APP_LEGACY_JSON_FALLBACK=false` 是默认推荐值。只有紧急恢复旧 JSON 数据时才临时设为 `true`。
+
+v1.8 新增生产扩展配置：
+
+- `APP_DB_BACKEND=sqlite|postgres`
+- `APP_DATABASE_URL`
+- `CACHE_BACKEND=memory|redis`
+- `EVENT_BACKEND=memory|redis`
+- `TASK_QUEUE_BACKEND=inline|redis`
+- `REDIS_URL`
+- `ARTIFACT_STORAGE_BACKEND=local|local_shared|s3`
+- `RAG_BACKEND=sqlite|pgvector`
 
 ## 测试
 
@@ -91,6 +102,10 @@ http://host.docker.internal:8001
 
 这些运行时文件不应提交到 Git。
 
+
+## meizhaiseek v1.8
+
+v1.8 prepares the platform for the 500-user production architecture without removing the local SQLite path. The production recommendation is PostgreSQL + Redis + RQ workers + distributed SSE wakeups + shared artifact storage. The current implementation includes the migration foundation, queue/event/storage/provider abstractions, health/readiness endpoints, request/metrics middleware, Docker production topology, and Locust scenarios. Full 500-user load results are not claimed unless `docs/CAPACITY_REPORT_V18.md` records an actual successful run.
 
 ## meizhaiseek v1.7.2
 

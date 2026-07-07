@@ -1,126 +1,323 @@
-﻿# Next Tasks
+# Next Tasks
 
-褰撳墠鐗堟湰锛歮eizhaiseek v1.7.2
+## v1.8.2 Current Gate
 
-褰撳墠鍘熷垯锛氬厛鍥炲綊鐪熷疄閾捐矾锛屽啀鍋?UI 澧炲己銆備笉瑕佺敤鍓嶇鐘舵€佹浛浠ｅ悗绔换鍔°€佷細璇濄€佺粨鏋滃拰閿欒鎸佷箙鍖栥€?
-## P0锛氬畧浣?`/agent` 鐪熷疄浠诲姟閾捐矾
+Current version: meizhaiseek v1.8.2
 
-### P0.1 鎻愪氦浠诲姟鍚庡乏渚ц亰澶╄褰曞繀椤绘柊澧炲苟鎸佷箙淇濆瓨
+P1 quality gates have passed the minimum acceptance threshold. Agent submit p95 remains 未通过 for the <=500ms priority target; the latest 100-user operator-pool run measured p95=600ms.
 
-鐩爣锛?
-- 鐢ㄦ埛鍦?`/agent` 鏅鸿兘浣撶晫闈㈡彁浜や换鍔″悗锛屽悗绔繀椤诲垱寤烘垨鏇存柊 Agent Conversation銆?- 宸︿晶鑱婂ぉ璁板綍蹇呴』鏂板鐪熷疄浼氳瘽銆?- 浼氳瘽銆佹秷鎭€乺un 蹇呴』鍐欏叆 APP SQLite銆?- localStorage 鍙兘淇濆瓨 active id锛屼笉鑳戒繚瀛樺畬鏁?messages 鍏呭綋浜嬪疄鏉ユ簮銆?
-娑夊強鏂囦欢锛?
+P2 is partially executed:
+
+- Redis pause/recovery SSE: 已通过.
+- Zombie maintenance recovery: 已通过.
+- Full worker crash/restart/retry: 未执行.
+- 50 video queue, Dataset queue, Document ingest queue, Blueprint queue, full MinIO, pgvector migration, schema parity: 未执行.
+
+Do not start P3 until the remaining P2 gates pass.
+
+当前版本：meizhaiseek v1.8.1
+
+原则：先修真实链路，再做 UI 增强。后端数据库和任务队列是事实来源；前端不能伪造任务、会话、结果或错误。
+
+## P0：/agent 真实任务链路回归
+
+### P0.1 提交任务后左侧聊天记录必须新增并持久保存
+
+目标：用户在 `/agent` 提交任务后，后端创建或更新 Agent Conversation；左侧列表立即出现真实会话；数据库中有 conversation/message/run。
+
+涉及文件：
+
 - `apps/web/src/app/agent/page.tsx`
-- `apps/web/src/components/AgentWorkspace.tsx`
-- `apps/web/src/hooks/useAgentConversations.ts`
+- `apps/web/src/hooks/useAgentRunEvents.ts`
+- `apps/web/src/hooks/useAgentRunPolling.ts`
 - `apps/api/routers/agent_runs.py`
 - `apps/api/routers/conversations.py`
 - `apps/api/services/conversation_store.py`
 - `apps/api/services/task_store.py`
 - `apps/api/services/service_events.py`
 
-楠屾敹鏍囧噯锛?
-- `POST /api/agent-runs` 杩斿洖鐪熷疄 `run_id` 鍜?`conversation_id`銆?- `GET /api/conversations` 绔嬪嵆鑳界湅鍒版柊浼氳瘽銆?- SQLite `agent_conversations`銆乣agent_messages`銆乣agent_runs` 鍧囨湁瀵瑰簲璁板綍銆?- 鍒锋柊椤甸潰鍚庡乏渚ц褰曚粛瀛樺湪銆?- 鐢ㄦ埛 A 涓嶈兘鐪嬪埌鐢ㄦ埛 B 鐨勪細璇濄€?
-### P0.2 鍒囨崲璺敱鍐嶅洖鏉ワ紝浠诲姟鍜岃亰澶╀笉鑳芥秷澶?
-鐩爣锛?
-- 浠?`/agent` 鍒囧埌 `/chat`銆佸悗鍙版垨鍏朵粬璺敱锛屽啀鍥?`/agent`锛岃兘鎭㈠ active conversation銆乵essages銆乴atest run銆乻tatus銆乺esult/error銆?- 鍒锋柊椤甸潰涔熻兘鎭㈠銆?- running run 鎭㈠鍚庣户缁?SSE锛孲SE 澶辫触鍐?polling銆?
-娑夊強鏂囦欢锛?
+验收标准：
+
+- `POST /api/agent-runs` 返回真实 `run_id`、`conversation_id`、`queue_job_id`。
+- `GET /api/conversations` 立即包含新会话。
+- `agent_conversations`、`agent_messages`、`agent_runs` 都有对应记录。
+- 刷新页面后左侧记录仍存在。
+- 用户 A 不能读取用户 B 的会话。
+
+### P0.2 切换到其他路由再回来，任务/聊天不能消失
+
+目标：从 `/agent` 切到 `/chat`、后台或其他路由后再回来，恢复 active conversation、messages、latest run、status、result/error。
+
+涉及文件：
+
 - `apps/web/src/app/agent/page.tsx`
-- `apps/web/src/components/AgentWorkspace.tsx`
 - `apps/web/src/hooks/useAgentRunEvents.ts`
 - `apps/web/src/hooks/useAgentRunPolling.ts`
 - `apps/api/services/conversation_store.py`
 - `apps/api/services/task_store.py`
 
-楠屾敹鏍囧噯锛?
-- 鎭㈠浼樺厛绾э細URL `conversation_id` -> localStorage active id -> 鍚庣鏈€杩戜細璇?-> 绌虹姸鎬併€?- running run 鎭㈠鍚庣户缁洿鏂扮姸鎬併€?- completed/failed/cancelled 涓嶉噸澶嶈疆璇€?- 浼氳瘽涓嶅瓨鍦ㄣ€佸凡褰掓。鎴栨棤鏉冮檺鏃朵笉鐧藉睆锛屾樉绀虹┖鐘舵€佸苟娓呯悊鏃犳晥 active id銆?- 蹇€熷垏鎹細璇濇椂鏈€缁堟樉绀烘渶鍚庝竴娆￠€夋嫨鐨勪細璇濄€?
-### P0.3 鑴氭湰/瑙嗛鎷嗚В鏅鸿兘浣撴彁浜ゅ悗蹇呴』鐪熷疄鎵ц
+验收标准：
 
-鐩爣锛?
-- `/agent` 椤甸潰鍙皟鐢ㄥ钩鍙板悗绔?`POST /api/agent-runs`銆?- 鍚庣鎸?`agent_type=video_script_breakdown` 杩涘叆 `video_script_workflow`銆?- 8001 鏈惎鍔ㄦ椂浠诲姟鐪熷疄 failed銆?- 8001 鍙揪鏃剁湡瀹?POST `/run`锛屼繚瀛?Debug Payload銆乺esult_json 鍜?artifacts銆?
-娑夊強鏂囦欢锛?
-- `apps/web/src/components/VideoScriptAgentPanel.tsx`
+- 恢复优先级：URL `conversation_id` -> localStorage active id -> 后端最近会话 -> 空状态。
+- running run 恢复后继续 SSE；SSE 失败才启用 polling。
+- completed/failed/cancelled 不重复轮询。
+- 无效 active id 被清理，不白屏。
+- 快速切换会话后最终显示最后一次选择。
+
+### P0.3 脚本/视频拆解智能体提交后必须真实执行
+
+目标：`/agent` 只调用平台后端 `POST /api/agent-runs`；后端对 `agent_type=video_script_breakdown` 进入队列和 workflow；8001 不可达时真实 failed，8001 可达时真实 POST `/run`。
+
+涉及文件：
+
 - `apps/api/routers/agent_runs.py`
+- `apps/api/tasks/queue.py`
 - `apps/api/workflows/video_script_workflow.py`
 - `apps/api/services/video_agent_payload_builder.py`
 - `apps/api/services/local_agent_client.py`
 - `apps/api/services/video_breakdown_result_normalizer.py`
 - `apps/api/services/artifact_service.py`
 - `apps/api/scripts/smoke_minimal.py`
+- `apps/web/src/app/agent/page.tsx`
 
-楠屾敹鏍囧噯锛?
-- Payload 鍖呭惈 `video_file`銆乣output_dir`銆乣mode`銆乣subtitle_region`銆乣ocr_workers`銆?- `standard` / `shot_text_excel` 鏈€缁堟槧灏勫埌鏈湴 Agent 鍙帴鍙楁ā寮忋€?- 8001 涓嶅彲杈炬椂 run.status 涓?`failed`锛岄敊璇俊鎭竻妤氥€?- 8001 鍙揪鏃?run 鐪熷疄 running/completed锛宺esult_json 鍜?artifacts 鎸佷箙鍖栥€?- Debug Payload request 鏄湡瀹炲彂缁?8001 鐨?`/run` payload銆?
-### P0.4 浠诲姟鐘舵€併€佺粨鏋溿€侀敊璇繀椤诲洖鏄惧埌瀵瑰簲鑱婂ぉ璁板綍
+验收标准：
 
-鐩爣锛?
-- `running/completed/failed/cancelled` 閫氳繃 `service_events` 鍚屾鍒板搴?conversation 鐨?assistant message銆?- completed 鏄剧ず summary銆乤rtifact銆乨ownload URL銆?- failed 鏄剧ず娓呮櫚閿欒銆?- retry 杩藉姞鏂?user/assistant messages 鍜屾柊 run id锛屼笉瑕嗙洊鏃?run銆?
-娑夊強鏂囦欢锛?
+- Debug Payload request 是真实发给 8001 的 `/run` payload。
+- Redis/RQ 模式下 API 立即返回，不等待视频处理完成。
+- 8001 不可达时 run.status 为 `failed`，错误清晰。
+- 8001 可达时 run 真实 running/completed，result_json 和 artifacts 持久化。
+- 不允许前端直接连 8001。
+
+### P0.4 任务状态、结果、错误回显到对应聊天记录
+
+目标：`running/completed/failed/cancelled` 通过 `service_events` / event bus 同步到对应 conversation assistant message；completed 显示 summary/artifacts；failed 显示错误；retry 保留旧 run 并创建新 run。
+
+涉及文件：
+
 - `apps/api/services/service_events.py`
 - `apps/api/services/conversation_store.py`
 - `apps/api/services/task_store.py`
-- `apps/web/src/components/AgentWorkspace.tsx`
-- `apps/web/src/components/AgentRunStatus.tsx`
-- `apps/web/src/components/VideoBreakdownResultPanel.tsx`
+- `apps/api/services/agent_run_event_bus.py`
+- `apps/web/src/app/agent/page.tsx`
+- `apps/web/src/hooks/useAgentRunEvents.ts`
 
-楠屾敹鏍囧噯锛?
-- running 鐘舵€佽兘鍦ㄨ亰澶╄褰曚腑鐪嬪埌浠诲姟杩涜涓€?- completed 鍚庡搴?assistant message 鏄剧ず缁撴灉鎽樿銆?- failed 鍚庡搴?assistant message 鏄剧ず閿欒鎽樿銆?- cancelled 鍚庢樉绀轰换鍔″凡鍙栨秷銆?- 澶氫細璇濄€佸 run 骞跺瓨鏃剁姸鎬佷笉涓茬嚎銆?
-## P1锛氳摑鍥惧彂甯冮棴鐜洖褰?
-### P1.1 瑙嗛鎷嗚В Blueprint 淇濇寔鐪熷疄鏍锋澘
+验收标准：
 
-鐩爣锛?
-- `bp_video_script_breakdown` 淇濇寔 `published`銆?- 缁х画缁戝畾 `video_script_workflow`銆乣video_script_agent`銆乣video_breakdown`銆?- 钃濆浘娴嬭瘯浠嶅鐢ㄧ湡瀹?Agent Run銆?
-娑夊強鏂囦欢锛?
-- `apps/api/services/agent_blueprint_seed_service.py`
-- `apps/api/services/agent_blueprint_service.py`
-- `apps/api/services/agent_blueprint_release_gate.py`
+- running 状态能在聊天记录中看到。
+- completed 后对应 assistant message 显示结果摘要和下载。
+- failed 后对应 assistant message 显示错误摘要。
+- cancelled 显示任务已取消。
+- 多会话、多 run 并存时状态不串线。
+
+## P1：v1.8.1 质量门禁补齐
+
+### P1.1 Bandit 中风险收敛
+
+目标：把剩余 Bandit Medium/Low 逐项分类：真实修复或精确标记误报。不要全局关闭 Bandit。
+
+涉及文件：
+
+- `apps/api/db/repositories/postgres.py`
+- `apps/api/rag/pgvector_provider.py`
+- `apps/api/routers/agents.py`
+- `apps/api/scripts/migrate_sqlite_to_postgres.py`
+- `apps/api/services/*_store.py`
+- `apps/api/services/local_agent_client.py`
+
+验收标准：
+
+- `python -m bandit -r apps/api -x apps/api/tests,apps/api/runtime,apps/api/models` 无 High。
+- 每个保留的 `# nosec` 都有具体原因。
+- 不弱化 table allowlist、CLI command guard、auth、user isolation。
+
+### P1.2 pip-audit 剩余 transformers 风险决策
+
+目标：处理 `transformers 4.57.6` 剩余 advisory；如果 `sentence-transformers` 仍约束 `<5`，记录风险和替代方案，不假装通过。
+
+涉及文件：
+
+- `apps/api/requirements.txt`
+- `docs/SECURITY_HARDENING_V181.md`
+- `docs/CAPACITY_REPORT_V18.md`
+
+验收标准：
+
+- `python -m pip_audit` 真实执行。
+- 若仍未通过，文档写明包名、版本、限制、后续升级路径。
+
+### P1.3 mypy 最小可用门禁
+
+目标：不要做全仓库类型大重写。先让高风险新增模块可被 mypy 检查。
+
+涉及文件：
+
+- `pyproject.toml`
+- `apps/api/services/security_config_service.py`
+- `apps/api/services/app_sqlite.py`
+- `apps/api/services/local_agent_client.py`
+- `apps/api/tasks/`
+- `apps/api/workers/`
+
+验收标准：
+
+- mypy 使用明确 path 配置，不依赖隐式当前目录。
+- 新增/高风险模块 scoped mypy 通过，或文档明确剩余类型问题。
+
+## P2：分布式链路验收
+
+### P2.1 Redis Pub/Sub SSE 完整验收
+
+目标：完成 smoke 之外的多实例 SSE 验收，包括 Redis 暂停/恢复和资源释放。
+
+涉及文件：
+
+- `apps/api/services/agent_run_event_bus.py`
+- `apps/api/routers/agent_runs.py`
+- `apps/web/src/hooks/useAgentRunEvents.ts`
+- `docs/DISTRIBUTED_ACCEPTANCE_V181.md`
+
+验收标准：
+
+- API A 创建 run，API B SSE 收到 status/progress/completed/failed。
+- Redis 暂停时 fallback polling 生效。
+- Redis 恢复后重新订阅。
+- 用户 A 不能订阅用户 B run。
+- 事件不包含 prompt、raw_response、workflow_options、token。
+- 真实通过后才允许 runtime health 设置 `events.multi_instance_verified=true`。
+
+### P2.2 Worker crash/restart/zombie recovery
+
+目标：真实杀 worker 后，任务不永久 running；重启后重试、interrupted 或 failed 策略明确。
+
+涉及文件：
+
+- `apps/api/workers/worker.py`
+- `apps/api/services/agent_run_maintenance.py`
+- `apps/api/services/task_store.py`
+- `apps/api/tasks/`
+- `docs/DISTRIBUTED_ACCEPTANCE_V181.md`
+
+验收标准：
+
+- 提交长时间 mock job。
+- worker 开始执行后终止进程。
+- zombie maintenance 生效。
+- 不重复生成 artifact。
+- cancelled 任务不恢复执行。
+- 达最大重试后停止。
+
+### P2.3 50 视频任务队列并发验收
+
+目标：用 mock 视频任务验证 video worker 并发上限，避免视频任务阻塞 general queue。
+
+涉及文件：
+
+- `apps/api/tasks/queue.py`
+- `apps/api/tasks/video_tasks.py`
+- `apps/api/workers/worker.py`
+- `docker-compose.prod.yml`
+- `load_tests/`
+
+验收标准：
+
+- 快速提交 50 个视频任务。
+- `worker-video=2` 时同时 executing 不超过 2。
+- 其余任务 queued。
+- general queue 不阻塞登录、读取、Agent 列表。
+- 最终 queued=0、executing=0。
+
+### P2.4 Dataset/Document/Blueprint 队列验收
+
+目标：验证 dataset clean/export、document ingest、blueprint test run 在 Redis/RQ 模式下真实入队、执行、持久化。
+
+涉及文件：
+
+- `apps/api/routers/datasets.py`
+- `apps/api/routers/qa_knowledge.py`
 - `apps/api/routers/agent_blueprints.py`
-- `apps/web/src/components/AgentBlueprintPanel.tsx`
+- `apps/api/tasks/dataset_tasks.py`
+- `apps/api/tasks/knowledge_tasks.py`
+- `apps/api/tasks/blueprint_tasks.py`
 
-楠屾敹鏍囧噯锛?
-- 钃濆浘瀛樺湪涓旂姸鎬佷负 `published`銆?- 8001 涓嶅彲杈炬椂钃濆浘娴嬭瘯鐪熷疄 failed锛宼est_run 璁板綍閿欒銆?- 8001 鍙揪鏃惰摑鍥炬祴璇曠敓鎴愮湡瀹?`agent_run_id` 鍜?artifacts銆?- release gate 涓嶅厑璁告棤楠岃瘉銆佹棤娴嬭瘯銆佹祴璇曞け璐ユ垨鐗堟湰涓嶅尮閰嶇殑鍙戝竷銆?
-### P1.2 淇濇寔鏋勫缓銆佹祴璇曞拰 smoke 鍙繍琛?
-鐩爣锛?
-- 鍚庣 compileall銆乽nittest銆乸ytest 閫氳繃銆?- 鍓嶇 build 閫氳繃銆?- smoke 缂哄嚟鎹椂娓呮櫚澶辫触锛屽甫鍑嵁鏃堕€氳繃銆?
-娑夊強鏂囦欢锛?
-- `apps/api/tests/*`
-- `apps/api/scripts/smoke_minimal.py`
-- `apps/web/src/**/*`
-- `docs/TESTING.md`
+验收标准：
 
-楠屾敹鏍囧噯锛?
-- `python -m compileall apps/api` 閫氳繃銆?- `python -m unittest discover -s apps/api/tests` 閫氳繃銆?- `python -m pytest apps/api/tests` 閫氳繃銆?- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm.cmd run build` 閫氳繃銆?- `python apps/api/scripts/smoke_minimal.py` 甯︽湰鍦?admin 鍑嵁鏃堕€氳繃銆?
-## P2锛氬伐绋嬫不鐞嗕笌鏂囨。
+- API 快速返回 `job_id`。
+- worker 写 running/progress/result/error。
+- 幂等、取消、失败、重试、用户隔离可验证。
+- 结果和 artifact 持久化。
 
-### P2.1 鏈窡韪枃浠朵笌杩愯鏁版嵁娌荤悊
+### P2.5 S3/MinIO 和 pgvector 完整链路
 
-鐩爣锛?
-- 涓嶆彁浜?`.env`銆乺untime DB銆乬enerated secrets銆乴ogs銆乽ploads銆乵odels銆乶ode_modules銆乣.next`銆佽棰戣緭鍑恒€?- 鏍圭洰褰?`ARCHITECTURE_EVALUATION_REPORT.md` 鑻ュ彧鏄弬鑰冭祫鏂欙紝涓嶆彁浜ゃ€?- 鏃ュ織缁х画鍐欏叆 `apps/api/runtime/logs/`銆?
-娑夊強鏂囦欢锛?
+目标：完成小样本之外的权限、流式、迁移验收。
+
+涉及文件：
+
+- `apps/api/storage/`
+- `apps/api/routers/artifacts.py`
+- `apps/api/rag/`
+- `apps/api/scripts/`
+- `docs/ARTIFACT_STORAGE.md`
+- `docs/RAG_BACKENDS.md`
+
+验收标准：
+
+- 用户 A 上传/下载，用户 B 不能下载。
+- object_key 不允许目录穿越。
+- API 不返回 S3 credentials。
+- 大文件下载不一次性读入内存。
+- pgvector migration 支持 dry-run/execute/verify/resume/checkpoint。
+
+## P2：/agent 回归自动化
+
+### P2.6 后端回归测试补齐
+
+目标：用最少测试覆盖 P0，不污染 runtime。
+
+涉及文件：
+
+- `apps/api/tests/test_agent_runs_api.py`
+- `apps/api/tests/test_conversation_store.py`
+- `apps/api/tests/test_agent_run_events_sse.py`
+
+验收标准：
+
+- `python -m unittest discover -s apps/api/tests` 通过。
+- `python -m pytest apps/api/tests` 通过。
+- 测试验证 conversation/message/run 同步、用户隔离、terminal status 防覆盖。
+
+## P2：文档和交付
+
+### P2.7 提交前保护
+
+目标：只 stage 确认范围，保护用户既有改动和运行产物。
+
+涉及文件：
+
+- `AGENTS.md`
 - `.gitignore`
-- `start-dev.ps1`
-- `apps/api/runtime/logs/`
 - `ARCHITECTURE_EVALUATION_REPORT.md`
 
-楠屾敹鏍囧噯锛?
-- `git status --short` 涓嶅嚭鐜版晱鎰熸垨杩愯鏁版嵁銆?- 闇€瑕佹彁浜ゆ椂鍙?stage 鏈鐩稿叧鏂囦欢锛屼笉浣跨敤鏃犺剳 `git add .`銆?- 闈炵┖鏃ュ織濡傞渶娌荤悊锛屽厛褰掓。锛屼笉鐩存帴鍒犻櫎銆?
-### P2.2 鏂囨。涓庣増鏈繚鎸佷竴鑷?
-鐩爣锛?
-- 褰撳墠鏂囨。淇濇寔 UTF-8 鍙銆?- 鏂囨。銆佸墠绔睍绀哄拰 runtime health 鍧囦负 `meizhaiseek v1.7.2`銆?- 鏂扮獥鍙ｅ彲浠ュ彧闈犱氦鎺ユ枃妗ｆ帴鎵嬨€?
-娑夊強鏂囦欢锛?
-- `AGENTS.md`
-- `docs/CODEX_HANDOFF.md`
-- `docs/NEXT_TASKS.md`
-- `docs/CHANGELOG_CONTEXT.md`
-- `docs/API.md`
-- `docs/PRD.md`
-- `docs/AGENT_BLUEPRINTS.md`
-- `README.md`
+验收标准：
 
-楠屾敹鏍囧噯锛?
-- `/api/admin/runtime/health` 杩斿洖 `version=v1.7.2`銆?- 鍓嶇鏄剧ず `meizhaiseek v1.7.2` 鍜?`meizhaiseek 2.0`銆?- 绂佺敤璇嶆壂鎻忔棤鍛戒腑銆?- 鏂囨。涓嶆妸 archive 閲岀殑鏃у唴瀹瑰綋褰撳墠浜嬪疄銆?
-## 鍚庣画璺嚎
+- `git status --short` 已审查。
+- `git diff --check` 只允许已知用户文件问题，不能新增 whitespace。
+- 不 stage `.env`、`.venv`、runtime、logs、backups、uploads、models、node_modules、Locust raw large files、secrets。
+- 不 stage `ARCHITECTURE_EVALUATION_REPORT.md`，除非用户明确要求。
 
-- v1.8锛氬弬鑰冮」鐩媶瑙ｄ笌钃濆浘鐢熸垚鍔╂墜銆?- v1.8.1锛氳摑鍥句汉宸ュ鏌ュ拰淇娴佺▼銆?- v1.9锛氬熀浜庤摑鍥惧疄鐜伴涓潪瑙嗛涓氬姟鏅鸿兘浣撱€?- v2.0锛氬鏅鸿兘浣撳伐浣滄祦缂栨帓銆?
-## meizhaiseek v1.7.2
+## P3：容量扩展
 
-v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.
+### P3.1 200/300/500 用户阶段压测
+
+目标：只有 P1/P2 门禁通过后才执行。100 用户必须先稳定。
+
+涉及文件：
+
+- `load_tests/locustfile.py`
+- `docs/CAPACITY_REPORT_V18.md`
+- `docs/SCALABILITY_500_USERS.md`
+
+验收标准：
+
+- 200 用户 5 分钟、300 用户 10 分钟、500 用户 15 分钟按阶段执行。
+- 错误率、p50/p95/p99、CPU/RAM、DB pool、Redis latency、queue depth、SSE 连接都记录。
+- 未达标就写未通过；资源不足就写未执行/未完成，不写支持 500 已通过。

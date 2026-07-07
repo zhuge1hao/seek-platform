@@ -5,10 +5,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from services import agent_config_store, agent_connector_store, agent_run_maintenance, app_sqlite, async_store_utils, audit_log_service, debug_payload_service, file_preview_service, file_store, json_to_sqlite_migrator, legacy_json_fallback, local_agent_client, payload_preview_service, security_config_service, skill_template_service
+from services import agent_config_store, agent_run_maintenance, app_sqlite, async_store_utils, audit_log_service, debug_payload_service, file_preview_service, file_store, json_to_sqlite_migrator, legacy_json_fallback, local_agent_client, payload_preview_service, runtime_health_service, security_config_service, skill_template_service
 from services.auth_service import require_admin
 from services.config_backup_service import backup_file, list_backups
-from services.config_guard import guard_file_store, validate_json_file
+from services.config_guard import guard_file_store
 
 
 router = APIRouter(dependencies=[Depends(require_admin)])
@@ -21,9 +21,7 @@ def runtime_health() -> dict[str, Any]:
     warnings = [*agent_report.get("warnings", []), *skill_report.get("warnings", []), *security_config_service.get_security_warnings()]
     fallback_stats = legacy_json_fallback.usage_stats()
     return {
-        "status": "ok" if not warnings else "warning",
-        "version": "v1.7.2",
-        "service": "meizhaiseek-api",
+        **runtime_health_service.runtime_health(warnings),
         "legacy_json_fallback_enabled": legacy_json_fallback.enabled(),
         "legacy_json_fallback_usage_count": fallback_stats["usage_count"],
         "legacy_json_fallback_last_used_at": fallback_stats["last_used_at"],
@@ -31,7 +29,6 @@ def runtime_health() -> dict[str, Any]:
         "agent_run_events": {"transport": "sse", "polling_fallback": True, "event_hub": True},
         "configs_valid": True,
         "agent_run_store_valid": True,
-        "warnings": warnings,
     }
 
 

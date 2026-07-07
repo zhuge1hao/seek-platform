@@ -1,6 +1,16 @@
 ﻿# API
 
-本文档记录 meizhaiseek v1.7.2 的主要后端接口。除 `/health` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
+本文档记录 meizhaiseek v1.8 的主要后端接口。除 `/health`、`/health/live` 和登录接口外，业务接口默认需要 `Authorization: Bearer <token>`。
+
+## v1.8 production architecture additions
+
+- `GET /health` 保持兼容响应：`{"status":"ok","service":"meizhaiseek-api"}`。
+- `GET /health/live` 返回进程 liveness，不依赖 PostgreSQL、Redis、DeepSeek 或 8001。
+- `GET /health/ready` 返回数据库、Redis、队列、事件、artifact storage、RAG 和 capacity profile 的脱敏状态。
+- `GET /api/admin/runtime/health` 返回 `version: "v1.8"`、`model: "meizhaiseek 2.0"` 和脱敏组件状态，不返回连接串、token、secret 或完整 prompt。
+- `POST /api/agent-runs` 创建 run/conversation 后立即返回 `run_id` 和 `conversation_id`；本地默认 inline queue，生产可用 Redis/RQ worker。
+- Agent Run SSE 协议保持不变；`EVENT_BACKEND=redis` 时 Redis Pub/Sub 只发轻量唤醒事件，API 重新读取 DB summary 后推给客户端。
+- 登录限流按 IP + username 执行，超限返回 `429` 和 `Retry-After`。
 
 ## Agent Blueprint v1.7.2 增强接口
 
@@ -25,12 +35,20 @@
 
 `GET /api/admin/runtime/health`
 
-仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.7.2 返回：
+仅管理员可用。返回运行时版本、存储状态、安全配置提示、legacy fallback 状态等。v1.8 返回：
 
 ```json
 {
   "service": "meizhaiseek-api",
-  "version": "v1.7.2",
+  "version": "v1.8",
+  "model": "meizhaiseek 2.0",
+  "database": {"backend": "sqlite", "status": "ok"},
+  "redis": {"status": "disabled"},
+  "queue": {"backend": "inline", "status": "ok"},
+  "events": {"backend": "memory", "transport": "sse"},
+  "artifact_storage": {"backend": "local", "status": "ok"},
+  "rag": {"backend": "sqlite", "status": "ok"},
+  "capacity_profile": "local-dev",
   "legacy_json_fallback_enabled": false,
   "warnings": []
 }
@@ -133,6 +151,8 @@ data: {"run_id":"run_xxx","status":"running","progress":20}
 
 支持事件：`status`、`step`、`completed`、`failed`、`heartbeat`。终态后服务端关闭流。SSE 失败时前端回退到 `GET /summary` 轮询。
 
+v1.8 为 `agent_runs` 增加 `row_version` 和终态保护：`completed/failed/cancelled` 不会被迟到 worker 更新覆盖为 `running`，`cancelled` 不会被迟到的 `completed` 覆盖。
+
 ## 视频拆解 Agent
 
 `GET /api/agents/video-script/status`
@@ -179,6 +199,18 @@ data: {"run_id":"run_xxx","status":"running","progress":20}
 - `GET /api/agent-runs/{run_id}/artifacts/{artifact_id}/download`: 按 user/run 校验下载 artifact。
 
 
+
+## v1.8 API additions
+
+### Runtime health and readiness
+
+`GET /api/admin/runtime/health` returns `version: v1.8` and includes sanitized component statuses for database, Redis, queue, events, artifact storage, RAG, and capacity profile. Sensitive secrets are not returned.
+
+`GET /health/live` is process liveness. `GET /health/ready` is deployment readiness and may return `degraded` if production dependencies are unavailable.
+
+### Queue and distributed events
+
+`TASK_QUEUE_BACKEND=inline|redis` controls whether Agent Run execution happens in-process or through RQ workers. `EVENT_BACKEND=memory|redis` controls whether SSE waitups are local or distributed through Redis Pub/Sub. The SSE wire format is unchanged.
 
 ## v1.7.2 API additions
 

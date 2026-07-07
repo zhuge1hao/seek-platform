@@ -83,3 +83,7 @@ v1.7.2 澧炲姞琛ㄥ崟妯″紡鍜岄珮绾?JSON 妯″紡銆傝〃鍗曟ā�
 ## meizhaiseek v1.7.2
 
 v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.
+
+## meizhaiseek v1.8
+
+Blueprint remains a configuration and governance layer over existing Agent Registry, Workflow, Connector, and Renderer capabilities. v1.8 may enqueue Blueprint test runs through the shared task queue, but it does not execute arbitrary code from Blueprint JSON. Runtime health exposes queue/event/storage status so release gates can be diagnosed without leaking prompts or secrets.
