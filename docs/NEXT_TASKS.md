@@ -1,5 +1,26 @@
 # Next Tasks
 
+## v1.8.2 Current State - 2026-07-07
+
+Immediate state:
+
+- Docker Desktop / Linux Engine recovered and production compose is running.
+- Running services: PostgreSQL healthy, Redis healthy, MinIO healthy, API healthy, Web healthy, Nginx running, `worker-general` running, `worker-video` running.
+- Not configured in compose: standalone `worker-dataset`, `worker-knowledge`, `worker-blueprint`.
+- Alembic is at `20260705_v18_initial (head)`.
+- APP SQLite -> PostgreSQL restore executed and verified.
+- pgvector restore path executed with zero RAG source documents/chunks; full RAG data migration remains not executed.
+- Schema parity script passed.
+- Login smoke and SSE smoke passed.
+- `/health/ready` is currently degraded because the admin password was restored to the legacy default at the user's request.
+
+Next mandatory work:
+
+- Replace the legacy default admin password with a strong production password before claiming readiness is fully green.
+- Continue P2 only after recording the current degraded readiness honestly.
+- Remaining P2: real Redis pause/recovery acceptance, worker crash/restart, zombie recovery, dataset queue, knowledge queue, blueprint queue, MinIO permissions/TTL/streaming, pgvector resume verification, 50 video jobs.
+- P3 remains blocked until P2 critical gates pass.
+
 ## v1.8.2 Current Gate
 
 Current version: meizhaiseek v1.8.2

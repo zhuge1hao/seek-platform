@@ -1,5 +1,19 @@
 # Changelog Context
 
+## v1.8.2 Docker Recovery Update - 2026-07-07
+
+- Restored Docker Desktop Linux Engine on `desktop-linux` without destructive WSL/Docker operations.
+- Verified relocated Docker data disk symlink from the Docker Desktop default VHDX path to `E:\USE\Docker\docker-desktop-disk\docker_data.vhdx`.
+- Rebuilt production Docker topology from empty Docker resources.
+- Started and verified PostgreSQL, Redis, MinIO, API, Web, Nginx, `worker-general`, and `worker-video`.
+- Ran Alembic to `20260705_v18_initial (head)`.
+- Restored APP data from host SQLite into PostgreSQL and verified table counts.
+- Enabled pgvector and ran RAG migration dry-run/execute/verify with zero source documents/chunks.
+- Verified `/health`, `/health/live`, `/health/ready` before password rollback, `/metrics`, login, runtime health, Agent Run enqueue, and SSE smoke.
+- At the user's request, restored the local admin password to the legacy default. After that rollback, `/health/ready` is degraded by design because `default_admin_password_detected=true`.
+- No source code was changed during service recovery. Runtime backups, `.env`, uploads, logs, and Docker data remain uncommitted.
+- P2 remains incomplete. Do not claim 500-user capacity or full distributed acceptance.
+
 ## v1.8.2 Current Status - 2026-07-06
 
 - Current code/runtime version: `meizhaiseek v1.8.2`.

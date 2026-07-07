@@ -1,5 +1,22 @@
 # Codex Handoff
 
+## v1.8.2 Docker Recovery Handoff - 2026-07-07
+
+- Branch: `stabilization/v1.8.2`.
+- Latest pushed code commit before this doc update: `c4f8c4114d82e6de513ce55b1faa7c0f979094ec`.
+- Runtime version: `meizhaiseek v1.8.2`; model display name: `meizhaiseek 2.0`.
+- Docker Desktop Linux Engine was restored without unregistering WSL, pruning Docker data, resetting Docker Desktop, or deleting the relocated VHDX.
+- Docker VHDX link is valid: `C:\Users\Administrator\AppData\Local\Docker\wsl\disk\docker_data.vhdx` -> `E:\USE\Docker\docker-desktop-disk\docker_data.vhdx`.
+- Production compose was rebuilt from empty Docker resources and is running PostgreSQL, Redis, MinIO, API, Web, Nginx, `worker-general`, and `worker-video`.
+- Current compose does not define separate `worker-dataset`, `worker-knowledge`, or `worker-blueprint`; queue-specific P2 acceptance for those queues remains not executed.
+- Alembic current: `20260705_v18_initial (head)`.
+- Host SQLite APP data was backed up under runtime and restored into PostgreSQL. Verify passed for the migration script.
+- pgvector extension is enabled. RAG SQLite-to-pgvector dry-run/execute/verify passed with zero source documents/chunks, so this is an empty migration verification, not a full RAG data migration.
+- `/health`, `/health/live`, `/metrics`, login, runtime health, and a header-auth SSE smoke passed.
+- Local admin password was restored to the legacy default at the user's request. Therefore `/health/ready` is currently `degraded` by design with `default_admin_password_detected=true`.
+- Do not claim production readiness is fully green while the default admin password is active.
+- Protected worktree rule still applies: do not stage or modify `ARCHITECTURE_EVALUATION_REPORT.md`; it remains a user-owned dirty file.
+
 ## v1.8.2 Handoff - 2026-07-06
 
 - Current code/runtime version: `meizhaiseek v1.8.2`.

@@ -1,5 +1,35 @@
 # meizhaiseek v1.8.2 Distributed Acceptance
 
+## 2026-07-07 Docker Recovery Addendum
+
+Status: production service startup recovered; full P2 acceptance still incomplete.
+
+Executed:
+
+- Docker Desktop Linux Engine recovered.
+- Production compose rebuilt and started.
+- PostgreSQL, Redis, MinIO, API, Web, Nginx, `worker-general`, and `worker-video` are running.
+- APP SQLite -> PostgreSQL migration executed and verified.
+- pgvector extension enabled.
+- RAG migration script dry-run/execute/verify passed with zero source documents/chunks.
+- Schema parity script passed.
+- Login, runtime health, Agent Run enqueue, and header-auth SSE smoke passed.
+
+Current limitation:
+
+- `/health/ready` is degraded after the admin password was restored to the legacy default at user request.
+- Standalone `worker-dataset`, `worker-knowledge`, and `worker-blueprint` are not configured in the current compose file.
+
+Still not executed:
+
+- Full Redis pause/recovery P2 rerun after Docker recovery.
+- Real worker crash/restart/retry.
+- Dataset, knowledge, and blueprint queue acceptance.
+- MinIO permissions, signed URL TTL, and streaming acceptance.
+- pgvector resume test with non-empty RAG data.
+- 50 video jobs.
+- P3 capacity tests.
+
 Date: 2026-07-06
 
 ## Status

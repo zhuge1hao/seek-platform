@@ -1,5 +1,16 @@
 ﻿# meizhaiseek-platform
 
+## Latest v1.8.2 Runtime Note
+
+As of 2026-07-07, the local Docker production topology on branch `stabilization/v1.8.2` has been recovered and started:
+
+- PostgreSQL/pgvector, Redis, MinIO, API, Web, Nginx, `worker-general`, and `worker-video` are running.
+- APP SQLite data was restored into PostgreSQL and verified.
+- RAG pgvector migration tooling ran successfully with zero source RAG documents/chunks.
+- Login, runtime health, Agent Run enqueue, and SSE smoke passed.
+- `/health/ready` is currently degraded because the local admin password was restored to the legacy default at user request.
+- Full P2 distributed acceptance and P3 200/300/500-user capacity validation remain not executed.
+
 meizhaiseek-platform 是面向电商经营场景的本地轻量 AI 工作台。当前版本为 **meizhaiseek v1.8**，包含 Next.js 前端、FastAPI 后端、APP SQLite、RAG SQLite、AI 对话、AI 智能体、Dataset、Connector、Debug Payload、后台账号管理、视频拆解智能体产物闭环，以及智能体蓝图与方法论配置中心。
 
 v1.8 增加 500 用户并发扩展基础：PostgreSQL/Alembic 生产路径、Redis/RQ 队列、分布式 Agent Run 事件、artifact storage facade、RAG provider facade、request id/metrics、Locust 基线脚本和生产部署文档。本地开发默认仍使用 SQLite、memory events、inline queue 和 local artifacts。
