@@ -1,0 +1,7 @@
+pytest==9.1.1
+pytest-asyncio==1.4.0
+locust==2.32.6
+ruff==0.8.4
+mypy==1.14.1
+bandit==1.8.0
+pip-audit==2.7.3

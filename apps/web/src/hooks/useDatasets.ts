@@ -1,23 +1,23 @@
 "use client";
 
-import useSWR from "swr";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { listDatasets, getDatasetMappingTemplates, type DatasetSummary, type MappingTemplate } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 
 type Params = { status?: string; limit?: number };
 
 export function useDatasets(params: Params = {}, enabled = true) {
-  return useSWR<{ datasets: DatasetSummary[] }>(
-    enabled ? queryKeys.datasets(params) : null,
+  return useApiQuery<{ datasets: DatasetSummary[] }>(
+    queryKeys.datasets(params),
     () => listDatasets(params),
-    { keepPreviousData: true, revalidateOnFocus: false, refreshInterval: 0 }
+    { enabled }
   );
 }
 
 export function useDatasetMappingTemplates(enabled = true) {
-  return useSWR<{ templates: MappingTemplate[] }>(
-    enabled ? queryKeys.datasetMappingTemplates : null,
+  return useApiQuery<{ templates: MappingTemplate[] }>(
+    queryKeys.datasetMappingTemplates,
     getDatasetMappingTemplates,
-    { keepPreviousData: true, revalidateOnFocus: false, refreshInterval: 0 }
+    { enabled }
   );
 }

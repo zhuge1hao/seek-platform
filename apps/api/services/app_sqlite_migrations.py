@@ -6,6 +6,7 @@ import sqlite3
 
 SCHEMA_VERSION = "20260702_v17_agent_blueprints"
 SCHEMA_VERSION_V171 = "20260703_v171_blueprint_release_loop"
+SCHEMA_VERSION_V18 = "20260705_v18_capacity_foundation"
 
 
 def _now() -> str:
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TEXT,
   last_login_at TEXT,
   metadata_json TEXT
+  ,row_version INTEGER DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -50,6 +52,10 @@ CREATE TABLE IF NOT EXISTS qa_conversations (
   updated_at TEXT,
   last_opened_at TEXT,
   metadata_json TEXT
+  ,storage_backend TEXT DEFAULT 'local'
+  ,object_key TEXT
+  ,original_filename TEXT
+  ,checksum TEXT
 );
 
 CREATE TABLE IF NOT EXISTS qa_messages (
@@ -374,6 +380,11 @@ CREATE INDEX IF NOT EXISTS idx_blueprint_validations_valid ON agent_blueprint_va
 
 def run_migrations(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA_SQL)
+    _ensure_column(conn, "agent_runs", "row_version", "INTEGER DEFAULT 1")
+    _ensure_column(conn, "artifacts", "storage_backend", "TEXT DEFAULT 'local'")
+    _ensure_column(conn, "artifacts", "object_key", "TEXT")
+    _ensure_column(conn, "artifacts", "original_filename", "TEXT")
+    _ensure_column(conn, "artifacts", "checksum", "TEXT")
     conn.execute(
         "INSERT OR IGNORE INTO schema_migrations(version, applied_at, description) VALUES (?, ?, ?)",
         ("20260629_v158_storage_perf_dataset_sqlite", _now(), "v1.5.8 storage performance and dataset sqlite"),
@@ -386,4 +397,14 @@ def run_migrations(conn: sqlite3.Connection) -> None:
         "INSERT OR IGNORE INTO schema_migrations(version, applied_at, description) VALUES (?, ?, ?)",
         (SCHEMA_VERSION_V171, _now(), "v1.7.1 blueprint release loop"),
     )
+    conn.execute(
+        "INSERT OR IGNORE INTO schema_migrations(version, applied_at, description) VALUES (?, ?, ?)",
+        (SCHEMA_VERSION_V18, _now(), "v1.8 capacity foundation columns"),
+    )
     conn.commit()
+
+
+def _ensure_column(conn: sqlite3.Connection, table: str, column: str, definition: str) -> None:
+    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")

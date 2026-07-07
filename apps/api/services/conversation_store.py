@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,6 +12,7 @@ from services.user_context import conversations_dir
 
 
 SCHEMA_VERSION = "1.0"
+LOGGER = logging.getLogger(__name__)
 
 
 class ConversationError(RuntimeError):
@@ -106,7 +108,8 @@ def _legacy_load(user_id: str) -> list[dict[str, Any]]:
         raw = json.loads(path.read_text(encoding="utf-8"))
         source = raw.get("conversations") if isinstance(raw, dict) else []
         return [item for value in source if isinstance(value, dict) if (item := _normalize_conversation(value, user_id))]
-    except Exception:
+    except Exception as exc:
+        LOGGER.warning("conversation_store legacy load failed: %s", type(exc).__name__)
         return []
 
 
@@ -271,15 +274,8 @@ def list_conversations(user_id: str, limit: int = 50, include_archived: bool = F
     safe_limit = max(1, min(limit, 200))
     archived_clause = "" if include_archived else "AND is_archived=0"
     with app_sqlite.connection() as conn:
-        rows = conn.execute(
-            f"""
-            SELECT * FROM agent_conversations
-            WHERE user_id=? {archived_clause}
-            ORDER BY updated_at DESC
-            LIMIT ?
-            """,
-            (user_id, safe_limit),
-        ).fetchall()
+        sql = "SELECT * FROM agent_conversations WHERE user_id=? " + archived_clause + " ORDER BY updated_at DESC LIMIT ?"  # nosec B608
+        rows = conn.execute(sql, (user_id, safe_limit)).fetchall()
     fields = ("conversation_id", "title", "agent_type", "agent_name", "latest_run_id", "status", "summary", "created_at", "updated_at", "is_archived")
     return [{key: _row_conversation(row).get(key) for key in fields} for row in rows]
 

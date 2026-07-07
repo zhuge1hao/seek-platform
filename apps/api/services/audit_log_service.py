@@ -77,7 +77,7 @@ def list_logs(action: str | None = None, user: str | None = None, status: str | 
         params.append(end_time)
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     with app_sqlite.connection() as conn:
-        rows = conn.execute(f"SELECT * FROM audit_logs {where} ORDER BY created_at DESC LIMIT ?", (*params, max(1, min(limit, 500)))).fetchall()
+        rows = conn.execute(f"SELECT * FROM audit_logs {where} ORDER BY created_at DESC LIMIT ?", (*params, max(1, min(limit, 500)))).fetchall()  # nosec B608: where is built from fixed predicates; values are parameterized.
     items: list[dict[str, Any]] = []
     for row in rows:
         detail = app_sqlite.json_load(row["detail_json"], {}) or {}

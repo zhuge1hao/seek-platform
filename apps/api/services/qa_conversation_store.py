@@ -201,7 +201,7 @@ def touch_conversation(user_id: str, conversation_id: str, status: str | None = 
     if not sets:
         return
     with app_sqlite.connection() as conn:
-        conn.execute(f"UPDATE qa_conversations SET {', '.join(sets)} WHERE conversation_id=? AND user_id=?", (*params, conversation_id, user_id))
+        conn.execute(f"UPDATE qa_conversations SET {', '.join(sets)} WHERE conversation_id=? AND user_id=?", (*params, conversation_id, user_id))  # nosec B608: update columns are fixed service-generated names; values are parameterized.
 
 
 def update_message(user_id: str, conversation_id: str, message_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:

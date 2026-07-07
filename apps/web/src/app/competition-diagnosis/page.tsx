@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { BarChart3, CalendarDays, ChevronDown, Info, Sparkles } from "lucide-react";
@@ -130,7 +130,7 @@ export default function CompetitionDiagnosisPage() {
                 <button
                   className="min-h-12 w-full rounded-2xl bg-gradient-to-r from-violet-400 to-fuchsia-300 text-sm font-bold text-white shadow-sm transition hover:from-violet-500 hover:to-fuchsia-400"
                   onClick={() =>
-                    setNotice("当前是 meizhaiseek v1.7.2，后续会接入商品数据、竞品数据和自动报告生成能力。")
+                    setNotice("当前是 meizhaiseek v1.8，后续会接入商品数据、竞品数据和自动报告生成能力。")
                   }
                   type="button"
                 >

@@ -1,179 +1,263 @@
-﻿# Codex Handoff
+# Codex Handoff
 
-## 椤圭洰鍚嶇О涓庡綋鍓嶇増鏈?
-- 椤圭洰锛歮eizhaiseek-platform
-- 褰撳墠鐗堟湰锛歮eizhaiseek v1.7.2
-- 鐗堟湰鍚嶇О锛氭櫤鑳戒綋钃濆浘鍙戝竷闂幆涓庡彲瑙嗗寲閰嶇疆澧炲己
-- 浠撳簱锛歨ttps://github.com/zhuge1hao/seek-platform.git
-- 鏈湴璺緞锛歚E:\USE\codexhome\agents-cowork\meizhaiseek-platform`
-- 褰撳墠鍒嗘敮锛歚main`
-- 鏈€杩戞彁浜わ細`89723b6 feat: complete blueprint release and visual editing flow`
-- 宸叉帹閫侊細`origin/main`
-- 褰撳墠鏈嶅姟锛歚start-dev.ps1` 宸插惎鍔紝API `http://127.0.0.1:8000`锛學eb `http://localhost:3000`
-- 褰撳墠鏈窡韪枃浠讹細`ARCHITECTURE_EVALUATION_REPORT.md`锛屼笉瑕佽鎻愪氦銆?
-## 褰撳墠椤圭洰鐩爣
+## v1.8.2 Docker Recovery Handoff - 2026-07-07
 
-meizhaiseek-platform 鏄潰鍚戠數鍟嗙粡钀ュ満鏅殑鏈湴杞婚噺 AI 宸ヤ綔鍙般€傚綋鍓嶉樁娈电洰鏍囨槸鍦ㄤ笉鐮村潖鏃㈡湁鐧诲綍閴存潈銆佹潈闄愩€丏ataset銆丆onnector銆丏ebug Payload銆丵A/RAG銆佸弻 SQLite 鍜岃棰戞媶瑙ｉ摼璺殑鍓嶆彁涓嬶紝鎶?Agent Blueprint 绋冲畾涓虹幇鏈?Agent Registry銆乄orkflow銆丆onnector 涔嬩笂鐨勭鐞嗘弿杩板眰銆?
-Blueprint 鍙弿杩般€佹牎楠屻€佹祴璇曘€佸彂甯冨拰鍥炴粴鐜版湁鑳藉姏锛屼笉鎵ц浠绘剰 Python銆乻hell 鎴栧姩鎬佸伐浣滄祦銆傝棰戞媶瑙ｆ櫤鑳戒綋 `bp_video_script_breakdown` 鏄涓€浠芥寮?published 钃濆浘锛屼粛浣跨敤鐜版湁 `video_script_workflow`銆乣video_script_agent` Connector 鍜?`video_breakdown` renderer銆?
-## 鎶€鏈爤涓庡惎鍔ㄦ柟寮?
-- 鍓嶇锛歂ext.js 14 App Router銆丷eact 18銆乀ypeScript銆乀ailwind CSS銆丼WR銆乴ucide-react銆?- 鍚庣锛欶astAPI銆乁vicorn銆丳ydantic銆佹爣鍑嗗簱 sqlite3銆乺equests銆?- 瀛樺偍锛欰PP SQLite 涓?RAG SQLite 鍒嗙銆?- AI 瀵硅瘽锛欴eepSeek OpenAI-compatible Chat Completions锛屾湰鍦?BGE embedding銆?- 瑙嗛 Agent锛氬钩鍙板悗绔€氳繃 Connector 璋冪敤鏈湴 8001 `/health` 鍜?`/run`銆?
-涓€閿惎鍔細
+- Branch: `stabilization/v1.8.2`.
+- Latest pushed code commit before this doc update: `c4f8c4114d82e6de513ce55b1faa7c0f979094ec`.
+- Runtime version: `meizhaiseek v1.8.2`; model display name: `meizhaiseek 2.0`.
+- Docker Desktop Linux Engine was restored without unregistering WSL, pruning Docker data, resetting Docker Desktop, or deleting the relocated VHDX.
+- Docker VHDX link is valid: `C:\Users\Administrator\AppData\Local\Docker\wsl\disk\docker_data.vhdx` -> `E:\USE\Docker\docker-desktop-disk\docker_data.vhdx`.
+- Production compose was rebuilt from empty Docker resources and is running PostgreSQL, Redis, MinIO, API, Web, Nginx, `worker-general`, and `worker-video`.
+- Current compose does not define separate `worker-dataset`, `worker-knowledge`, or `worker-blueprint`; queue-specific P2 acceptance for those queues remains not executed.
+- Alembic current: `20260705_v18_initial (head)`.
+- Host SQLite APP data was backed up under runtime and restored into PostgreSQL. Verify passed for the migration script.
+- pgvector extension is enabled. RAG SQLite-to-pgvector dry-run/execute/verify passed with zero source documents/chunks, so this is an empty migration verification, not a full RAG data migration.
+- `/health`, `/health/live`, `/metrics`, login, runtime health, and a header-auth SSE smoke passed.
+- Local admin password was restored to the legacy default at the user's request. Therefore `/health/ready` is currently `degraded` by design with `default_admin_password_detected=true`.
+- Do not claim production readiness is fully green while the default admin password is active.
+- Protected worktree rule still applies: do not stage or modify `ARCHITECTURE_EVALUATION_REPORT.md`; it remains a user-owned dirty file.
+
+## v1.8.2 Handoff - 2026-07-06
+
+- Current code/runtime version: `meizhaiseek v1.8.2`.
+- Model display name: `meizhaiseek 2.0`.
+- Branch: `main`.
+- Last pushed commit is still `cae7884 refactor: stabilize architecture P1-P3 for v1.7.2`.
+- Worktree is dirty. Do not use `git add .` or `git add -A`.
+- Do not stage `.env`, runtime/logs/uploads/models/node_modules, local Locust CSV/log artifacts, or `ARCHITECTURE_EVALUATION_REPORT.md`.
+- `ARCHITECTURE_EVALUATION_REPORT.md` is a protected user change; do not fix its known line 793 trailing whitespace.
+
+P1 status:
+
+- Passed minimum quality/capacity gates.
+- `compileall`: passed.
+- `unittest`: 53 OK.
+- `pytest`: 53 passed, 2 skipped, 2 warnings.
+- `ruff`: passed.
+- scoped `mypy`: passed.
+- Bandit: High=0, Medium=0, Low=33.
+- pip-audit raw scan: 未通过 for three `transformers 4.57.6` advisories; exact exceptions documented.
+- Frontend build: passed.
+- 100-user 10m operator-pool Locust: 0 failures, aggregate p95 160ms.
+- Agent submit p95: 600ms, so <=500ms priority target is 未通过.
+
+P2 status:
+
+- Redis pause/recovery SSE with API A/API B: passed.
+- Runtime health `multi_instance_sse_verified=passed`.
+- Controlled zombie maintenance repair: passed after terminal-update protection fix.
+- Full worker crash/restart/retry: 未执行.
+- 50 video queue, Dataset queue, Document ingest queue, Blueprint queue, full MinIO, pgvector migration, schema parity: 未执行.
+
+P3 status:
+
+- 未执行. Do not run or claim 200/300/500 user validation until P2 is complete.
+
+## 项目名称与当前版本
+
+- 项目：meizhaiseek-platform
+- 当前版本：meizhaiseek v1.8.1
+- 版本名：安全加固、100 用户性能收敛与分布式链路验收
+- 模型名：meizhaiseek 2.0
+- 仓库：https://github.com/zhuge1hao/seek-platform.git
+- 本地路径：`E:\USE\codexhome\agents-cowork\meizhaiseek-platform`
+- 当前分支：main
+- 最近已推送提交：`cae7884 refactor: stabilize architecture P1-P3 for v1.7.2`
+- 当前状态：工作区仍未提交，包含 v1.8 基础改动、v1.8.1 安全/性能改动、文档改动和用户既有 `ARCHITECTURE_EVALUATION_REPORT.md` 改动。不要裸 `git add .`。
+
+## 当前项目目标
+
+meizhaiseek-platform 是本地/私有化 AI 工作台，服务电商经营、内容拆解、QA/RAG、Dataset、Blueprint 和视频脚本拆解。当前目标不是新增业务智能体，而是把 v1.8 分布式生产路径补稳到 v1.8.1：安全前置项、100 用户性能收敛、分布式链路验收，并继续保护 `/agent` 真实任务和聊天持久化。
+
+## 技术栈与启动方式
+
+- 前端：Next.js 14 App Router、React 18、TypeScript、Tailwind、SWR、lucide-react。
+- 后端：FastAPI、Uvicorn、Pydantic、sqlite3、psycopg、SQLAlchemy async、asyncpg、Alembic、Redis、RQ、Prometheus metrics。
+- 默认开发存储：APP SQLite `apps/api/runtime/app/meizhaiseek.sqlite3`，RAG SQLite `apps/api/runtime/rag/rag.sqlite3`。
+- 生产推荐路径：PostgreSQL + Redis/RQ + Redis events + MinIO/S3 + pgvector。
+- 本地视频 Agent：`http://127.0.0.1:8001`；Docker 内访问宿主机使用 `http://host.docker.internal:8001`。
+
+开发启动：
 
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
 .\start-dev.ps1
 ```
 
-鍗曠嫭鍚姩鍚庣锛?
+后端单启：
+
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api
 python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-鍗曠嫭鍚姩鍓嶇锛?
+前端单启：
+
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\web
 $env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'
 npm.cmd run dev -- -p 3000
 ```
 
-甯歌楠岃瘉锛?
+生产拓扑：
+
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
-python -m compileall apps/api
-python -m unittest discover -s apps/api/tests
-python -m pytest apps/api/tests
-cd apps\web
-$env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'
-npm.cmd run build
+docker compose -f docker-compose.prod.yml up -d --build --scale worker-general=4 --scale worker-video=2
+docker compose -f docker-compose.prod.yml ps
 ```
 
-Smoke锛?
-```powershell
-cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
-$env:SMOKE_ADMIN_USERNAME='admin'
-$env:SMOKE_ADMIN_PASSWORD='<local-password>'
-python apps/api/scripts/smoke_minimal.py
-```
-
-## 鍏抽敭鐩綍缁撴瀯
+## 关键目录结构
 
 ```text
-apps/web/src/app                 # 椤甸潰璺敱
-apps/web/src/components          # Agent銆丆hat銆丏ataset銆丄dmin銆丅lueprint UI
-apps/web/src/hooks               # SWR hooks銆丼SE/polling hooks
-apps/web/src/lib                 # API client銆乹ueryKeys銆乤uth銆乤gent types
-apps/api/routers                 # FastAPI routers
-apps/api/services                # 瀛樺偍銆侀壌鏉冦€佷换鍔°€丆onnector銆丵A/RAG銆丅lueprint
-apps/api/workflows               # Agent workflow锛屽惈 video_script_workflow
-apps/api/tests                   # unittest/pytest 鍏煎娴嬭瘯
-apps/api/scripts/smoke_minimal.py
-apps/api/runtime                 # 鏈湴杩愯鏁版嵁锛屼笉鎻愪氦
-apps/api/uploads                 # 涓婁紶鏂囦欢锛屼笉鎻愪氦
-docs                             # 浜ゆ帴銆丄PI銆佹祴璇曘€佹灦鏋勪笂涓嬫枃
+apps/api/main.py                         FastAPI app, health, metrics, startup
+apps/api/routers                         HTTP API routes
+apps/api/schemas                         Pydantic request/response schemas
+apps/api/services                        stores, auth, security, tasks, connectors, QA/RAG, Blueprint
+apps/api/db                              SQLAlchemy async, Alembic, PostgreSQL schema
+apps/api/tasks                           inline/RQ queue facade and task entry points
+apps/api/workers                         RQ worker entry
+apps/api/storage                         artifact storage providers: local/local_shared/s3
+apps/api/rag                             RAG providers: sqlite/pgvector
+apps/api/scripts                         smoke, migration, verification scripts
+apps/api/tests                           unittest/pytest tests
+apps/api/runtime                         local runtime data, never commit
+apps/api/uploads                         uploaded files, never commit
+apps/web/src/app                         Next.js pages
+apps/web/src/components                  Agent, Chat, Dataset, Admin, Blueprint UI
+apps/web/src/hooks                       SWR, SSE, polling hooks
+apps/web/src/lib                         auth, api client, registry, helpers
+load_tests                               Locust scripts
+docs                                    product, API, testing, scaling, handoff docs
 ```
 
-## 宸插畬鎴愮増鏈褰?
-### v1.7.2锛氭櫤鑳戒綋钃濆浘鍙戝竷闂幆涓庡彲瑙嗗寲閰嶇疆澧炲己
+## 已完成版本记录
 
-- 鏂板 `agent_blueprint_test_runs` 鍜?`agent_blueprint_validation_results`锛屾瘡娆￠獙璇佸拰娴嬭瘯閮藉彲杩芥函銆?- 鏂板钃濆浘 diff銆乺elease gate銆乮nput preview銆乺esult preview 鏈嶅姟涓?API銆?- 鍙戝竷鎺ュ彛鍚庣閲嶆柊鎵ц鍙戝竷闂ㄧ锛涙棤褰撳墠鐗堟湰鏈夋晥楠岃瘉銆佹棤娴嬭瘯璁板綍銆佹祴璇曞け璐ャ€佺増鏈笉鍖归厤閮戒細闃绘鍙戝竷銆?- 鍙戝竷 warning 闇€瑕?`confirm_warnings=true`锛宱perator/viewer 涓嶈兘鍙戝竷銆?- 鍥炴粴鍓嶆牎楠岀洰鏍囧巻鍙?published 鐗堟湰锛岀敓鎴?diff 鎽樿骞跺啓 release/audit銆?- 钃濆浘绠＄悊椤靛鍔犵粨鏋勫寲缂栬緫鍣ㄣ€侀獙璇佸巻鍙层€佹祴璇曡繍琛屽巻鍙层€佺増鏈?diff銆佸彂甯冮棬绂佸拰棰勮锛涢珮绾?JSON 妯″紡淇濈暀銆?- `/api/agents` 鍜?`/agent` 杞婚噺灞曠ず published 钃濆浘鐗堟湰銆佹柟娉曡鎽樿銆佽緭鍑烘憳瑕佸拰鏈€杩戞祴璇曠姸鎬侊紝涓嶈繑鍥?Prompt 鎴栧畬鏁存墽琛岄厤缃€?- 鐗堟湰灞曠ず鏇存柊涓?`meizhaiseek v1.7.2`锛屾ā鍨嬪悕缁х画 `meizhaiseek 2.0`銆?- 宸查€氳繃 compileall銆乽nittest銆乸ytest銆亀eb build銆乻moke_minimal銆?
-### v1.7锛氭櫤鑳戒綋钃濆浘涓庢柟娉曡閰嶇疆涓績
+### v1.8.1
 
-- 鏂板 Agent Blueprint SQLite 琛ㄣ€乻tore銆乻ervice銆乿alidator銆乮mport/export銆乻eed service銆?- 鏂板 `/api/agent-blueprints` CRUD銆乿ersions銆乿alidate銆乸ublish銆乺ollback銆乧lone銆乨isable/enable/deprecate銆乼est-cases銆乺eleases銆乪xport/import銆?- 鍚庡彴鏂板鈥滄櫤鑳戒綋钃濆浘鈥濈鐞嗛〉銆?- `/api/agents` 澧炲姞钃濆浘鍏宠仈瀛楁锛屾棤钃濆浘鏅鸿兘浣撴樉绀?`unmanaged`銆?- `POST /api/agent-runs` 浠呭湪鍏宠仈钃濆浘 disabled/deprecated 鏃舵嫆缁濇柊浠诲姟銆?- 瑙嗛鎷嗚В鏅鸿兘浣?seeded 涓?`bp_video_script_breakdown` published 钃濆浘銆?
-### v1.6.5锛氭灦鏋勮瘎浼?P1-P3 浜岃疆浼樺寲
+- 安全：生产不再回退固定 JWT secret；本地缺 secret 时生成 runtime secret；生产禁止 `admin123` 初始管理员弱密码；runtime health 只显示 secret 状态。
+- 安全：`table_count()` 增加表名白名单；CLI Connector 使用 `shell=False` 并拒绝 shell metacharacters；静默异常改为脱敏日志；迁移/文件 ID 从 SHA1 改 SHA256。
+- 依赖：FastAPI、python-multipart、requests、pytest、pytest-asyncio 升级；`pip check` 通过；`pip-audit` 仅剩 transformers 受 sentence-transformers 约束的 3 个 advisory。
+- 性能：PostgreSQL sync adapter 增加小连接池；`/api/agents` 改轻量摘要、批量蓝图查询、短 TTL cache，不再列表同步探测 8001。
+- 性能：Agent Run submit 缩短请求线程路径，成功审计转 background task，响应包含 `queue_job_id`；Redis 登录限流改 pipeline。
+- 队列：RQ queue 拆为 `general/video/dataset/knowledge/blueprint`；生产 compose 已验证 `worker-general=4`、`worker-video=2` 运行。
+- 验证：compileall 通过；unittest 35 tests OK；pytest 35 passed；ruff 通过；web build 通过；生产 compose rebuild/up/health 通过。
+- 容量：20 用户 2m 0% 错误，aggregate p95 44ms；100 用户 2m 0% 错误，aggregate p95 140ms；100 用户 10m 0% 错误，aggregate p95 140ms，submit p95 520ms。
+- 分布式：多 API SSE 做了 smoke，API A 创建 run，API B 收到 11 个 SSE 事件，事件未泄露 prompt/raw_response/workflow_options/token。
+- 未完成：mypy 未通过；bandit 仍有中/低项；Redis pause/recovery、worker crash/recovery、50 视频队列、Dataset/Document/Blueprint 队列验收、完整 S3 权限、完整 pgvector 迁移、200/300/500 用户压测未执行。
 
-- 鎵╁ぇ SWR 璇诲彇灞傝鐩栥€?- 鏂板鏍稿績 unittest 鍜?GitHub Actions/Docker 鍩虹銆?- legacy JSON fallback 榛樿鍏抽棴锛宺untime health 鏄剧ず鐘舵€併€?- 鏂板 SQLite async wrapper 绗竴闃舵銆?- 鏂板 Agent Run SSE events锛屽墠绔け璐ュ洖閫€ polling銆?- 澧炲己 video-agent E2E smoke銆?- 淇瑙嗛缁撴灉 tab 闂睆鍜岄暱鏂囨湰鏌ョ湅銆?
-### v1.6.4锛氳棰戞媶瑙ｆ櫤鑳戒綋鐪熷疄鎴愬姛閾捐矾楠屾敹涓庝骇鐗╅棴鐜?
-- 榛樿 Connector 鎸囧悜鏈湴 8001銆?- 骞冲彴 payload 鏄犲皠涓烘湰鍦拌棰?Agent `/run` payload銆?- 鐪熷疄璋冪敤 8001锛屼笉浼€?completed銆?- 鏍囧噯鍖?result_json锛岃鍙?shot_report锛岀櫥璁?Excel/JSON/鍥剧墖/folder_manifest artifacts銆?- Debug Payload 淇濆瓨鐪熷疄 request/response/error銆?
-## 褰撳墠姝ｅ湪澶勭悊鐨勯棶棰?
-鏈疆鍙仛涓婁笅鏂囦氦鎺ュ寘钀界洏锛屼笉缁х画鍐欐柊鍔熻兘銆?
-涓嬩竴绐楀彛鏈€浼樺厛浠诲姟浠嶆槸 `/agent` 鍥炲綊锛?
-1. 鍦?`/agent` 鏅鸿兘浣撶晫闈㈡墽琛屼换鍔″悗锛屽乏渚ц亰澶╄褰曞繀椤绘柊澧炲苟鎸佷箙淇濆瓨銆?2. 鍒囨崲鍒板叾浠栬矾鐢卞啀鍥炴潵锛屼换鍔″拰鑱婂ぉ涓嶈兘娑堝け銆?3. 鑴氭湰/瑙嗛鎷嗚В鏅鸿兘浣撴彁浜ゅ悗蹇呴』鐪熷疄璋冪敤鍚庣鍜?local agent锛屼笉鍏佽鍙垱寤?UI 鐘舵€併€?4. 浠诲姟鐘舵€併€佺粨鏋溿€侀敊璇俊鎭繀椤诲洖鏄惧埌瀵瑰簲鑱婂ぉ璁板綍銆?
-## 鏈€杩戜竴娆＄敤鎴锋槑纭姹?
-鈥滆浣犱负褰撳墠椤圭洰鐢熸垚涓€涓柊绐楀彛鍙户缁帴鎵嬬殑涓婁笅鏂囦氦鎺ュ寘銆備笉瑕佺户缁啓鏂板姛鑳斤紝鍏堝彧鍋氭€荤粨鍜岃惤鐩樸€傗€?
-## 宸茬粡鏀硅繃鐨勫叧閿枃浠?
-v1.7.2 鍏抽敭浠ｇ爜锛?
-- `apps/api/services/app_sqlite_migrations.py`
-- `apps/api/services/app_sqlite.py`
-- `apps/api/services/agent_blueprint_store.py`
-- `apps/api/services/agent_blueprint_service.py`
-- `apps/api/services/agent_blueprint_validator.py`
-- `apps/api/services/agent_blueprint_diff_service.py`
-- `apps/api/services/agent_blueprint_release_gate.py`
-- `apps/api/services/agent_blueprint_preview_service.py`
-- `apps/api/routers/agent_blueprints.py`
-- `apps/api/routers/agents.py`
-- `apps/api/routers/admin_runtime.py`
-- `apps/api/scripts/smoke_minimal.py`
-- `apps/web/src/components/AgentBlueprintPanel.tsx`
-- `apps/web/src/components/AgentBlueprintEditor.tsx`
-- `apps/web/src/components/AgentWorkspace.tsx`
-- `apps/web/src/lib/api.ts`
-- `apps/web/src/lib/queryKeys.ts`
-- `apps/web/src/hooks/useAgentBlueprints.ts`
-- `apps/web/src/lib/agents.ts`
+### v1.8
 
-v1.7.2 娴嬭瘯锛?
-- `apps/api/tests/test_agent_blueprint_diff.py`
-- `apps/api/tests/test_agent_blueprint_release_gate.py`
-- `apps/api/tests/test_agent_blueprint_test_runs.py`
-- `apps/api/tests/test_agent_blueprint_validation_history.py`
-- `apps/api/tests/test_agent_blueprint_preview.py`
-- `apps/api/tests/test_agent_blueprint_publish_flow.py`
-- 鏃㈡湁钃濆浘/API/Agent Run 娴嬭瘯涔熷凡鏇存柊銆?
-鏂囨。锛?
-- `README.md`
-- `AGENTS.md`
-- `docs/CODEX_HANDOFF.md`
-- `docs/NEXT_TASKS.md`
-- `docs/CHANGELOG_CONTEXT.md`
-- `docs/AGENT_BLUEPRINTS.md`
-- `docs/API.md`
-- `docs/PRD.md`
-- `docs/TODO.md`
-- `docs/TESTING.md`
-- `docs/STORAGE_SQLITE.md`
+- 新增 PostgreSQL/Alembic schema、22 张 APP 表、SQLite -> PostgreSQL 迁移脚本。
+- 新增 Redis cache/rate-limit/distributed event bus、inline/RQ queue facade、worker entry、Agent Run Redis Pub/Sub wakeup。
+- 新增 artifact storage facade、RAG provider facade、request id、metrics、`/health/live`、`/health/ready`、runtime health v1.8 component status。
+- `agent_runs.row_version` 和终态保护落地；登录限流按 IP + username。
+- Docker production 拓扑包含 PostgreSQL、Redis、MinIO、API、Web、Nginx、worker-general、worker-video。
+- Alembic upgrade/re-run、SQLite -> PostgreSQL dry-run/execute/verify、MinIO 小样本、pgvector 小样本均已真实执行过。
 
-## 鏁版嵁搴?API/鍓嶇鐘舵€?
-鏁版嵁搴擄細
+### v1.7.2
 
-- APP SQLite 鏂板锛?  - `agent_blueprints`
-  - `agent_blueprint_versions`
-  - `agent_blueprint_test_cases`
-  - `agent_blueprint_releases`
-  - `agent_blueprint_test_runs`
-  - `agent_blueprint_validation_results`
-- `app_sqlite.health_check()` 绾冲叆钃濆浘琛ㄨ鏁般€?- RAG SQLite 浠嶅彧璐熻矗鐭ヨ瘑搴撴枃妗ｃ€乧hunks銆乪mbedding銆?
-API锛?
-- `/health` 杩斿洖 `{"status":"ok","service":"meizhaiseek-api"}`銆?- 鐧诲綍鍚?`/api/admin/runtime/health` 杩斿洖 `version=v1.7.2`銆?- `/api/agent-blueprints` 鏀寔 v1.7/v1.7.2 钃濆浘 API銆?- `/api/agents` 杩斿洖杞婚噺钃濆浘瀛楁锛屼笉娉勯湶瀹屾暣 Prompt銆乵ethodology 鎴?execution config銆?- `/api/agents/video-script/status` 鍦?8001 涓嶅彲杈炬椂杩斿洖 disconnected锛屼笉搴?500銆?- `/api/agent-runs/{run_id}/events` 缁х画鎻愪緵 SSE锛屽墠绔け璐ュ悗 polling fallback銆?
-鍓嶇锛?
-- 鐗堟湰灞曠ず锛歚meizhaiseek v1.7.2`銆?- 妯″瀷灞曠ず锛歚meizhaiseek 2.0`銆?- 宸︿晶涓诲鑸繚鐣欌€滅編瀹匓I鈥濃€滀竾鑳界編铏锯€濄€?- 鍚庡彴宸叉湁鈥滄櫤鑳戒綋钃濆浘鈥濋〉闈€?- `/agent` 宸插睍绀?published 钃濆浘杞婚噺鎽樿锛屼絾涓嶆敼鍙樼幇鏈変换鍔℃墽琛岄€昏緫銆?
-## 宸茬煡 bug / 椋庨櫓
+- 蓝图发布 E2E、release gate、rollback、Registry/Blueprint sync、legacy JSON fallback 默认 false、SSE Event Hub、async store wrapper、Docker production build 配置。
+- 后端 compileall/unittest/pytest、migration verify、web build、smoke、docker compose config 均曾通过。
 
-- `smoke_minimal.py` 缂?admin 鍑嵁浼氬け璐ワ紝杩欐槸淇濇姢鏈哄埗锛涗笉瑕佹敼鎴愰粯璁ら€氳繃銆?- 8001 鏈惎鍔ㄦ椂瑙嗛鎷嗚В浠诲姟搴旂湡瀹?failed锛涗笉瑕佷负浜?UI 濂界湅浼€犳垚鍔熴€?- 鏍圭洰褰?`ARCHITECTURE_EVALUATION_REPORT.md` 鏄湭璺熻釜鏂囦欢锛涢櫎闈炵敤鎴锋槑纭姹傦紝鍚﹀垯涓嶈鎻愪氦銆?- `start-dev.ps1` 浼氬啓 `apps/api/runtime/logs/api-dev.log` 鍜?`web-dev.log`锛宺untime/logs 涓嶆彁浜ゃ€?- 钃濆浘 UI 宸叉槸绱у噾鍙敤瀹炵幇锛屼笉鏄畬鏁磋〃鍗曟瀯寤哄櫒锛涘悗缁寮鸿鍏堝畧浣忓悗绔湡瀹炵姸鎬併€?
-## 涓嶈兘鐮村潖鐨勫姛鑳?
-- v1.2 鐧诲綍閴存潈銆佽鑹叉潈闄愩€佺敤鎴烽殧绂汇€?- v1.3 Connector銆丳ayload Preview銆丏ebug Replay銆?- v1.4 绠＄悊鍛樸€佸璁°€佹潈闄愩€丼afeDrawer銆?- v1.5 Dataset銆佸瓧娈垫槧灏勩€佹竻娲椼€佸鍑恒€佸畨鍏ㄤ笅杞姐€?- v1.5.2-v1.5.6 QA/RAG銆佺煡璇嗗簱銆佽瘖鏂€佹祦寮忛棶绛斻€?- v1.5.7 APP SQLite 杩佺Щ鍜?APP/RAG SQLite 鍒嗙銆?- v1.5.8 conversation 澧為噺 upsert銆丏ataset SQLite銆乻ervice_events銆?- v1.6+ 瑙嗛鎷嗚В鐪熷疄鎵ц銆乺esult normalizer銆乤rtifact銆丏ebug Payload銆?- v1.7+ Blueprint 鎻忚堪灞傘€佽棰戞媶瑙?published 钃濆浘銆佸彂甯?鍥炴粴/娴嬭瘯/瀵煎叆瀵煎嚭銆?- `/agent` 浼氳瘽鎸佷箙鍖栥€佽矾鐢辨仮澶嶃€佸彇娑堛€侀噸璇曘€佷笅杞姐€?- `/chat` 娴佸紡闂瓟銆?
-## 涓嬩竴绐楀彛蹇呴』浼樺厛璇诲彇鐨勬枃浠?
+### v1.7.1 / v1.7
+
+- Blueprint center、版本、验证、测试、发布、回滚、导入导出。
+- 视频拆解 seeded 为 published blueprint `bp_video_script_breakdown`。
+
+### v1.6.x
+
+- 视频拆解智能体生产化，真实调用本地 8001；不可达时真实 failed；artifact、Debug Payload、summary/result、SSE/polling 闭环。
+
+### v1.5.x
+
+- APP SQLite 迁移、APP/RAG SQLite 分离、Dataset、字段映射、清洗、导出、安全下载、QA/RAG、知识库、DeepSeek 流式问答。
+
+### v1.2-v1.4
+
+- 登录鉴权、角色权限、用户隔离、Connector、Payload Preview、Debug Replay、管理员、审计、权限。
+
+## 当前正在处理的问题
+
+最近用户要求只生成交接包，不继续写新功能。下一窗口恢复开发时，最优先仍是 `/agent` 回归：
+
+1. `/agent` 智能体界面执行任务后，左侧聊天记录必须新增并持久保存。
+2. 切换到其他路由再回来，任务和聊天不能消失。
+3. 脚本/视频拆解智能体提交后必须真实调用后端和 local agent，不允许只创建 UI 状态。
+4. 任务状态、结果、错误必须回写到对应聊天记录。
+
+## 最近一次用户明确要求
+
+为当前项目生成一个新窗口可继续接手的上下文交接包。不要继续写新功能，只做总结和落盘，更新 `docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md`、`AGENTS.md`。
+
+## 已经改过的关键文件
+
+- 安全/配置：`apps/api/services/security_config_service.py`、`apps/api/services/token_service.py`、`apps/api/services/user_store.py`、`.env.example`
+- DB/生产路径：`apps/api/services/app_sqlite.py`、`apps/api/db/`、`alembic.ini`、`docker-compose.prod.yml`
+- 队列/worker：`apps/api/tasks/`、`apps/api/workers/`、`apps/api/services/runtime_health_service.py`
+- Agent run：`apps/api/routers/agent_runs.py`、`apps/api/services/task_store.py`、`apps/api/services/orchestrator.py`
+- Conversation：`apps/api/services/conversation_store.py`、`apps/api/services/service_events.py`
+- Redis/events/cache：`apps/api/services/redis_service.py`、`cache_service.py`、`rate_limit_service.py`、`agent_run_event_bus.py`
+- Artifact/RAG：`apps/api/storage/`、`apps/api/rag/`、`apps/api/services/artifact_service.py`、`qa_rag_store.py`
+- Frontend：`apps/web/src/app/agent/page.tsx`、`apps/web/src/components/*Agent*`、`DatasetPanel.tsx`、`KnowledgeBasePanel.tsx`、`RuntimeHealthPanel.tsx`
+- Tests：`apps/api/tests/test_security_hardening.py`、`test_auth_service.py`、`test_agent_runs_api.py`、`test_agent_run_events_sse.py`
+- Docs：`docs/CAPACITY_REPORT_V18.md`、`docs/SECURITY_HARDENING_V181.md`、`docs/PERFORMANCE_OPTIMIZATION_V181.md`、`docs/DISTRIBUTED_ACCEPTANCE_V181.md`
+
+## 数据库/API/前端状态
+
+- 当前生产 compose 已重建并保持运行：PostgreSQL healthy、Redis healthy、MinIO healthy、API healthy、Web healthy、Nginx running、worker-general x4、worker-video x2。
+- `/health` 和 `/health/live` 返回 ok。
+- `/health/ready` 返回 Postgres/Redis/queue/events/S3/pgvector/security ok。
+- 登录后 `/api/admin/runtime/health` 返回 `version=v1.8.1`、`model=meizhaiseek 2.0`、database postgres、queue redis、events redis、artifact_storage s3、rag pgvector。
+- 前端生产 build 通过。
+- `ARCHITECTURE_EVALUATION_REPORT.md` 是用户既有未提交改动，已知第 793 行 trailing whitespace，不要擅自修改或 stage。
+
+## 已知 bug / 风险
+
+- `mypy` 还不是可用门禁：当前 top-level `services` / `tasks` 导入布局缺少 mypy path/config，且有真实类型问题。
+- `bandit` 高危已归零，但仍有中/低项，主要是动态 SQL 片段和已防护 subprocess 的审计提示。
+- `pip-audit` 剩余 `transformers 4.57.6` advisory，受 `sentence-transformers<5` 约束。
+- P2 未完整验收：Redis pause/recovery、worker crash/recovery、50 视频队列、Dataset/Document/Blueprint 队列、完整 S3 权限、完整 pgvector 迁移都未执行。
+- P3 200/300/500 用户压测未执行，不能写支持 500 用户已通过。
+- `.env` 内有本机真实 secret/admin/loadtest 密码，不提交、不输出。
+- runtime/logs/backups/uploads/models/node_modules 不提交。
+
+## 不能破坏的功能
+
+- v1.2 登录鉴权、角色权限、用户隔离。
+- v1.3 Connector、Payload Preview、Debug Replay。
+- v1.4 管理员、审计、权限。
+- v1.5 Dataset、字段映射、清洗、导出、安全下载。
+- v1.5.2-v1.5.6 QA/RAG、知识库、诊断、流式问答。
+- v1.5.7 APP SQLite 迁移和 APP/RAG SQLite 分离。
+- v1.5.8 conversation 增量 upsert、Dataset SQLite、service_events。
+- v1.6+ 视频拆解真实执行、result normalizer、artifact、Debug Payload。
+- v1.7+ Blueprint 描述层、视频拆解 published 蓝图、发布/回滚/测试/导入导出。
+- v1.8+ PostgreSQL/Redis/RQ/S3/pgvector 生产路径和 SQLite 本地兼容。
+- `/agent` 会话持久化、路由恢复、取消、重试、下载。
+- `/chat` 流式问答。
+
+## 下一窗口必须优先读取的文件
+
 1. `AGENTS.md`
 2. `docs/CODEX_HANDOFF.md`
 3. `docs/NEXT_TASKS.md`
 4. `docs/CHANGELOG_CONTEXT.md`
-5. `docs/API.md`
-6. `docs/PRD.md`
-7. `docs/STORAGE_SQLITE.md`
-8. `docs/AGENT_BLUEPRINTS.md`
-9. `docs/TESTING.md`
-10. `apps/web/src/app/agent/page.tsx`
-11. `apps/web/src/components/AgentWorkspace.tsx`
-12. `apps/api/routers/agent_runs.py`
-13. `apps/api/services/conversation_store.py`
-14. `apps/api/services/task_store.py`
-15. `apps/api/services/service_events.py`
-16. `apps/api/workflows/video_script_workflow.py`
+5. `docs/CAPACITY_REPORT_V18.md`
+6. `docs/SECURITY_HARDENING_V181.md`
+7. `docs/PERFORMANCE_OPTIMIZATION_V181.md`
+8. `docs/DISTRIBUTED_ACCEPTANCE_V181.md`
+9. `docs/API.md`
+10. `docs/PRD.md`
+11. `docs/TESTING.md`
+12. `apps/web/src/app/agent/page.tsx`
+13. `apps/web/src/hooks/useAgentRunEvents.ts`
+14. `apps/api/routers/agent_runs.py`
+15. `apps/api/services/conversation_store.py`
+16. `apps/api/services/task_store.py`
+17. `apps/api/tasks/queue.py`
+18. `apps/api/workers/worker.py`
 
-## 鏂扮獥鍙ｅ惎鍔ㄦ彁绀鸿瘝
+## 新窗口启动提示词
 
-璇风户缁帴鎵?`E:\USE\codexhome\agents-cowork\meizhaiseek-platform`銆傚綋鍓嶇増鏈槸 meizhaiseek v1.7.2锛孏itHub 浠撳簱鏄?`https://github.com/zhuge1hao/seek-platform.git`锛屾渶杩戞彁浜ゆ槸 `89723b6 feat: complete blueprint release and visual editing flow`銆傝鍏堝畬鏁磋鍙?`AGENTS.md`銆乣docs/CODEX_HANDOFF.md`銆乣docs/NEXT_TASKS.md`銆乣docs/CHANGELOG_CONTEXT.md`銆乣docs/API.md`銆乣docs/PRD.md`銆乣docs/STORAGE_SQLITE.md`銆乣docs/AGENT_BLUEPRINTS.md`銆乣docs/TESTING.md`锛屽啀璇诲彇鐩稿叧浠ｇ爜锛屼笉瑕佸彧渚濊禆鍘嗗彶瀵硅瘽鎴?Git 鐘舵€併€傚綋鍓嶆渶浼樺厛鍥炲綊 `/agent`锛氫换鍔℃彁浜ゅ悗宸︿晶鑱婂ぉ璁板綍蹇呴』鏂板骞舵寔涔呬繚瀛橈紱鍒囨崲璺敱鍐嶅洖鏉ヤ换鍔″拰鑱婂ぉ涓嶈兘娑堝け锛涜剼鏈?瑙嗛鎷嗚В鏅鸿兘浣撳繀椤荤湡瀹炶皟鐢ㄥ悗绔拰 local agent锛涗换鍔＄姸鎬併€佺粨鏋溿€侀敊璇繀椤诲洖鍐欏埌瀵瑰簲鑱婂ぉ璁板綍銆備笉瑕佺牬鍧?v1.2-v1.7.2 宸叉湁閴存潈銆丆onnector銆丏ebug銆佺鐞嗗憳銆丏ataset銆丵A/RAG銆丼QLite銆佽棰戞媶瑙ｃ€丼SE/polling 鍜?Blueprint 鑳藉姏銆?
-## meizhaiseek v1.7.2
-
-v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Blueprint release E2E coverage, wider auth/conversation/task tests, Blueprint Store splitting, legacy JSON fallback retirement diagnostics, production Docker build/start, Agent Run SSE tests, async SQLite read wrappers, frontend API module compatibility split, methodology drag ordering, Registry/Blueprint reconciliation, and the Agent Run Event Hub. Existing Agent, Workflow, Connector, APP SQLite, RAG SQLite, Dataset, QA/RAG, Debug Payload, and video breakdown execution models are unchanged.
+请继续接手 `E:\USE\codexhome\agents-cowork\meizhaiseek-platform`。当前版本是 `meizhaiseek v1.8.1`，模型名 `meizhaiseek 2.0`，当前分支 `main`，最近已推送提交仍是 `cae7884 refactor: stabilize architecture P1-P3 for v1.7.2`。请先完整读取 `AGENTS.md`、`docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md`、`docs/CAPACITY_REPORT_V18.md`、`docs/SECURITY_HARDENING_V181.md`、`docs/PERFORMANCE_OPTIMIZATION_V181.md`、`docs/DISTRIBUTED_ACCEPTANCE_V181.md`，再读取代码和 `git status --short`。当前工作区未提交，包含 v1.8/v1.8.1 改动和用户既有 `ARCHITECTURE_EVALUATION_REPORT.md` 改动；不要裸 `git add .`，不要提交 `.env`、runtime、logs、uploads、models、node_modules，也不要修改/暂存评估报告第 793 行 trailing whitespace。最优先任务是回归 `/agent`：任务提交后左侧聊天记录必须新增并持久保存；切路由回来任务/聊天不能消失；脚本/视频拆解智能体必须真实调用后端和 local agent；任务状态、结果、错误必须回写到对应聊天记录。不要破坏已有鉴权、Connector、Debug、管理员、Dataset、QA/RAG、SQLite、视频拆解、SSE/polling、Blueprint、Postgres/Redis/RQ/S3/pgvector 能力。

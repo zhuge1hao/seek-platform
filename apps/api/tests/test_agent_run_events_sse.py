@@ -12,15 +12,28 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 class AgentRunEventsSseTest(unittest.TestCase):
+    ADMIN_PASSWORD = "AdminEvents123!"
+
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["APP_SQLITE_PATH"] = str(Path(self.tmp.name) / "app.sqlite3")
+        os.environ["APP_DB_BACKEND"] = "sqlite"
+        os.environ["APP_SQLITE_AUTO_MIGRATE"] = "false"
         os.environ["APP_LEGACY_JSON_FALLBACK"] = "false"
+        os.environ.pop("APP_ENV", None)
+        os.environ.pop("INITIAL_ADMIN_PASSWORD", None)
         os.environ["AUTH_TOKEN_SECRET"] = "test-secret"
         os.environ["MEIZHAISEEK_ADMIN_USERNAME"] = "admin"
-        os.environ["MEIZHAISEEK_ADMIN_INITIAL_PASSWORD"] = "admin123"
+        os.environ["MEIZHAISEEK_ADMIN_INITIAL_PASSWORD"] = self.ADMIN_PASSWORD
         from services import app_sqlite
         app_sqlite._INIT_DONE = False
+        from services import rate_limit_service, user_store
+        from services.password_service import hash_password
+        rate_limit_service._WINDOWS.clear()
+        users = user_store.load_users()
+        users["users"]["admin"]["password_hash"] = hash_password(self.ADMIN_PASSWORD)
+        users["users"]["admin"]["enabled"] = True
+        user_store.save_users(users)
 
     def tearDown(self) -> None:
         from services import app_sqlite
@@ -86,7 +99,7 @@ class AgentRunEventsSseTest(unittest.TestCase):
 
         user_admin_service.create_user("other", "password123", "operator")
         with TestClient(app) as client:
-            admin = self._token(client, "admin", "admin123")
+            self._token(client, "admin", self.ADMIN_PASSWORD)
             other = self._token(client, "other", "password123")
 
             run = self._create_run()
@@ -117,7 +130,7 @@ class AgentRunEventsSseTest(unittest.TestCase):
         from services import task_store
 
         with TestClient(app) as client:
-            admin = self._token(client, "admin", "admin123")
+            self._token(client, "admin", self.ADMIN_PASSWORD)
             run = self._create_run()
             admin_user = {"user_id": "admin", "username": "admin", "role": "admin"}
             first = self._collect_events(run["run_id"], admin_user, max_events=2)

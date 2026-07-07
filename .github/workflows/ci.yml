@@ -5,17 +5,45 @@ on:
   pull_request:
 
 jobs:
-  build:
+  quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: meizhaiseek_test
+          POSTGRES_USER: meizhaiseek
+          POSTGRES_PASSWORD: password
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U meizhaiseek -d meizhaiseek_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - "6379:6379"
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       APP_LEGACY_JSON_FALLBACK: "false"
+      APP_DB_BACKEND: sqlite
       APP_SQLITE_PATH: ${{ runner.temp }}/meizhaiseek-ci.sqlite3
       APP_RUNTIME_DIR: ${{ runner.temp }}/meizhaiseek-runtime
-      AUTH_TOKEN_SECRET: ci-test-secret
+      AUTH_TOKEN_SECRET: ci-test-secret-for-v182-quality-gates-123456
       MEIZHAISEEK_ADMIN_USERNAME: admin
-      MEIZHAISEEK_ADMIN_INITIAL_PASSWORD: admin123456
+      MEIZHAISEEK_ADMIN_INITIAL_PASSWORD: AdminCi123456!
       DEEPSEEK_API_KEY: ""
       BGE_MODEL_PATH: ""
+      CACHE_BACKEND: memory
+      RATE_LIMIT_BACKEND: memory
+      EVENT_BACKEND: memory
+      TASK_QUEUE_BACKEND: inline
     steps:
       - uses: actions/checkout@v4
 
@@ -24,19 +52,45 @@ jobs:
           python-version: "3.12"
 
       - name: Install API dependencies
-        run: python -m pip install -r apps/api/requirements.txt
-
-      - name: Install API test dependencies
-        run: python -m pip install pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r apps/api/requirements.txt -r apps/api/requirements-dev.txt
 
       - name: Compile API
         run: python -m compileall apps/api
 
-      - name: Run API unit tests
+      - name: Ruff
+        run: python -m ruff check apps/api
+
+      - name: Scoped mypy
+        run: python -m mypy
+
+      - name: Bandit High/Medium gate
+        run: |
+          mkdir -p apps/api/runtime/logs
+          python -m bandit -r apps/api --severity-level medium -f json -o apps/api/runtime/logs/bandit-ci.json
+          python apps/api/scripts/check_bandit_report.py apps/api/runtime/logs/bandit-ci.json
+
+      - name: pip-audit with documented exceptions
+        run: |
+          python -m pip_audit \
+            --ignore-vuln PYSEC-2025-217 \
+            --ignore-vuln GHSA-69w3-r845-3855 \
+            --ignore-vuln GHSA-29pf-2h5f-8g72
+
+      - name: Unit tests
         run: python -m unittest discover -s apps/api/tests
 
-      - name: Run API pytest suite
+      - name: Pytest
         run: python -m pytest apps/api/tests
+
+      - name: PostgreSQL service smoke
+        env:
+          APP_DATABASE_URL: postgresql+asyncpg://meizhaiseek:password@localhost:5432/meizhaiseek_test
+        run: python -c "import socket; socket.create_connection(('127.0.0.1', 5432), timeout=5).close()"
+
+      - name: Redis service smoke
+        run: python -c "import socket; socket.create_connection(('127.0.0.1', 6379), timeout=5).close()"
 
       - uses: actions/setup-node@v4
         with:
@@ -44,12 +98,18 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
 
-      - name: Install web dependencies
+      - name: Web npm ci
         working-directory: apps/web
         run: npm ci
 
-      - name: Build web
+      - name: Web build
         working-directory: apps/web
         env:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
         run: npm run build
+
+      - name: Docker compose config
+        run: docker compose -f docker-compose.prod.yml config
+
+      - name: Docker image build
+        run: docker compose -f docker-compose.prod.yml build

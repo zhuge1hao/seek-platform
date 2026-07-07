@@ -1,5 +1,6 @@
 import json
 import os
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,21 @@ from schemas.agent_runs import DEFAULT_VIDEO_SCRIPT_SESSION_ID
 from services.agent_protocol_parser import normalize_agent_protocol_response
 from services import debug_payload_service
 from services.mock_agent_scenarios import mock_generic, mock_video_script
+
+
+SHELL_METACHARS = ("&", "|", ";", ">", "<", "$(", "`", "\n", "\r")
+
+
+def _safe_cli_args(command: str) -> list[str]:
+    if any(token in command for token in SHELL_METACHARS):
+        raise ValueError("command contains unsafe shell metacharacters")
+    args = shlex.split(command, posix=os.name != "nt")
+    if not args:
+        raise ValueError("command is empty")
+    executable = Path(args[0])
+    if executable.suffix.lower() in {".bat", ".cmd"} and not executable.is_absolute():
+        raise ValueError("Windows batch commands must use an absolute path")
+    return args
 
 
 def _timeout_seconds(connector: dict[str, Any] | None = None) -> int:
@@ -129,13 +145,17 @@ def _call_local_agent(payload: dict[str, Any], run_id: str | None = None, connec
         if not command:
             return _failure("本地 agent CLI 命令尚未配置，请设置 LOCAL_AGENT_CLI_COMMAND。", session_id=session_id, run_id=run_id)
         try:
+            args = _safe_cli_args(command)
+        except ValueError as exc:
+            return _failure(f"Local agent CLI command rejected: {exc}", session_id=session_id, run_id=run_id)
+        try:
             completed = subprocess.run(
-                command,
+                args,
                 input=json.dumps(payload, ensure_ascii=False),
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                shell=True,
+                shell=False,
                 env={**os.environ, "LOCAL_AGENT_SESSION_ID": session_id or ""},
             )
         except subprocess.TimeoutExpired as exc:

@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
-from services import app_sqlite
+from services import app_sqlite, security_config_service
 from services.password_service import hash_password
 
 
@@ -20,7 +20,7 @@ def _now() -> str:
 def _default_user() -> dict[str, Any]:
     now = _now()
     username = os.getenv("MEIZHAISEEK_ADMIN_USERNAME", "admin").strip() or "admin"
-    password = os.getenv("MEIZHAISEEK_ADMIN_INITIAL_PASSWORD", "admin123")
+    password, password_source = security_config_service.get_initial_admin_password()
     return {
         "user_id": username,
         "username": username,
@@ -32,7 +32,7 @@ def _default_user() -> dict[str, Any]:
         "created_at": now,
         "updated_at": now,
         "last_login_at": None,
-        "remark": "默认管理员",
+        "remark": f"default admin ({password_source})",
     }
 
 

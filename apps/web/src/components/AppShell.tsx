@@ -3,6 +3,7 @@
 import { ReactNode, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Bot, Brush, ChartNoAxesCombined, CircleGauge, Headphones, LogOut, MessageSquareText, PenTool, Sparkles } from "lucide-react";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthGuard } from "@/components/AuthGuard";
 import { logout } from "@/lib/auth";
 import { navigationItems, type NavigationItemId } from "@/lib/navigation";
@@ -96,7 +97,7 @@ export function AppShell({ children, activeId, dark = false, contentClassName = 
 
         <section className={["relative min-h-screen flex-1 overflow-y-auto", contentClassName].join(" ")}>
           {notice ? <div className="fixed left-1/2 top-6 z-50 -translate-x-1/2 rounded-full bg-slate-950 px-5 py-2 text-sm font-medium text-white shadow-soft">{notice}</div> : null}
-          {children}
+          <AppErrorBoundary>{children}</AppErrorBoundary>
           <button aria-label="联系客服" className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-soft transition hover:scale-105" type="button">
             <Headphones className="h-6 w-6" />
           </button>

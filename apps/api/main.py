@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
 
 def _load_env_file() -> None:
@@ -23,8 +24,11 @@ _load_env_file()
 
 from routers import admin_runtime, admin_users, agent_blueprints, agent_configs, agent_connectors, agent_runs, agents, artifacts, auth, chat, conversations, datasets, files, qa_chat, qa_knowledge, skills
 from services import agent_blueprint_seed_service, agent_blueprint_service, app_sqlite, conversation_store, json_to_sqlite_migrator, security_config_service, service_events
+from middleware.metrics import MetricsMiddleware, metrics_enabled, render_metrics
+from middleware.request_context import RequestContextMiddleware
+from services import runtime_health_service
 
-app = FastAPI(title="meizhaiseek-api", version="1.7.2")
+app = FastAPI(title="meizhaiseek-api", version="1.8.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,6 +37,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(MetricsMiddleware)
+app.add_middleware(RequestContextMiddleware)
 
 app.include_router(agents.router, prefix="/api", tags=["agents"])
 app.include_router(agent_blueprints.router, prefix="/api", tags=["agent-blueprints"])
@@ -57,11 +63,28 @@ def health() -> dict[str, str]:
     return {"status": "ok", "service": "meizhaiseek-api"}
 
 
+@app.get("/health/live")
+def health_live() -> dict[str, str]:
+    return {"status": "ok", "service": "meizhaiseek-api"}
+
+
+@app.get("/health/ready")
+def health_ready() -> dict[str, object]:
+    return runtime_health_service.readiness()
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    if not metrics_enabled():
+        return Response(status_code=404)
+    return Response(content=render_metrics(), media_type="text/plain; version=0.0.4")
+
+
 @app.on_event("startup")
 def startup_storage() -> None:
     app_sqlite.init_app_db()
     app_sqlite.run_migrations()
-    if not os.getenv("AUTH_TOKEN_SECRET", "").strip():
+    if not os.getenv("AUTH_TOKEN_SECRET", "").strip() and not security_config_service.production_mode():
         security_config_service.ensure_generated_secret()
     service_events.register_run_updated_handler(conversation_store.sync_run_to_conversation)
     service_events.register_run_updated_handler(agent_blueprint_service.sync_test_run_result)

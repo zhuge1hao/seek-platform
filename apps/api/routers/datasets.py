@@ -1,8 +1,7 @@
 import json
-from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from services import audit_log_service, data_cleaning_service, dataset_store, field_mapping_service, file_store
@@ -108,13 +107,19 @@ def get_mapping(dataset_id: str, user: dict[str, Any] = Depends(require_viewer_o
 
 
 @router.post("/datasets/{dataset_id}/clean")
-def clean_dataset(dataset_id: str, payload: CleaningRequest, request: Request, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, Any]:
+def clean_dataset(dataset_id: str, payload: CleaningRequest, request: Request, background_tasks: BackgroundTasks, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, Any]:
     dataset = _dataset_or_404(dataset_id, user)
     if user.get("role") != "admin" and dataset["user_id"] != user["user_id"]:
         raise HTTPException(status_code=403, detail="当前账号无权清洗该数据集。")
     mapping_path = dataset_store.dataset_dir(dataset["user_id"], dataset_id) / "mapping" / "field_mapping.json"
     if not mapping_path.exists():
         raise HTTPException(status_code=400, detail="请先保存字段映射后再执行清洗。")
+    from tasks.queue import backend as queue_backend, enqueue_call
+    if queue_backend() == "redis":
+        job = dataset_store.create_dataset_job(dataset_id, dataset["user_id"], "dataset_clean", {"rules": payload.rules})
+        enqueue_call("tasks.dataset_tasks.execute_dataset_job", (job["job_id"], dataset["user_id"]), job["job_id"], background_tasks, timeout_seconds=3600)
+        audit_log_service.write_log("dataset.clean.enqueue", "success", user, dataset_id, {"job_id": job["job_id"], "rules": payload.rules}, audit_log_service.client_ip(request))
+        return {"status": "queued", "dataset_id": dataset_id, "job_id": job["job_id"], "job": job}
     try:
         mapping = json.loads(mapping_path.read_text(encoding="utf-8")).get("mapping", {})
         result = data_cleaning_service.clean_dataset(dataset, mapping, payload.rules)

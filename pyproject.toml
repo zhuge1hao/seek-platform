@@ -1,0 +1,27 @@
+[tool.ruff]
+line-length = 240
+
+[tool.ruff.lint.per-file-ignores]
+"apps/api/main.py" = ["E402"]
+"apps/api/services/agent_blueprint_store.py" = ["F401"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "apps/api"
+explicit_package_bases = true
+files = [
+  "apps/api/services/security_config_service.py",
+  "apps/api/services/token_service.py",
+  "apps/api/services/password_service.py",
+  "apps/api/services/task_store.py",
+  "apps/api/services/app_sqlite.py",
+  "apps/api/tasks",
+  "apps/api/storage",
+  "apps/api/rag",
+  "apps/api/db",
+]
+ignore_missing_imports = true
+follow_imports = "skip"
+check_untyped_defs = true
+warn_unused_ignores = true
+no_implicit_optional = true

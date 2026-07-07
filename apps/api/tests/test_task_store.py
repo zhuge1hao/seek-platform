@@ -95,6 +95,32 @@ class TaskStoreTest(unittest.TestCase):
         cleanup = agent_run_maintenance.cleanup(days=1, statuses=["completed", "failed", "running"], dry_run=True)
         self.assertNotIn("running", cleanup["statuses"])
 
+    def test_terminal_status_updates_are_guarded(self) -> None:
+        from services import task_store
+
+        run = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "guard"})
+        self.assertEqual(run["row_version"], 1)
+        completed = task_store.update_run(run["run_id"], {"status": "completed", "progress": 100, "result": {"answer": "done"}}, "user_a")
+        self.assertEqual(completed["status"], "completed")
+        self.assertEqual(completed["progress"], 100)
+        self.assertGreater(completed["row_version"], run["row_version"])
+
+        stale = task_store.update_run(run["run_id"], {"status": "running", "progress": 40, "current_step": "late worker", "result": {"answer": "late"}, "error": None}, "user_a")
+        self.assertEqual(stale["status"], "completed")
+        self.assertEqual(stale["progress"], 100)
+        self.assertNotEqual(stale.get("current_step"), "late worker")
+        self.assertEqual(stale.get("result"), {"answer": "done"})
+        self.assertIn("ignored stale status update running after completed", stale["logs"])
+
+        cancel = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "cancel"})
+        cancelled, error = task_store.cancel_run(cancel["run_id"], "user_a")
+        self.assertIsNone(error)
+        self.assertEqual(cancelled["status"], "cancelled")
+        ignored = task_store.update_run(cancel["run_id"], {"status": "completed", "result": {"answer": "too late"}, "completed_at": "2099-01-01"}, "user_a")
+        self.assertEqual(ignored["status"], "cancelled")
+        self.assertNotEqual((ignored.get("result") or {}).get("answer"), "too late")
+        self.assertIsNone(ignored.get("completed_at"))
+
 
 if __name__ == "__main__":
     unittest.main()

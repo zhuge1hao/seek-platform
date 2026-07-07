@@ -159,7 +159,7 @@ def _row_validation(row: Any) -> dict[str, Any]:
 def list_blueprints(include_unpublished: bool = True) -> list[dict[str, Any]]:
     clause = "" if include_unpublished else "WHERE status='published'"
     with app_sqlite.connection() as conn:
-        rows = conn.execute(f"SELECT * FROM agent_blueprints {clause} ORDER BY updated_at DESC").fetchall()
+        rows = conn.execute(f"SELECT * FROM agent_blueprints {clause} ORDER BY updated_at DESC").fetchall()  # nosec B608: clause is selected from a fixed boolean branch and has no user SQL.
     return [_row_blueprint(row) for row in rows]
 
 

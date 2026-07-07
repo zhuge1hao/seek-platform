@@ -36,10 +36,29 @@ def _embedding(value: str | None) -> list[float] | None:
 
 
 def search(question: str, user_id: str, top_k: int | None = None, score_threshold: float | None = None) -> list[dict[str, Any]]:
+    query = embed_text(question)
+    if os.getenv("RAG_BACKEND", "sqlite").lower() == "pgvector":
+        from rag.pgvector_provider import PgVectorRagProvider
+        threshold = _threshold() if score_threshold is None else score_threshold
+        results = []
+        for chunk in PgVectorRagProvider().search(user_id, query, _top_k(top_k)):
+            score = float(chunk.get("score") or 0)
+            if score < threshold:
+                continue
+            content = str(chunk.get("content") or "")
+            results.append({
+                "chunk_id": chunk.get("chunk_id"),
+                "doc_id": chunk.get("doc_id"),
+                "title": chunk.get("title") or "local knowledge",
+                "content": content[:1200],
+                "content_preview": content[:300],
+                "score": round(score, 4),
+                "metadata": chunk.get("metadata") or {},
+            })
+        return results
     chunks = qa_rag_store.list_chunks(user_id)
     if not chunks:
         return []
-    query = embed_text(question)
     threshold = _threshold() if score_threshold is None else score_threshold
     scored: list[dict[str, Any]] = []
     for chunk in chunks:

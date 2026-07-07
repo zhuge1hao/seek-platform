@@ -15,6 +15,8 @@ class AgentRunsApiTest(unittest.TestCase):
         os.environ["APP_SQLITE_PATH"] = str(Path(self.tmp.name) / "app.sqlite3")
         os.environ["APP_LEGACY_JSON_FALLBACK"] = "false"
         os.environ["APP_SQLITE_AUTO_MIGRATE"] = "false"
+        os.environ.pop("APP_ENV", None)
+        os.environ.pop("INITIAL_ADMIN_PASSWORD", None)
         os.environ["AUTH_TOKEN_SECRET"] = "test-secret"
         os.environ["MEIZHAISEEK_ADMIN_USERNAME"] = "admin"
         os.environ["MEIZHAISEEK_ADMIN_INITIAL_PASSWORD"] = "admin123"
@@ -33,7 +35,13 @@ class AgentRunsApiTest(unittest.TestCase):
             token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
             headers = {"Authorization": f"Bearer {token}"}
             runtime = client.get("/api/admin/runtime/health", headers=headers).json()
-            self.assertEqual(runtime["version"], "v1.7.2")
+            self.assertEqual(runtime["version"], "v1.8.2")
+            self.assertEqual(runtime["model"], "meizhaiseek 2.0")
+            self.assertIn("database", runtime)
+            self.assertIn("redis", runtime)
+            self.assertIn("queue", runtime)
+            self.assertEqual(client.get("/health/live").json()["status"], "ok")
+            self.assertIn(client.get("/health/ready").json()["status"], {"ok", "degraded"})
             self.assertFalse(runtime["legacy_json_fallback_enabled"])
             self.assertEqual(runtime["legacy_json_fallback_usage_count"], 0)
             self.assertEqual(runtime["async_store"]["max_concurrency"], 8)
@@ -77,6 +85,28 @@ class AgentRunsApiTest(unittest.TestCase):
             self.assertEqual(failed_detail["conversation"]["status"], "failed")
             self.assertEqual(failed_message["status"], "failed")
             self.assertEqual(failed_message["content"], "local agent disconnected")
+
+    def test_video_run_dispatches_workflow_and_writes_failure_to_conversation(self) -> None:
+        from fastapi.testclient import TestClient
+        from main import app
+
+        with TestClient(app) as client:
+            token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
+            headers = {"Authorization": f"Bearer {token}"}
+            with patch("workflows.video_script_workflow.video_agent_status_service.check_status", return_value={"status": "disconnected", "message": "local agent disconnected"}):
+                created = client.post(
+                    "/api/agent-runs",
+                    headers=headers,
+                    json={"agent_type": "video_script_breakdown", "prompt": "break video", "video_path": "E:\\USE\\codexhome\\fenge\\videos\\test\\1.mp4"},
+                )
+            self.assertEqual(created.status_code, 200, created.text)
+            body = created.json()
+            detail = client.get(f"/api/conversations/{body['conversation_id']}", headers=headers).json()
+            self.assertEqual(detail["latest_run"]["run_id"], body["run_id"])
+            self.assertEqual(detail["latest_run"]["status"], "failed")
+            failed_message = next(message for message in detail["conversation"]["messages"] if message.get("run_id") == body["run_id"])
+            self.assertEqual(failed_message["status"], "failed")
+            self.assertIn("local agent disconnected", failed_message["content"])
 
     def test_user_isolation_summary_result_and_blueprint_state_blocks(self) -> None:
         from fastapi.testclient import TestClient

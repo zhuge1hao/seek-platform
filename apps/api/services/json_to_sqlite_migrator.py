@@ -100,7 +100,7 @@ def _migrate_audit(conn, report: dict[str, Any]) -> None:
         try:
             item = json.loads(line)
             created_at = item.get("time") or item.get("created_at") or _now()
-            audit_id = hashlib.sha1(line.encode("utf-8")).hexdigest()
+            audit_id = hashlib.sha256(line.encode("utf-8")).hexdigest()
             detail = dict(item.get("detail") or {})
             if item.get("status") is not None:
                 detail.setdefault("status", item.get("status"))
@@ -218,7 +218,7 @@ def _migrate_agent_runs(conn, report: dict[str, Any]) -> None:
                 storage_path = artifact.get("path") or artifact.get("file_path")
                 if not storage_path:
                     continue
-                artifact_id = hashlib.sha1(f"{run['run_id']}:{index}:{storage_path}".encode("utf-8")).hexdigest()
+                artifact_id = hashlib.sha256(f"{run['run_id']}:{index}:{storage_path}".encode("utf-8")).hexdigest()
                 conn.execute(
                     """
                     INSERT OR IGNORE INTO artifacts(artifact_id, user_id, run_id, filename, storage_path, download_url, content_type, size_bytes, created_at, updated_at, metadata_json)
@@ -360,7 +360,7 @@ def _upsert_dataset_file(conn, dataset: dict[str, Any], file: dict[str, Any], re
     if not storage_path:
         return
     path = Path(str(storage_path))
-    file_id = file.get("file_id") or hashlib.sha1(f"{dataset['dataset_id']}:{storage_path}".encode("utf-8")).hexdigest()
+    file_id = file.get("file_id") or hashlib.sha256(f"{dataset['dataset_id']}:{storage_path}".encode("utf-8")).hexdigest()
     conn.execute(
         """
         INSERT INTO dataset_files(file_id, dataset_id, user_id, file_type, filename, storage_path, content_type, size_bytes, created_at, metadata_json)

@@ -7,6 +7,7 @@ import { AgentRunStatus } from "@/components/AgentRunStatus";
 import { FilePreviewPanel } from "@/components/FilePreviewPanel";
 import { SkillSelectorPanel } from "@/components/SkillSelectorPanel";
 import { DatasetPanel } from "@/components/DatasetPanel";
+import { ResultPanelErrorBoundary } from "@/components/ResultPanelErrorBoundary";
 import { DATASET_AGENT_TYPES, DatasetSelector } from "@/components/DatasetSelector";
 import {
   cancelAgentRun,
@@ -31,7 +32,7 @@ type GenericAgentPanelProps = {
   onRunActiveChange?: (running: boolean) => void;
   conversationId?: string | null;
   initialRun?: AgentRunStatusType | null;
-  onConversationChange?: (conversationId: string) => void;
+  onConversationChange?: (conversationId: string) => void | Promise<void>;
   onRunChange?: (run: AgentRunStatusType) => void;
 };
 
@@ -126,10 +127,10 @@ export function GenericAgentPanel({ agent, agentConfig, promptValue, onPromptCha
         workflow_options: agentConfig?.default_options || agent.default_options || {},
         conversation_id: conversationId || undefined
       });
-      onConversationChange?.(created.conversation_id);
       const nextRun = { run_id: created.run_id, conversation_id: created.conversation_id, agent_type: agent.agent_type, mode: agent.default_mode || "default", status: created.status, progress: 10, current_step: created.message, logs: [created.message], result: null, error: null } as AgentRunStatusType;
       setRunStatus(nextRun);
       onRunChange?.(nextRun);
+      await onConversationChange?.(created.conversation_id);
       setNotice(created.message);
     } catch (submitError) {
       setIsSubmitting(false);
@@ -171,10 +172,10 @@ export function GenericAgentPanel({ agent, agentConfig, promptValue, onPromptCha
     setError("");
     try {
       const retried = await retryAgentRun(runId);
-      onConversationChange?.(retried.conversation_id);
       const nextRun = { run_id: retried.run_id, conversation_id: retried.conversation_id, agent_type: agent.agent_type, mode: agent.default_mode || "default", status: retried.status, progress: 10, current_step: retried.message, logs: [retried.message], result: null, error: null } as AgentRunStatusType;
       setRunStatus(nextRun);
       onRunChange?.(nextRun);
+      await onConversationChange?.(retried.conversation_id);
       setNotice(retried.message);
     } catch (retryError) {
       setIsSubmitting(false);
@@ -318,9 +319,9 @@ export function GenericAgentPanel({ agent, agentConfig, promptValue, onPromptCha
         </div>
       </div>
 
-      {runStatus ? <AgentRunStatus isActionLoading={isRunActionLoading} onCancel={canOperate ? handleCancelRun : undefined} onRetry={canOperate ? handleRetryRun : undefined} run={runStatus} /> : null}
+      {runStatus ? <ResultPanelErrorBoundary><AgentRunStatus isActionLoading={isRunActionLoading} onCancel={canOperate ? handleCancelRun : undefined} onRetry={canOperate ? handleRetryRun : undefined} run={runStatus} /></ResultPanelErrorBoundary> : null}
       {previewOpen ? <PayloadPreviewModal connectorId={previewConnectorId} error={!payloadPreview && !previewLoading ? error : undefined} onClose={() => setPreviewOpen(false)} onCopied={() => setNotice("Payload 已复制。")} payload={payloadPreview} /> : null}
-      {supportsDatasets ? <DatasetPanel onChanged={() => setDatasetRefreshKey((value) => value + 1)} onClose={() => setDatasetPanelOpen(false)} open={datasetPanelOpen} readOnly={!canOperate} /> : null}
+      {supportsDatasets ? <ResultPanelErrorBoundary><DatasetPanel onChanged={() => setDatasetRefreshKey((value) => value + 1)} onClose={() => setDatasetPanelOpen(false)} open={datasetPanelOpen} readOnly={!canOperate} /></ResultPanelErrorBoundary> : null}
     </div>
   );
 }

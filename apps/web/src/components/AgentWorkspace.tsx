@@ -20,7 +20,7 @@ type AgentWorkspaceProps = {
   onAgentSelect?: (agent: AgentDefinition) => void;
   conversationId?: string | null;
   initialRun?: AgentRunStatus | null;
-  onConversationChange?: (conversationId: string) => void;
+  onConversationChange?: (conversationId: string) => void | Promise<void>;
   onRunChange?: (run: AgentRunStatus) => void;
 };
 

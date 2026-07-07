@@ -37,3 +37,4 @@ class AgentRunCreateResponse(BaseModel):
     conversation_id: str
     status: str
     message: str
+    queue_job_id: str | None = None
