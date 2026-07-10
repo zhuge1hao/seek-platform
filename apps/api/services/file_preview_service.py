@@ -49,7 +49,7 @@ def _preview_csv(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8-sig", newline="") as source:
         reader = csv.DictReader(source)
         columns = reader.fieldnames or []
-        rows = []
+        rows: list[dict[str, str]] = []
         row_count = 0
         for row in reader:
             row_count += 1

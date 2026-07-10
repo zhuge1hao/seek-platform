@@ -36,14 +36,26 @@ class UserStoreTest(unittest.TestCase):
         self.assertEqual(created["username"], "alice")
         self.assertRaises(user_admin_service.UserAdminError, user_admin_service.create_user, "alice", "AlicePass123!", "operator")
         user_admin_service.create_user("viewer1", "ViewerPass123!", "viewer")
-        self.assertEqual(user_store.get_user("alice")["role"], "operator")
+        alice = user_store.get_user("alice")
+        self.assertIsNotNone(alice)
+        assert alice is not None
+        self.assertEqual(alice["role"], "operator")
         disabled, _ = user_admin_service.update_user("alice", {"enabled": False}, "admin")
         self.assertFalse(disabled["enabled"])
-        self.assertEqual(user_store.get_user("alice")["auth_version"], 2)
-        before = user_store.get_user("viewer1")["auth_version"]
+        alice = user_store.get_user("alice")
+        self.assertIsNotNone(alice)
+        assert alice is not None
+        self.assertEqual(alice["auth_version"], 2)
+        viewer = user_store.get_user("viewer1")
+        self.assertIsNotNone(viewer)
+        assert viewer is not None
+        before = viewer["auth_version"]
         user_store.update_password("viewer1", hash_password("NewViewerPass123!"))
-        self.assertEqual(user_store.get_user("viewer1")["auth_version"], before + 1)
-        public = user_store.public_user(user_store.get_user("viewer1"))
+        viewer = user_store.get_user("viewer1")
+        self.assertIsNotNone(viewer)
+        assert viewer is not None
+        self.assertEqual(viewer["auth_version"], before + 1)
+        public = user_store.public_user(viewer)
         self.assertNotIn("password_hash", public)
         self.assertEqual(set(public), {"user_id", "username", "role", "enabled", "created_at", "updated_at", "last_login_at", "password_updated_at", "remark"})
 

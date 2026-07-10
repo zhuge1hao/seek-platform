@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, NoReturn
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -28,7 +28,7 @@ class PasswordReset(BaseModel):
     new_password: str = Field(..., min_length=8)
 
 
-def _raise(exc: user_admin_service.UserAdminError) -> None:
+def _raise(exc: user_admin_service.UserAdminError) -> NoReturn:
     status = 404 if exc.code == "not_found" else 409 if exc.code == "conflict" else 400
     raise HTTPException(status_code=status, detail=str(exc)) from exc
 

@@ -51,9 +51,9 @@ def stream_chat(
 ) -> Iterator[str]:
     question = question.strip()
     conversation, _user_message = qa_conversation_store.append_user_message(user["user_id"], conversation_id, question)
-    conversation_id = conversation["conversation_id"]
+    conversation_id = str(conversation["conversation_id"])
     assistant = qa_conversation_store.create_assistant_message(user["user_id"], conversation_id, "streaming")
-    message_id = assistant["message_id"]
+    message_id = str(assistant["message_id"])
     answer_parts: list[str] = []
     sources: list[dict[str, Any]] = []
     warnings: list[str] = []

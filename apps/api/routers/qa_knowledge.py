@@ -36,7 +36,7 @@ def upload_knowledge_document(
             doc_id = document["doc_id"]
             enqueue_call(
                 "tasks.knowledge_tasks.execute_document_ingest",
-                [doc_id, user["user_id"]],
+                (doc_id, user["user_id"]),
                 job_id=f"document_ingest:{doc_id}",
                 background_tasks=background_tasks,
                 timeout_seconds=1800,

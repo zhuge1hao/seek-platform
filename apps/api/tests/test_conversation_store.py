@@ -28,6 +28,8 @@ class ConversationStoreTest(unittest.TestCase):
         conversation_store.update_agent_message("user_a", conv["conversation_id"], assistant["message_id"], {"status": "completed", "content": "done"})
 
         loaded = conversation_store.get_conversation(conv["conversation_id"], "user_a")
+        self.assertIsNotNone(loaded)
+        assert loaded is not None
         self.assertEqual(len(loaded["messages"]), 2)
         self.assertIsNone(conversation_store.get_conversation(conv["conversation_id"], "user_b"))
 
@@ -48,13 +50,18 @@ class ConversationStoreTest(unittest.TestCase):
         conversation_store.append_agent_message("user_b", other["conversation_id"], {"message_id": "user_b_msg", "role": "user", "content": "two"})
 
         loaded = conversation_store.get_conversation(conv["conversation_id"], "user_a")
+        self.assertIsNotNone(loaded)
+        assert loaded is not None
         assistant_messages = [message for message in loaded["messages"] if message.get("run_id") == run["run_id"]]
         self.assertEqual(len(assistant_messages), 1)
         self.assertEqual(assistant_messages[0]["status"], "cancelled")
         self.assertEqual(loaded["latest_run_id"], run["run_id"])
         self.assertEqual(loaded["status"], "cancelled")
         self.assertIsNone(conversation_store.get_conversation(conv["conversation_id"], "user_b"))
-        self.assertEqual(len(conversation_store.get_conversation(other["conversation_id"], "user_b")["messages"]), 1)
+        other_loaded = conversation_store.get_conversation(other["conversation_id"], "user_b")
+        self.assertIsNotNone(other_loaded)
+        assert other_loaded is not None
+        self.assertEqual(len(other_loaded["messages"]), 1)
 
 
 if __name__ == "__main__":

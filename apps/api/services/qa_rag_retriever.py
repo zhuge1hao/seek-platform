@@ -8,7 +8,8 @@ from services.qa_embedding_service import embed_text
 
 
 def _top_k(value: int | None = None) -> int:
-    return max(1, min(int(value or os.getenv("RAG_TOP_K", "5")), 20))
+    raw = str(value) if value is not None else os.getenv("RAG_TOP_K", "5")
+    return max(1, min(int(raw or "5"), 20))
 
 
 def _threshold() -> float:

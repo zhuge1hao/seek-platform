@@ -29,7 +29,7 @@ def _safe_cli_args(command: str) -> list[str]:
 
 
 def _timeout_seconds(connector: dict[str, Any] | None = None) -> int:
-    raw = (connector or {}).get("timeout_seconds") or os.getenv("LOCAL_AGENT_TIMEOUT_SECONDS", "1800")
+    raw = str((connector or {}).get("timeout_seconds") or os.getenv("LOCAL_AGENT_TIMEOUT_SECONDS", "1800"))
     try:
         return max(1, int(raw))
     except ValueError:
@@ -171,11 +171,11 @@ def _call_local_agent(payload: dict[str, Any], run_id: str | None = None, connec
                 run_id=run_id,
             )
         try:
-            raw_response: Any = json.loads(completed.stdout.strip())
+            cli_response: Any = json.loads(completed.stdout.strip())
         except ValueError:
-            raw_response = completed.stdout.strip()
-        debug_payload_service.save_response(run_id, raw_response, metadata=metadata)
-        result = _success(raw_response, session_id=session_id, output_dir=output_dir)
+            cli_response = completed.stdout.strip()
+        debug_payload_service.save_response(run_id, cli_response, metadata=metadata)
+        result = _success(cli_response, session_id=session_id, output_dir=output_dir)
         if completed.stderr:
             result["raw"] = {"response": result.get("raw"), "stderr": completed.stderr}
         return result

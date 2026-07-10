@@ -45,7 +45,10 @@ class AgentBlueprintImportExportTest(unittest.TestCase):
 
         imported = agent_blueprint_import_export.import_blueprint(exported, ADMIN)
         self.assertEqual(imported["blueprint"]["blueprint_id"], "bp_export_import")
-        self.assertEqual(agent_blueprint_store.get_blueprint("bp_export_import")["status"], "draft")
+        stored_blueprint = agent_blueprint_store.get_blueprint("bp_export_import")
+        self.assertIsNotNone(stored_blueprint)
+        assert stored_blueprint is not None
+        self.assertEqual(stored_blueprint["status"], "draft")
 
 
 if __name__ == "__main__":

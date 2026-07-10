@@ -70,7 +70,10 @@ class AuthServiceTest(unittest.TestCase):
         user_admin_service.create_user("viewer", "ViewerPass123!", "viewer")
         user_admin_service.create_user("operator", "OperatorPass123!", "operator")
 
-        admin_token = token_service.create_token(user_store.get_user("admin"))[0]
+        admin_user = user_store.get_user("admin")
+        self.assertIsNotNone(admin_user)
+        assert admin_user is not None
+        admin_token = token_service.create_token(admin_user)[0]
         with TestClient(app) as client:
             me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {admin_token}"})
             self.assertEqual(me.status_code, 200, me.text)
@@ -88,7 +91,10 @@ class AuthServiceTest(unittest.TestCase):
             user_store.update_password("admin", hash_password("NewPassword123!"))
             self.assertEqual(client.get("/api/auth/me", headers={"Authorization": f"Bearer {admin_token}"}).status_code, 401)
 
-            fresh_token = token_service.create_token(user_store.get_user("admin"))[0]
+            fresh_user = user_store.get_user("admin")
+            self.assertIsNotNone(fresh_user)
+            assert fresh_user is not None
+            fresh_token = token_service.create_token(fresh_user)[0]
             with patch("services.token_service.time.time", return_value=10_000_000_000):
                 self.assertRaises(token_service.TokenError, token_service.decode_token, fresh_token)
             runtime = client.get("/api/admin/runtime/health", headers={"Authorization": f"Bearer {fresh_token}"}).json()

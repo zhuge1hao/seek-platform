@@ -70,7 +70,10 @@ class AgentBlueprintServiceTest(unittest.TestCase):
         self.assertIsNone(cloned["blueprint"]["published_version_id"])
 
         self.assertTrue(run_v2["run"]["run_id"].startswith("run_"))
-        self.assertEqual(agent_blueprint_store.get_test_case(case["test_case_id"])["last_result"]["status"], "PASS")
+        stored_case = agent_blueprint_store.get_test_case(case["test_case_id"])
+        self.assertIsNotNone(stored_case)
+        assert stored_case is not None
+        self.assertEqual(stored_case["last_result"]["status"], "PASS")
 
         agent_blueprint_seed_service.safe_seed_video_blueprint()
         agent_blueprint_seed_service.safe_seed_video_blueprint()

@@ -98,7 +98,8 @@ def guard_agent_configs(path: Path, default_configs: list[dict[str, Any]]) -> di
             merged["connector_id"] = "video_script_agent"
             warnings.append("video_script_breakdown.connector_id 已恢复默认绑定。")
         repaired.append(merged)
-        seen.add(agent_type)
+        if agent_type:
+            seen.add(str(agent_type))
 
     for agent_type, default in default_by_type.items():
         if agent_type not in seen:

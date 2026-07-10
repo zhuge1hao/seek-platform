@@ -29,7 +29,10 @@ class AgentBlueprintTestRunsTest(unittest.TestCase):
         store.update_test_run(second["test_run_id"], {"status": "passed", "agent_run_id": "run_b", "actual_status": "completed"})
         runs = store.list_test_runs("bp_runs", limit=10)
         self.assertEqual(len(runs), 2)
-        self.assertEqual(store.get_test_run_by_agent_run_id("run_b")["status"], "passed")
+        stored_run = store.get_test_run_by_agent_run_id("run_b")
+        self.assertIsNotNone(stored_run)
+        assert stored_run is not None
+        self.assertEqual(stored_run["status"], "passed")
 
 
 if __name__ == "__main__":

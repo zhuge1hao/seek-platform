@@ -29,11 +29,17 @@ class AgentBlueprintStoreTest(unittest.TestCase):
         v2 = store.create_version("bp_store", {"input_schema": {"fields": []}}, "admin")
         self.assertEqual(v1["version_number"], 1)
         self.assertEqual(v2["version_number"], 2)
-        self.assertEqual(store.get_blueprint("bp_store")["current_version_id"], v2["version_id"])
+        stored_blueprint = store.get_blueprint("bp_store")
+        self.assertIsNotNone(stored_blueprint)
+        assert stored_blueprint is not None
+        self.assertEqual(stored_blueprint["current_version_id"], v2["version_id"])
 
         case = store.save_test_case("bp_store", {"name": "case", "input": {"prompt": "hello"}}, "admin")
         store.set_test_case_run_result(case["test_case_id"], "run_1", {"status": "PASS"})
-        self.assertEqual(store.get_test_case_by_run_id("run_1")["last_result"]["status"], "PASS")
+        stored_case = store.get_test_case_by_run_id("run_1")
+        self.assertIsNotNone(stored_case)
+        assert stored_case is not None
+        self.assertEqual(stored_case["last_result"]["status"], "PASS")
 
         store.mark_version_published("bp_store", v1["version_id"])
         store.update_blueprint("bp_store", {"status": "published", "published_version_id": v1["version_id"]}, "admin")

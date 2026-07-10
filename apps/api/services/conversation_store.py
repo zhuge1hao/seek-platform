@@ -107,6 +107,8 @@ def _legacy_load(user_id: str) -> list[dict[str, Any]]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
         source = raw.get("conversations") if isinstance(raw, dict) else []
+        if not isinstance(source, list):
+            return []
         return [item for value in source if isinstance(value, dict) if (item := _normalize_conversation(value, user_id))]
     except Exception as exc:
         LOGGER.warning("conversation_store legacy load failed: %s", type(exc).__name__)
@@ -234,7 +236,7 @@ def _ensure_legacy_loaded(user_id: str) -> None:
 def create_conversation(user_id: str, agent_type: str, prompt: str = "", title: str = "") -> dict[str, Any]:
     now = _now()
     agent_name = _agent_name(agent_type)
-    conversation = {
+    conversation: dict[str, Any] = {
         "conversation_id": _new_id("conv"), "user_id": user_id, "title": title.strip() or _title(agent_name, prompt),
         "agent_type": agent_type, "agent_name": agent_name, "prompt": prompt, "latest_run_id": None, "run_ids": [],
         "status": "running", "summary": "", "messages": [], "created_at": now, "updated_at": now,

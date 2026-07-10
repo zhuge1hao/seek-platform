@@ -62,7 +62,10 @@ class TokenServiceTest(unittest.TestCase):
         from services import token_service, user_admin_service, user_store
 
         user_admin_service.create_user("bob", "BobPassword123!", "operator")
-        token = token_service.create_token(user_store.get_user("bob"))[0]
+        bob = user_store.get_user("bob")
+        self.assertIsNotNone(bob)
+        assert bob is not None
+        token = token_service.create_token(bob)[0]
         with TestClient(app) as client:
             self.assertEqual(client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code, 200)
             user_admin_service.disable_user("bob", "admin")

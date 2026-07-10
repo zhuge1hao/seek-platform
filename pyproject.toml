@@ -19,6 +19,8 @@ files = [
   "apps/api/storage",
   "apps/api/rag",
   "apps/api/db",
+  "apps/api/routers",
+  "apps/api/tests",
 ]
 ignore_missing_imports = true
 follow_imports = "skip"

@@ -67,8 +67,14 @@ class AgentBlueprintApiTest(unittest.TestCase):
                 "auth_version": 1,
             }
             user_store.save_users(users)
-            op_headers = {"Authorization": f"Bearer {self._token(user_store.get_user('operator'))}"}
-            viewer_headers = {"Authorization": f"Bearer {self._token(user_store.get_user('viewer'))}"}
+            operator_user = user_store.get_user("operator")
+            viewer_user = user_store.get_user("viewer")
+            self.assertIsNotNone(operator_user)
+            self.assertIsNotNone(viewer_user)
+            assert operator_user is not None
+            assert viewer_user is not None
+            op_headers = {"Authorization": f"Bearer {self._token(operator_user)}"}
+            viewer_headers = {"Authorization": f"Bearer {self._token(viewer_user)}"}
 
             payload = {
                 "blueprint_id": "bp_api",

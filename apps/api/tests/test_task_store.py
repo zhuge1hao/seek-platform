@@ -31,8 +31,12 @@ class TaskStoreTest(unittest.TestCase):
         task_store.update_run(run["run_id"], {"conversation_id": conversation["conversation_id"]}, "user_a")
         task_store.update_run(run["run_id"], {"status": "completed", "progress": 100, "result": {"answer": "done"}}, "user_a")
         completed = task_store.get_run(run["run_id"], "user_a", include_legacy=False)
+        self.assertIsNotNone(completed)
+        assert completed is not None
         self.assertEqual(completed["status"], "completed")
         loaded = conversation_store.get_conversation(conversation["conversation_id"], "user_a")
+        self.assertIsNotNone(loaded)
+        assert loaded is not None
         self.assertEqual(loaded["latest_run_id"], run["run_id"])
         self.assertEqual(loaded["status"], "completed")
         self.assertEqual(loaded["summary"], "done")
@@ -43,6 +47,7 @@ class TaskStoreTest(unittest.TestCase):
 
         retry = task_store.clone_run_for_retry(run["run_id"], "user_a")
         self.assertIsNotNone(retry)
+        assert retry is not None
         self.assertNotEqual(retry["run_id"], run["run_id"])
         self.assertEqual(retry["conversation_id"], conversation["conversation_id"])
 
@@ -50,8 +55,13 @@ class TaskStoreTest(unittest.TestCase):
         failed_conversation, _ = conversation_store.attach_run(failed)
         task_store.update_run(failed["run_id"], {"conversation_id": failed_conversation["conversation_id"]}, "user_a")
         task_store.update_run(failed["run_id"], {"status": "failed", "error": "boom"}, "user_a")
-        self.assertEqual(task_store.get_run(failed["run_id"], "user_a", include_legacy=False)["error"], "boom")
+        failed_run = task_store.get_run(failed["run_id"], "user_a", include_legacy=False)
+        self.assertIsNotNone(failed_run)
+        assert failed_run is not None
+        self.assertEqual(failed_run["error"], "boom")
         failed_loaded = conversation_store.get_conversation(failed_conversation["conversation_id"], "user_a")
+        self.assertIsNotNone(failed_loaded)
+        assert failed_loaded is not None
         failed_assistant = next(message for message in failed_loaded["messages"] if message.get("run_id") == failed["run_id"])
         self.assertEqual(failed_loaded["status"], "failed")
         self.assertEqual(failed_loaded["summary"], "boom")
@@ -71,17 +81,28 @@ class TaskStoreTest(unittest.TestCase):
         })
         self.assertEqual(run["status"], "running")
         completed = task_store.update_run(run["run_id"], {"status": "completed", "progress": 100, "result": {"answer": "ok", "raw_response": "x" * 9000}}, "user_a")
+        self.assertIsNotNone(completed)
+        assert completed is not None
         summary = task_store.summarize_run(completed)
+        self.assertIsNotNone(summary)
+        assert summary is not None
         self.assertTrue(summary["result_has_more"])
         self.assertNotIn("raw_response", str(summary["result"]))
-        self.assertEqual(task_store.get_run(run["run_id"], "user_a", include_legacy=False)["result"]["raw_response"], "x" * 9000)
+        stored = task_store.get_run(run["run_id"], "user_a", include_legacy=False)
+        self.assertIsNotNone(stored)
+        assert stored is not None
+        self.assertEqual(stored["result"]["raw_response"], "x" * 9000)
 
         retry = task_store.clone_run_for_retry(run["run_id"], "user_a")
+        self.assertIsNotNone(retry)
+        assert retry is not None
         self.assertEqual(retry["workflow_options"], {"temperature": 0.2, "api_key": "not-in-summary"})
 
         cancel = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "cancel"})
         cancelled, error = task_store.cancel_run(cancel["run_id"], "user_a")
         self.assertIsNone(error)
+        self.assertIsNotNone(cancelled)
+        assert cancelled is not None
         self.assertEqual(cancelled["status"], "cancelled")
 
         stale = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "stale"})
@@ -91,7 +112,10 @@ class TaskStoreTest(unittest.TestCase):
             conn.execute("UPDATE agent_runs SET updated_at=?, metadata_json=? WHERE run_id=?", (old, app_sqlite.json_dump(stale), stale["run_id"]))
         repaired = agent_run_maintenance.repair_stale(timeout_minutes=1)
         self.assertGreaterEqual(repaired["repaired"], 1)
-        self.assertEqual(task_store.get_run(stale["run_id"], "user_a", include_legacy=False)["status"], "failed")
+        repaired_run = task_store.get_run(stale["run_id"], "user_a", include_legacy=False)
+        self.assertIsNotNone(repaired_run)
+        assert repaired_run is not None
+        self.assertEqual(repaired_run["status"], "failed")
         cleanup = agent_run_maintenance.cleanup(days=1, statuses=["completed", "failed", "running"], dry_run=True)
         self.assertNotIn("running", cleanup["statuses"])
 
@@ -101,11 +125,15 @@ class TaskStoreTest(unittest.TestCase):
         run = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "guard"})
         self.assertEqual(run["row_version"], 1)
         completed = task_store.update_run(run["run_id"], {"status": "completed", "progress": 100, "result": {"answer": "done"}}, "user_a")
+        self.assertIsNotNone(completed)
+        assert completed is not None
         self.assertEqual(completed["status"], "completed")
         self.assertEqual(completed["progress"], 100)
         self.assertGreater(completed["row_version"], run["row_version"])
 
         stale = task_store.update_run(run["run_id"], {"status": "running", "progress": 40, "current_step": "late worker", "result": {"answer": "late"}, "error": None}, "user_a")
+        self.assertIsNotNone(stale)
+        assert stale is not None
         self.assertEqual(stale["status"], "completed")
         self.assertEqual(stale["progress"], 100)
         self.assertNotEqual(stale.get("current_step"), "late worker")
@@ -115,8 +143,12 @@ class TaskStoreTest(unittest.TestCase):
         cancel = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "cancel"})
         cancelled, error = task_store.cancel_run(cancel["run_id"], "user_a")
         self.assertIsNone(error)
+        self.assertIsNotNone(cancelled)
+        assert cancelled is not None
         self.assertEqual(cancelled["status"], "cancelled")
         ignored = task_store.update_run(cancel["run_id"], {"status": "completed", "result": {"answer": "too late"}, "completed_at": "2099-01-01"}, "user_a")
+        self.assertIsNotNone(ignored)
+        assert ignored is not None
         self.assertEqual(ignored["status"], "cancelled")
         self.assertNotEqual((ignored.get("result") or {}).get("answer"), "too late")
         self.assertIsNone(ignored.get("completed_at"))

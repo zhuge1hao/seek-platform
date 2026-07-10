@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 
@@ -13,7 +13,7 @@ from services.auth_service import require_admin, require_operator_or_admin, requ
 router = APIRouter()
 
 
-def _raise(exc: Exception) -> None:
+def _raise(exc: Exception) -> NoReturn:
     if isinstance(exc, PermissionError):
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     if isinstance(exc, ReleaseGateError):

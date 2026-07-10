@@ -59,7 +59,10 @@ class AgentBlueprintRegistrySyncTest(unittest.TestCase):
             self.assertEqual(created["agent_id"], agent_id)
             self.assertEqual(created["status"], "draft")
             self.assertIsNone(created["published_version_id"])
-            self.assertEqual(agent_blueprint_store.get_blueprint(created["blueprint_id"])["status"], "draft")
+            stored_blueprint = agent_blueprint_store.get_blueprint(created["blueprint_id"])
+            self.assertIsNotNone(stored_blueprint)
+            assert stored_blueprint is not None
+            self.assertEqual(stored_blueprint["status"], "draft")
 
 
 if __name__ == "__main__":

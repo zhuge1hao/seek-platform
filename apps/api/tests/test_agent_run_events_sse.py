@@ -66,7 +66,7 @@ class AgentRunEventsSseTest(unittest.TestCase):
                 "workflow_options": {"api_key": "secret", "token": "hidden", "safe": True},
             }
         )
-        return task_store.update_run(
+        updated = task_store.update_run(
             run["run_id"],
             {
                 "status": status,
@@ -77,6 +77,9 @@ class AgentRunEventsSseTest(unittest.TestCase):
             },
             user_id,
         )
+        self.assertIsNotNone(updated)
+        assert updated is not None
+        return updated
 
     def _collect_events(self, run_id: str, user: dict, max_events: int = 1) -> str:
         async def no_sleep(_seconds: float) -> None:
@@ -115,6 +118,8 @@ class AgentRunEventsSseTest(unittest.TestCase):
             self.assertNotIn("workflow_options", text)
 
             still_running = task_store.get_run(run["run_id"], "admin", include_legacy=False)
+            self.assertIsNotNone(still_running)
+            assert still_running is not None
             self.assertEqual(still_running["status"], "running")
 
             for status, event in (("completed", "completed"), ("failed", "failed"), ("cancelled", "cancelled")):
@@ -138,6 +143,8 @@ class AgentRunEventsSseTest(unittest.TestCase):
             self.assertIn("event: heartbeat", first)
             self.assertIn("event: heartbeat", second)
             persisted = task_store.get_run(run["run_id"], "admin", include_legacy=False)
+            self.assertIsNotNone(persisted)
+            assert persisted is not None
             self.assertEqual(persisted["status"], "running")
             self.assertEqual(persisted["progress"], 55)
 

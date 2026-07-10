@@ -178,6 +178,54 @@ class AppSQLiteTest(unittest.TestCase):
             self.assertRaises(RuntimeError, failing_pool.acquire)
         self.assertEqual(failing_pool._created, 0)
 
+    def test_postgres_connection_close_returns_only_once(self) -> None:
+        from services import app_sqlite
+
+        os.environ["APP_DB_POOL_SIZE"] = "1"
+        os.environ["APP_DB_MAX_OVERFLOW"] = "0"
+        pool = app_sqlite._PostgresPool()
+        with patch.object(pool, "_new_connection", return_value=FakeRawConnection()):
+            conn = pool.acquire()
+            raw = conn._conn
+            conn.close()
+            conn.close()
+            self.assertIs(pool.acquire()._conn, raw)
+
+    def test_postgres_pool_multithread_no_connection_leak(self) -> None:
+        from services import app_sqlite
+
+        os.environ["APP_DB_POOL_SIZE"] = "2"
+        os.environ["APP_DB_MAX_OVERFLOW"] = "2"
+        os.environ["APP_DB_POOL_TIMEOUT"] = "1"
+        raw: list[FakeRawConnection] = []
+        errors: list[Exception] = []
+        pool = app_sqlite._PostgresPool()
+
+        def make_conn() -> FakeRawConnection:
+            conn = FakeRawConnection()
+            raw.append(conn)
+            return conn
+
+        def worker() -> None:
+            try:
+                for _ in range(10):
+                    conn = pool.acquire()
+                    conn.execute("SELECT 1").close()
+                    conn.close()
+            except Exception as exc:  # pragma: no cover - asserted below
+                errors.append(exc)
+
+        with patch.object(pool, "_new_connection", side_effect=make_conn):
+            threads = [threading.Thread(target=worker) for _ in range(8)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+        self.assertEqual(errors, [])
+        self.assertLessEqual(pool._created, pool._max_total)
+        self.assertLessEqual(len(raw), pool._max_total)
+
 
 if __name__ == "__main__":
     unittest.main()

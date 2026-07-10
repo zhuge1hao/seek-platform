@@ -113,6 +113,8 @@ def _legacy_load(user_id: str) -> list[dict[str, Any]]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
         source = raw.get("conversations") if isinstance(raw, dict) else []
+        if not isinstance(source, list):
+            return []
         return [item for value in source if isinstance(value, dict) if (item := _normalize_conversation(value, user_id))]
     except Exception:
         return []

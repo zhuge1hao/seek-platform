@@ -76,8 +76,11 @@ def validate_blueprint(blueprint: dict[str, Any] | None, version: dict[str, Any]
     for index, step in enumerate(steps):
         if str((step or {}).get("failure_policy") or "stop") not in FAILURE_POLICIES:
             errors.append(_issue(f"methodology.steps[{index}].failure_policy", "unsupported failure policy"))
+        order_value = (step or {}).get("order")
         try:
-            orders.append(int((step or {}).get("order")))
+            if order_value is None:
+                raise ValueError
+            orders.append(int(order_value))
         except (TypeError, ValueError):
             errors.append(_issue(f"methodology.steps[{index}].order", "order must be numeric"))
     if orders and orders != sorted(orders):

@@ -206,9 +206,9 @@ async def iter_agent_run_events(run_id: str, user: dict[str, Any], sleep_func=as
                     logger.warning("agent_run_sse_redis_wait_failed run_id=%s error_type=%s", run_id, type(exc).__name__)
                     await asyncio.sleep(2)
             else:
-                event = await agent_run_event_hub.wait_for_event(run_id, last_hub_sequence, timeout=2)
-                if event:
-                    last_hub_sequence = event[0]
+                hub_event = await agent_run_event_hub.wait_for_event(run_id, last_hub_sequence, timeout=2)
+                if hub_event:
+                    last_hub_sequence = hub_event[0]
         else:
             await sleep_func(2)
 
@@ -239,7 +239,7 @@ def cancel_agent_run(run_id: str, request: Request, user: dict[str, Any] = Depen
 
 
 @router.post("/agent-runs/{run_id}/retry", response_model=AgentRunCreateResponse)
-def retry_agent_run(run_id: str, background_tasks: BackgroundTasks, request: Request, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, str]:
+def retry_agent_run(run_id: str, background_tasks: BackgroundTasks, request: Request, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, Any]:
     existing = task_store.get_run(run_id) if user.get("role") == "admin" else task_store.get_run(run_id, user["user_id"], include_legacy=False)
     if existing is None or not can_access_owner(user, existing.get("user_id")):
         raise HTTPException(status_code=404, detail="任务不存在。")

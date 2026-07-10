@@ -55,7 +55,7 @@ def configs_status() -> dict[str, Any]:
     agent_report = agent_config_store.guard_configs()
     visible_agent_count = len([item for item in agent_report["items"] if item.get("visible", True)])
     skill_report = skill_template_service.guard_templates()
-    file_report = guard_file_store(file_store._store_path())  # type: ignore[attr-defined]
+    file_report = guard_file_store(file_store._store_path())
     return {
         "status": "ok",
         "configs": [
@@ -93,7 +93,7 @@ def configs_status() -> dict[str, Any]:
 @router.post("/admin/runtime/configs/backup")
 def backup_configs() -> dict[str, Any]:
     backups = []
-    for path in [agent_config_store._resolve_store_path(), skill_template_service._store_path(), file_store._store_path()]:  # type: ignore[attr-defined]
+    for path in [agent_config_store._resolve_store_path(), skill_template_service._store_path(), file_store._store_path()]:
         item = backup_file(path, "manual_backup")
         if item:
             backups.append(item)
@@ -102,7 +102,7 @@ def backup_configs() -> dict[str, Any]:
 
 @router.post("/admin/runtime/configs/repair")
 def repair_configs(request: Request, user: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
-    result = {"status": "ok", "agent_configs": agent_config_store.guard_configs(), "skill_templates": skill_template_service.guard_templates(), "files": guard_file_store(file_store._store_path())}  # type: ignore[attr-defined]
+    result = {"status": "ok", "agent_configs": agent_config_store.guard_configs(), "skill_templates": skill_template_service.guard_templates(), "files": guard_file_store(file_store._store_path())}
     audit_log_service.write_log("runtime.config.repair", "success", user, "runtime", {}, audit_log_service.client_ip(request))
     return result
 

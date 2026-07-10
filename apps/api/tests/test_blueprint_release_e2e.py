@@ -126,6 +126,8 @@ class BlueprintReleaseE2ETest(unittest.TestCase):
             self.assertEqual(rolled.status_code, 200, rolled.text)
             rollback_version_id = rolled.json()["blueprint"]["published_version_id"]
             rollback_version = agent_blueprint_store.get_version(rollback_version_id)
+            self.assertIsNotNone(rollback_version)
+            assert rollback_version is not None
             self.assertEqual(rollback_version["parent_version_id"], version1["version_id"])
             rollback_release = next(item for item in agent_blueprint_store.list_releases("bp_title_e2e") if item["action"] == "rollback")
             self.assertEqual(rollback_release["metadata"]["rollback_target_version_id"], version1["version_id"])
