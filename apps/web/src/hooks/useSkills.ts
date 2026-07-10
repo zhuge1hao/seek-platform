@@ -1,13 +1,13 @@
 "use client";
 
-import useSWR from "swr";
 import { getSkillTemplates, type SkillTemplate } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { queryKeys } from "@/lib/queryKeys";
 
 export function useSkills(agentType?: string, enabled = true) {
-  return useSWR<{ items: SkillTemplate[] }>(
-    enabled ? queryKeys.skills(agentType) : null,
+  return useApiQuery<{ items: SkillTemplate[] }>(
+    queryKeys.skills(agentType),
     () => getSkillTemplates(agentType),
-    { keepPreviousData: true, revalidateOnFocus: false, refreshInterval: 0 }
+    { enabled }
   );
 }

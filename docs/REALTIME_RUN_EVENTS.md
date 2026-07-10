@@ -9,3 +9,23 @@ For local development, `EVENT_BACKEND=memory` keeps the v1.7.2 in-process behavi
 For production, `EVENT_BACKEND=redis` uses `agent_run_event_bus` and Redis Pub/Sub. Redis messages are lightweight wakeups only; they do not include raw response, full prompt, full workflow options, or business truth. Each SSE response re-reads the run summary from the configured DB before sending data to the browser.
 
 This intentionally avoids WebSocket. Polling fallback remains available after SSE errors, API restarts, Redis interruptions, or page visibility changes.
+
+## v1.8.2 P2 Client Backoff Update - 2026-07-10
+
+Encoded:
+
+- Agent Run SSE client retry uses 1s/2s/4s/8s/16s/30s exponential backoff with jitter.
+- Browser network recovery triggers an immediate retry.
+- HTTP 401/403/404 stops retry instead of looping forever.
+- Completed, failed, and cancelled runs close the stream.
+- Component unmount and run switch abort the previous stream.
+- Existing polling fallback remains the durable fallback and is stopped when SSE reconnects.
+
+Executed:
+
+- Frontend production build passed.
+
+Not executed:
+
+- Redis pause/recovery browser-level reconnection timing test.
+- Multi-tab duplicate SSE connection stress test.

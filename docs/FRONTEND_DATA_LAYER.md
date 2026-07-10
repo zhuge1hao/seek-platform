@@ -57,3 +57,22 @@ v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Bl
 
 - Browser-level visual regression for every protected boundary.
 - Runtime SSE reconnect/fallback P2 fault tests.
+
+## meizhaiseek v1.8.2 P2 frontend update, 2026-07-10
+
+已编码:
+
+- Remaining simple direct SWR hooks now call `useApiQuery`: agent configs, agent connectors, admin users, current user, files, runtime health, storage health, skill templates, and debug payloads.
+- Agent Run SSE reconnect now uses exponential backoff of 1s, 2s, 4s, 8s, 16s, then max 30s with jitter.
+- Browser `online` triggers an immediate SSE retry.
+- 401, 403, and 404 SSE failures do not retry forever.
+- Terminal run statuses still stop SSE; route unmount and run switch still abort the active stream.
+- Polling fallback remains active only after SSE failure and is stopped when SSE reconnects.
+
+已执行:
+
+- `npm.cmd run build`: passed.
+
+未执行:
+
+- Multi-tab browser stress test for duplicate SSE connection reduction.

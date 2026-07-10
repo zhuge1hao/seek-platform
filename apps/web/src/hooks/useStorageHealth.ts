@@ -1,13 +1,13 @@
 "use client";
 
-import useSWR from "swr";
 import { getStorageHealth, type StorageHealthResponse } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { queryKeys } from "@/lib/queryKeys";
 
 export function useStorageHealth(enabled = true) {
-  return useSWR<StorageHealthResponse>(
-    enabled ? queryKeys.storageHealth : null,
+  return useApiQuery<StorageHealthResponse>(
+    queryKeys.storageHealth,
     getStorageHealth,
-    { keepPreviousData: true, revalidateOnFocus: false, refreshInterval: enabled ? 30000 : 0 }
+    { enabled, refreshInterval: enabled ? 30000 : 0 }
   );
 }

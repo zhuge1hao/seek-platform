@@ -63,6 +63,62 @@ class ConversationStoreTest(unittest.TestCase):
         assert other_loaded is not None
         self.assertEqual(len(other_loaded["messages"]), 1)
 
+    def test_agent_message_append_and_update_are_incremental(self) -> None:
+        from services import conversation_store
+
+        conv = conversation_store.create_conversation("user_a", "title_writing", "hello")
+        first = conversation_store.append_agent_message(
+            "user_a",
+            conv["conversation_id"],
+            {"message_id": "msg_1", "role": "user", "content": "one", "status": "completed"},
+        )
+        second = conversation_store.append_agent_message(
+            "user_a",
+            conv["conversation_id"],
+            {"message_id": "msg_2", "role": "assistant", "content": "two", "status": "running"},
+        )
+        updated = conversation_store.update_agent_message(
+            "user_a",
+            conv["conversation_id"],
+            second["message_id"],
+            {"content": "two done", "status": "completed"},
+        )
+
+        self.assertIsNotNone(updated)
+        loaded = conversation_store.get_conversation(conv["conversation_id"], "user_a")
+        self.assertIsNotNone(loaded)
+        assert loaded is not None
+        self.assertEqual([message["message_id"] for message in loaded["messages"]], [first["message_id"], second["message_id"]])
+        self.assertEqual(loaded["messages"][1]["content"], "two done")
+
+    def test_qa_message_append_and_update_are_incremental(self) -> None:
+        from services import qa_conversation_store
+
+        conversation = qa_conversation_store.create_conversation("user_a", "qa")
+        qa_conversation_store.append_message(
+            "user_a",
+            conversation["conversation_id"],
+            {"message_id": "qa_msg_1", "role": "user", "content": "question", "status": "completed"},
+        )
+        qa_conversation_store.append_message(
+            "user_a",
+            conversation["conversation_id"],
+            {"message_id": "qa_msg_2", "role": "assistant", "content": "", "status": "streaming"},
+        )
+        qa_conversation_store.update_message(
+            "user_a",
+            conversation["conversation_id"],
+            "qa_msg_2",
+            {"content": "answer", "status": "completed"},
+        )
+
+        loaded = qa_conversation_store.get_conversation("user_a", conversation["conversation_id"])
+        self.assertIsNotNone(loaded)
+        assert loaded is not None
+        self.assertEqual([message["message_id"] for message in loaded["messages"]], ["qa_msg_1", "qa_msg_2"])
+        self.assertEqual(loaded["messages"][1]["content"], "answer")
+        self.assertIsNone(qa_conversation_store.get_conversation("user_b", conversation["conversation_id"]))
+
 
 if __name__ == "__main__":
     unittest.main()

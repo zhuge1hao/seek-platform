@@ -1,15 +1,15 @@
 "use client";
 
-import useSWR from "swr";
 import { listDebugPayloads, type DebugPayloadSummary } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { queryKeys } from "@/lib/queryKeys";
 
 type Params = { limit?: number; agent_type?: string; status?: string };
 
 export function useDebugPayloads(params: Params = {}, enabled = true) {
-  return useSWR<{ items: DebugPayloadSummary[] }>(
-    enabled ? queryKeys.debugPayloads(params) : null,
+  return useApiQuery<{ items: DebugPayloadSummary[] }>(
+    queryKeys.debugPayloads(params),
     () => listDebugPayloads(params),
-    { keepPreviousData: true, revalidateOnFocus: false, refreshInterval: 0 }
+    { enabled }
   );
 }

@@ -274,10 +274,17 @@ def get_conversation(conversation_id: str, user_id: str, include_archived: bool 
 def list_conversations(user_id: str, limit: int = 50, include_archived: bool = False) -> list[dict[str, Any]]:
     _ensure_legacy_loaded(user_id)
     safe_limit = max(1, min(limit, 200))
-    archived_clause = "" if include_archived else "AND is_archived=0"
     with app_sqlite.connection() as conn:
-        sql = "SELECT * FROM agent_conversations WHERE user_id=? " + archived_clause + " ORDER BY updated_at DESC LIMIT ?"  # nosec B608
-        rows = conn.execute(sql, (user_id, safe_limit)).fetchall()
+        if include_archived:
+            rows = conn.execute(
+                "SELECT * FROM agent_conversations WHERE user_id=? ORDER BY updated_at DESC LIMIT ?",
+                (user_id, safe_limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM agent_conversations WHERE user_id=? AND is_archived=0 ORDER BY updated_at DESC LIMIT ?",
+                (user_id, safe_limit),
+            ).fetchall()
     fields = ("conversation_id", "title", "agent_type", "agent_name", "latest_run_id", "status", "summary", "created_at", "updated_at", "is_archived")
     return [{key: _row_conversation(row).get(key) for key in fields} for row in rows]
 

@@ -1,13 +1,9 @@
 "use client";
 
-import useSWR from "swr";
 import { getAgentConnectors, type AgentConnector } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { queryKeys } from "@/lib/queryKeys";
 
 export function useAgentConnectors(enabled = true) {
-  return useSWR<{ items: AgentConnector[] }>(
-    enabled ? queryKeys.agentConnectors : null,
-    getAgentConnectors,
-    { keepPreviousData: true, revalidateOnFocus: false, refreshInterval: 0 }
-  );
+  return useApiQuery<{ items: AgentConnector[] }>(queryKeys.agentConnectors, getAgentConnectors, { enabled });
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import useSWR from "swr";
 import { getRuntimeHealth, type RuntimeHealthResponse } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { queryKeys } from "@/lib/queryKeys";
 
 export function useRuntimeHealth(enabled = true) {
-  return useSWR<RuntimeHealthResponse>(
-    enabled ? queryKeys.runtimeHealth : null,
+  return useApiQuery<RuntimeHealthResponse>(
+    queryKeys.runtimeHealth,
     getRuntimeHealth,
-    { keepPreviousData: true, revalidateOnFocus: false, refreshInterval: enabled ? 30000 : 0 }
+    { enabled, refreshInterval: enabled ? 30000 : 0 }
   );
 }

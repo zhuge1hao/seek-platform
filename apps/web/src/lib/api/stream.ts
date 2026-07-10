@@ -57,6 +57,16 @@ export type AgentRunStreamHandlers = {
 
 const TERMINAL_RUN_STATUS = new Set(["completed", "failed", "cancelled"]);
 
+export class StreamHttpError extends Error {
+  status: number;
+
+  constructor(status: number) {
+    super(`SSE ${status}`);
+    this.name = "StreamHttpError";
+    this.status = status;
+  }
+}
+
 function consumeAgentRunBlock(block: string, runId: string, handlers: AgentRunStreamHandlers): boolean {
   let eventName = "message";
   const dataLines: string[] = [];
@@ -87,7 +97,7 @@ export async function streamAgentRunEvents(runId: string, handlers: AgentRunStre
       signal,
     });
     if (response.status === 401 || response.status === 403) clearAuthSession();
-    if (!response.ok || !response.body) throw new Error(`SSE ${response.status}`);
+    if (!response.ok || !response.body) throw new StreamHttpError(response.status);
     handlers.onConnected?.();
     const reader = response.body.getReader();
     const decoder = new TextDecoder();

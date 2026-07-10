@@ -11,6 +11,7 @@ Completed this round:
 - BGE-small-zh SQLite and pgvector smoke passed.
 - Non-empty pgvector migration smoke passed with 5 documents and 50 chunks.
 - 100-user 15-minute Locust run passed minimum latency/error gate and queue depth recovered to 0 after scaling `worker-general=4`.
+- P2 partial technical debt pass: one conversation B608 site removed, conversation incremental-write tests added, remaining simple SWR hooks moved to `useApiQuery`, and Agent Run SSE backoff encoded.
 
 Still blocked / not executed:
 
@@ -18,6 +19,7 @@ Still blocked / not executed:
 - P2 worker crash/restart and zombie recovery are not executed in this round.
 - P2 50 video jobs are not executed.
 - P2 real Dataset/Knowledge/Blueprint Docker worker acceptance is not fully executed.
+- JSON DB migration for `agent_config_store` and `skill_template_service` is not executed.
 - P3 200/300/500 users remain not executed.
 
 Next recommended step:
