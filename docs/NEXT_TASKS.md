@@ -1,5 +1,29 @@
 # Next Tasks
 
+## v1.8.2 Current State - 2026-07-10
+
+Completed this round:
+
+- P0 was committed and pushed as `645bea682a54d2ffe670a41631ffbf44f5ad6221`.
+- Full `mypy apps/api` now passes.
+- Redis client reuse, Redis error redaction, cache sensitive-entry refusal, QA enqueue tests, and Blueprint queue entry points are encoded.
+- `worker-general` compose queue list is now `general,dataset,knowledge,blueprint`.
+- BGE-small-zh SQLite and pgvector smoke passed.
+- Non-empty pgvector migration smoke passed with 5 documents and 50 chunks.
+- 100-user 15-minute Locust run passed minimum latency/error gate and queue depth recovered to 0 after scaling `worker-general=4`.
+
+Still blocked / not executed:
+
+- Raw `pip-audit` still fails for three documented `transformers 4.57.6` advisories.
+- P2 worker crash/restart and zombie recovery are not executed in this round.
+- P2 50 video jobs are not executed.
+- P2 real Dataset/Knowledge/Blueprint Docker worker acceptance is not fully executed.
+- P3 200/300/500 users remain not executed.
+
+Next recommended step:
+
+- Continue P2 with real worker crash/restart and queue acceptance after the P1 commit is pushed; do not start P3 until P2 critical gates pass.
+
 ## v1.8.2 Current State - 2026-07-07
 
 Immediate state:

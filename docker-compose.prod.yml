@@ -131,7 +131,7 @@ services:
       APP_DB_MAX_OVERFLOW: ${WORKER_GENERAL_DB_MAX_OVERFLOW:-2}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       TASK_QUEUE_BACKEND: redis
-      RQ_QUEUES: general
+      RQ_QUEUES: general,dataset,knowledge,blueprint
       EVENT_BACKEND: ${EVENT_BACKEND:-redis}
       RAG_BACKEND: ${RAG_BACKEND:-pgvector}
       ARTIFACT_STORAGE_BACKEND: ${ARTIFACT_STORAGE_BACKEND:-s3}

@@ -1,3 +1,38 @@
+# Capacity Report v1.8/v1.8.2 Update - 2026-07-10
+
+Executed:
+
+- 100 users, 15 minutes, Locust 2.32.6, host `http://127.0.0.1`.
+- 140 temporary operator accounts were used; admin account sharing was not used for virtual users.
+- Running Docker topology included PostgreSQL, Redis, MinIO, API, Web, Nginx, 1 worker-general at start, then worker-general was scaled to 4 for queue drain.
+
+Passed minimum gate:
+
+- Error rate: 0%.
+- Aggregate p95: 120ms.
+- `/api/agent-runs` submit p95: 130ms.
+- `/api/agents` p95: 27ms.
+- Login p95: 210ms.
+- General queue depth recovered from 658 to 0 after scaling `worker-general=4`.
+
+Observed but not failed for the read-heavy gate:
+
+- `/api/agent-runs/:id/events` p95 was about 1800ms because the Locust task holds the SSE stream for up to 5 seconds.
+- `/api/agent-runs/:id/summary` p95 was about 2800ms during queued task backlog.
+
+Not executed:
+
+- 200-user test.
+- 300-user test.
+- 500-user test.
+- P2 worker crash/restart and 50 video queue tests.
+
+Conclusion:
+
+- Current hardware/topology passed the 100-user minimum gate in this run.
+- 500-user capacity is not verified and must not be claimed.
+
+---
 # Capacity Report v1.8
 
 Status: production validation partially completed. The 20-user baseline passed. The 100-user run completed with 0% errors after using temporary per-user accounts, but latency did not meet the v1.8 capacity targets. The 500-user run was not executed because the 100-user latency gate was not met.

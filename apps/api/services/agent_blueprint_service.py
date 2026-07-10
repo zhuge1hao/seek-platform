@@ -268,6 +268,14 @@ def run_test_case(blueprint_id: str, test_case_id: str, background_tasks: Backgr
         raise BlueprintServiceError("蓝图版本不存在。")
     version_id = str(case.get("version_id") or version["version_id"])
     test_run = store.create_test_run(blueprint_id, version_id, test_case_id, _user_id(user), case.get("expected_status") or "completed")
+    from tasks.queue import backend as queue_backend, enqueue_call
+
+    if queue_backend() == "redis":
+        job_id = f"blueprint-test-{test_run['test_run_id']}"
+        queue_result = enqueue_call("tasks.blueprint_tasks.execute_blueprint_test", (test_run["test_run_id"], _user_id(user)), job_id, background_tasks, timeout_seconds=3600)
+        queued = store.update_test_run(test_run["test_run_id"], {"status": "pending", "metadata": {"queue_job_id": queue_result.get("job_id")}}) or test_run
+        audit_log_service.write_log("agent_blueprint.test_run.enqueue", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "test_case_id": test_case_id, "test_run_id": test_run["test_run_id"], "job_id": queue_result.get("job_id")})
+        return {"test_case": store.get_test_case(test_case_id), "test_run": queued, "run": None, "job_id": queue_result.get("job_id"), "status": "queued"}
     data = case.get("input") or {}
     agent_type = str(data.get("agent_type") or blueprint.get("agent_id") or "")
     payload = AgentRunCreate(
@@ -287,6 +295,39 @@ def run_test_case(blueprint_id: str, test_case_id: str, background_tasks: Backgr
     store.set_test_case_run_result(test_case_id, created["run_id"], {"status": "running", "run_id": created["run_id"], "test_run_id": test_run["test_run_id"]})
     audit_log_service.write_log("agent_blueprint.test_run.create", "success", user, blueprint_id, {"blueprint_id": blueprint_id, "test_case_id": test_case_id, "test_run_id": test_run["test_run_id"], "run_id": created["run_id"]})
     return {"test_case": store.get_test_case(test_case_id), "test_run": store.get_test_run(test_run["test_run_id"]), "run": created}
+
+
+def execute_queued_test_case(test_run_id: str, user_id: str) -> None:
+    test_run = store.get_test_run(test_run_id)
+    if not test_run or test_run.get("status") in TERMINAL:
+        return
+    case = store.get_test_case(str(test_run.get("test_case_id") or ""))
+    blueprint = store.get_blueprint(str(test_run.get("blueprint_id") or ""))
+    if not case or not blueprint:
+        store.update_test_run(test_run_id, {"status": "error", "completed_at": _now(), "error_message": "blueprint test case not found"})
+        return
+    if str(case.get("blueprint_id") or "") != str(blueprint.get("blueprint_id") or ""):
+        store.update_test_run(test_run_id, {"status": "error", "completed_at": _now(), "error_message": "blueprint test case mismatch"})
+        return
+    data = case.get("input") or {}
+    agent_type = str(data.get("agent_type") or blueprint.get("agent_id") or "")
+    payload = AgentRunCreate(
+        agent_type=agent_type,
+        mode=data.get("mode"),
+        prompt=str(data.get("prompt") or f"blueprint test: {case['name']}"),
+        video_path=data.get("video_path") or data.get("video_file"),
+        video_url=data.get("video_url"),
+        workflow_options={key: value for key, value in data.items() if key not in {"agent_type", "mode", "prompt", "video_path", "video_file", "video_url"}},
+    )
+    user = {"user_id": user_id, "username": user_id, "role": "operator"}
+    try:
+        created = orchestrator.start_run(payload, BackgroundTasks(), user)
+    except Exception as exc:
+        store.update_test_run(test_run_id, {"status": "error", "completed_at": _now(), "error_message": str(exc)})
+        raise
+    store.update_test_run(test_run_id, {"status": "running", "agent_run_id": created["run_id"]})
+    store.set_test_case_run_result(str(test_run["test_case_id"]), created["run_id"], {"status": "running", "run_id": created["run_id"], "test_run_id": test_run_id})
+    audit_log_service.write_log("agent_blueprint.test_run.start", "success", user, str(test_run["blueprint_id"]), {"blueprint_id": test_run["blueprint_id"], "test_case_id": test_run["test_case_id"], "test_run_id": test_run_id, "run_id": created["run_id"]})
 
 
 def sync_test_run_result(run: dict[str, Any]) -> None:

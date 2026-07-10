@@ -1,5 +1,33 @@
 ﻿# Testing
 
+## meizhaiseek v1.8.2 P0/P1 update, 2026-07-10
+
+Executed and passed:
+
+- `python -m compileall apps/api`: passed.
+- `.venv\Scripts\python.exe -m ruff check apps/api`: passed.
+- `.venv\Scripts\python.exe -m mypy apps/api`: passed for 181 source files.
+- `.venv\Scripts\python.exe -m mypy apps/api/services apps/api/tasks apps/api/storage apps/api/rag apps/api/db apps/api/routers apps/api/tests`: passed for 151 source files.
+- `python -m unittest discover -s apps/api/tests`: 59 tests OK.
+- `python -m pytest apps/api/tests`: 59 passed, 2 skipped.
+- `.venv\Scripts\python.exe -m bandit --severity-level medium -r apps/api`: passed; High=0, Medium=0.
+- `.venv\Scripts\python.exe -m pip_audit --ignore-vuln PYSEC-2025-217 --ignore-vuln GHSA-69w3-r845-3855 --ignore-vuln GHSA-29pf-2h5f-8g72`: passed with 3 ignored advisories.
+
+Executed and not passed:
+
+- Raw `.venv\Scripts\python.exe -m pip_audit`: failed with the three documented `transformers 4.57.6` advisories.
+
+Executed performance smoke:
+
+- 100 users, 15 minutes, 140 temporary operator accounts, host `http://127.0.0.1`.
+- Result: 0 failures, aggregate p95 120ms, `/api/agent-runs` p95 130ms, `/api/agents` p95 27ms, login p95 210ms.
+- Queue depth recovered to 0 after scaling `worker-general` to 4.
+
+Not executed:
+
+- P2 worker crash/restart.
+- 50 video queue acceptance.
+- P3 200/300/500 user tests.
 ## 本地测试
 
 ```powershell

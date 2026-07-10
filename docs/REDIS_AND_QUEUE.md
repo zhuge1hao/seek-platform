@@ -1,5 +1,35 @@
 # Redis And Queue
 
+## v1.8.2 Queue Update - 2026-07-10
+
+Encoded:
+
+- Redis clients are now reused per URL/response mode in `redis_service`.
+- Redis health errors redact passwords from URLs.
+- Cache entries whose keys or nested fields look like secrets/tokens/passwords/API keys are refused.
+- QA document upload and reindex enqueue `tasks.knowledge_tasks.execute_document_ingest` when `TASK_QUEUE_BACKEND=redis`; inline/dev mode remains compatible.
+- Blueprint test runs enqueue `tasks.blueprint_tasks.execute_blueprint_test` when `TASK_QUEUE_BACKEND=redis`; inline/dev mode keeps the previous immediate Agent Run behavior.
+- `worker-general` now listens to `general,dataset,knowledge,blueprint` in production compose. Dedicated dataset/knowledge/blueprint worker services are still not configured.
+
+Executed:
+
+- Unit tests for cache_service, redis_service, rate_limit_service, runtime_health_service, agent_run_event_bus, QA document enqueue, task queue routing, and Blueprint queue routing.
+- 100-user 15-minute Locust run on 2026-07-10 with 140 temporary operator accounts.
+- Redis queue depth check after Locust.
+
+Passed:
+
+- Queue-related tests passed.
+- Locust 100 users / 15 minutes: 0 failures, aggregate p95 120ms, `/api/agent-runs` p95 130ms, `/api/agents` p95 27ms, login p95 210ms.
+- Queue depth reached 658 general jobs after Locust, then recovered to 0 after scaling `worker-general` to 4.
+
+Not executed:
+
+- Real worker crash/restart/retry acceptance.
+- 50 video job queue acceptance.
+- Dataset export queue end-to-end with artifact storage.
+- Dedicated dataset/knowledge/blueprint worker services.
+
 v1.8 uses Redis for cache, rate limit, RQ queue, and distributed event wakeups. Redis keys use the `meizhaiseek:` prefix.
 
 Queue modes:

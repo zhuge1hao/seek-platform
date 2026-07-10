@@ -1,5 +1,23 @@
 # Codex Handoff
 
+## v1.8.2 Handoff - 2026-07-10
+
+- Branch: `stabilization/v1.8.2`.
+- P0 was committed and pushed as `645bea682a54d2ffe670a41631ffbf44f5ad6221`.
+- Protected dirty file remains `ARCHITECTURE_EVALUATION_REPORT.md`; do not stage or modify it.
+- Version remains `meizhaiseek v1.8.2`; model remains `meizhaiseek 2.0`.
+- Full `mypy apps/api` passed for 181 source files.
+- Redis client reuse and health error redaction are implemented.
+- Cache refuses sensitive cache entries.
+- QA document ingest/reindex and Blueprint test run queue entry points are implemented for Redis mode; inline/dev mode remains compatible.
+- Production `worker-general` is configured to consume `general,dataset,knowledge,blueprint`; separate dataset/knowledge/blueprint worker services are still not configured.
+- Raw pip-audit still fails for three `transformers 4.57.6` advisories; exact documented exceptions pass.
+- BGE-small-zh SQLite and pgvector smoke passed with 512-dimensional embeddings.
+- Non-empty pgvector migration smoke passed with 5 documents and 50 chunks, including resume checkpoint.
+- 100-user 15-minute Locust on 2026-07-10 passed with 0 failures, aggregate p95 120ms, submit p95 130ms, `/api/agents` p95 27ms, login p95 210ms.
+- General queue recovered from 658 pending jobs to 0 after scaling `worker-general=4`.
+- P2 worker crash/restart, 50 video jobs, full Dataset/Knowledge/Blueprint Docker worker acceptance, and P3 200/300/500 users are not executed.
+
 ## v1.8.2 Docker Recovery Handoff - 2026-07-07
 
 - Branch: `stabilization/v1.8.2`.

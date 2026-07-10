@@ -60,7 +60,7 @@ def check(condition: bool, message: str) -> None:
 
 def video_agent_available() -> bool:
     try:
-        video_agent_url = os.getenv("VIDEO_AGENT_BASE_URL") or os.getenv("VIDEO_AGENT_URL", "http://127.0.0.1:8001")
+        video_agent_url = os.getenv("VIDEO_AGENT_BASE_URL") or os.getenv("VIDEO_AGENT_URL") or "http://127.0.0.1:8001"
         video_agent_url = video_agent_url.rstrip("/")
         response = requests.get(f"{video_agent_url}/health", timeout=5)
         data = response.json()

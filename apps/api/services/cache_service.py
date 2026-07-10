@@ -15,13 +15,29 @@ except Exception:  # pragma: no cover
 _MEMORY: dict[str, tuple[float, Any]] = {}
 LOGGER = logging.getLogger(__name__)
 REDIS_FALLBACKS = Counter("meizhaiseek_cache_redis_fallbacks_total", "Redis cache fallback count", ["operation"]) if Counter else None
+SENSITIVE_KEY_PARTS = ("secret", "token", "password", "api_key", "apikey", "authorization")
 
 
 def backend() -> str:
     return os.getenv("CACHE_BACKEND", "memory").lower()
 
 
+def _is_sensitive_key(key: str) -> bool:
+    lowered = key.lower()
+    return any(part in lowered for part in SENSITIVE_KEY_PARTS)
+
+
+def _contains_sensitive_value(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(_is_sensitive_key(str(key)) or _contains_sensitive_value(item) for key, item in value.items())
+    if isinstance(value, list):
+        return any(_contains_sensitive_value(item) for item in value)
+    return False
+
+
 def get(key: str, default: Any = None) -> Any:
+    if _is_sensitive_key(key):
+        return default
     if backend() == "redis":
         try:
             value = redis_service.client().get(redis_service.key("cache", key))
@@ -39,6 +55,9 @@ def get(key: str, default: Any = None) -> Any:
 
 
 def set(key: str, value: Any, ttl_seconds: int = 60) -> None:
+    if _is_sensitive_key(key) or _contains_sensitive_value(value):
+        LOGGER.warning("cache_service refused sensitive cache entry: %s", key)
+        return
     if backend() == "redis":
         try:
             redis_service.client().setex(redis_service.key("cache", key), ttl_seconds, json.dumps(value, ensure_ascii=False))
