@@ -10,9 +10,16 @@ Completed baseline:
 
 Next:
 
-- P0: passed and ready to push.
-- P1: queue closure, pgvector non-empty validation, dependency exception review.
-- P2/P3: run only after earlier gates pass; unexecuted items must remain marked `not executed`.
+- P0: passed, committed, and pushed as `26eb794cb6ae90ae38e2c71b6e12697f3acda4df`.
+- P1: local quality gate, dependency exception review, BGE smoke, pgvector non-empty migration, Dataset/Knowledge/Blueprint queue unit proof, Docker queue depth check, and 100-user 15-minute Locust rerun passed.
+- P1 commit/push: pending until staged review.
+- P2/P3: run only after P1 commit is pushed; unexecuted items must remain marked `not executed`.
+
+P1 notes:
+
+- Raw `pip-audit` remains not passed without the exact documented `transformers 4.57.6` advisory exceptions.
+- Dataset export queue acceptance is not passed because no public API endpoint exists.
+- Standalone dataset/knowledge/blueprint workers are not configured; `worker-general` consumes those queues.
 
 ## v1.8.2 Current State - 2026-07-10
 

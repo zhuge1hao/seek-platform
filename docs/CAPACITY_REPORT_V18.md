@@ -1,3 +1,46 @@
+# Capacity Report v1.8/v1.8.3 Update - 2026-07-12
+
+Executed:
+
+- 100 users, 15 minutes, Locust 2.32.6, host `http://127.0.0.1`.
+- 140 temporary operator accounts were created for `locust_v183_p1_*`; the password was stored only in uncommitted runtime state.
+- Running Docker topology included PostgreSQL, Redis, MinIO, API, Web, Nginx, worker-general x4, and worker-video x1.
+- `worker-general` listened to `general,dataset,knowledge,blueprint`; no standalone dataset/knowledge/blueprint workers were configured.
+
+First attempt:
+
+- Not passed. PowerShell execution policy prevented loading the runtime Locust environment script, so Locust fell back to the default admin credentials.
+- Result: 100 login failures, including 60 HTTP 401 and 40 HTTP 429. This run is excluded from capacity pass conclusions.
+
+Passed minimum gate on rerun:
+
+- Error rate: 0%.
+- Total requests: 88,217.
+- Aggregate p95: 110ms.
+- Aggregate p99: 240ms.
+- `/api/agent-runs` submit p95: 370ms.
+- `/api/agents` p95: 64ms.
+- Login p95: 260ms.
+- `/api/conversations` p95: 67ms.
+- `/api/qa/health` p95: 170ms.
+- `/health` p95: 24ms.
+- SSE endpoint p95: 66ms.
+- Redis queue depths after the run: `general=0`, `video=0`, `dataset=0`, `knowledge=0`, `blueprint=0`.
+
+Not executed:
+
+- 200-user test.
+- 300-user test.
+- 500-user test.
+- P2 worker crash/restart, MinIO full chain, and 50 video queue tests.
+
+Conclusion:
+
+- v1.8.3 P1 100-user minimum gate passed on current hardware.
+- Agent submit p95 <=500ms priority target passed in this run.
+- 500-user capacity is still not verified and must not be claimed.
+
+---
 # Capacity Report v1.8/v1.8.2 Update - 2026-07-10
 
 Executed:

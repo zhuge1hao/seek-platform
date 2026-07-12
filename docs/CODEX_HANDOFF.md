@@ -7,6 +7,13 @@
 - Runtime version target: `v1.8.3`; model remains `meizhaiseek 2.0`.
 - `ARCHITECTURE_EVALUATION_REPORT.md` is protected and must remain unstaged.
 - P0 validation passed: compileall, ruff, full mypy, unittest, pytest, and web build.
+- P1 validation passed locally after adding Dataset clean queue coverage: compileall, ruff, full mypy, unittest 71 OK, pytest 71 passed / 2 skipped, Bandit High=0 Medium=0, pip-audit exact exception gate passed.
+- Raw pip-audit remains not passed because `transformers 4.57.6` still has three documented accepted advisories.
+- BGE-small-zh smoke passed with 512-dimensional embeddings.
+- pgvector non-empty migration validation passed with isolated 5-document / 60-chunk test data, including execute, verify, resume, and top-k search.
+- 100-user 15-minute Locust rerun passed with 0 failures, aggregate p95 110ms, and submit p95 370ms; the first attempt is marked not passed because environment variables were not loaded under PowerShell execution policy.
+- Docker production topology is running and healthy, with `worker-general` x4 consuming `general,dataset,knowledge,blueprint` and `worker-video` x1 consuming `video`.
+- Dataset export queue acceptance is not passed because the current API has no public Dataset export enqueue endpoint.
 - Do not claim P2/P3 completion until Redis/worker/video/MinIO/pgvector/capacity checks are actually executed.
 
 ## v1.8.2 Handoff - 2026-07-10

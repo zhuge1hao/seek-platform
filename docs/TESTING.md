@@ -1,5 +1,37 @@
 ﻿# Testing
 
+## meizhaiseek v1.8.3 P0/P1 update, 2026-07-12
+
+Executed and passed:
+
+- `python -m compileall apps/api`: passed.
+- `.venv\Scripts\python.exe -m ruff check apps/api`: passed.
+- `.venv\Scripts\python.exe -m mypy apps/api`: passed for 182 source files after adding the Dataset queue test.
+- `python -m unittest discover -s apps/api/tests`: 71 tests OK.
+- `python -m pytest apps/api/tests`: 71 passed, 2 skipped.
+- `.venv\Scripts\python.exe -m bandit --severity-level medium -r apps/api`: passed; High=0, Medium=0.
+- `.venv\Scripts\python.exe -m pip_audit --ignore-vuln PYSEC-2025-217 --ignore-vuln GHSA-69w3-r845-3855 --ignore-vuln GHSA-29pf-2h5f-8g72`: passed with 3 ignored advisories.
+- BGE-small-zh smoke: passed, model loaded, embedding dimension 512.
+- pgvector non-empty migration validation: passed with 5 documents, 60 chunks, dry-run/execute/verify/resume, and top-k search.
+
+Executed and not passed:
+
+- Raw `.venv\Scripts\python.exe -m pip_audit`: failed with the three documented `transformers 4.57.6` advisories.
+- First 100-user Locust attempt: not passed because the runtime Locust environment script could not be loaded by PowerShell execution policy and the run fell back to default admin credentials.
+
+Executed performance smoke:
+
+- 100 users, 15 minutes, 140 temporary operator accounts, host `http://127.0.0.1`.
+- Result: 0 failures, aggregate p95 110ms, `/api/agent-runs` submit p95 370ms, `/api/agents` p95 64ms, login p95 260ms.
+- Queue depth recovered to 0 for `general`, `video`, `dataset`, `knowledge`, and `blueprint`.
+
+Not executed:
+
+- P2 Redis pause/recovery full acceptance.
+- P2 worker crash/restart and 50 video queue acceptance.
+- P2 MinIO permissions/TTL/streaming acceptance.
+- P3 200/300/500 user tests.
+
 ## meizhaiseek v1.8.2 P0/P1 update, 2026-07-10
 
 Executed and passed:

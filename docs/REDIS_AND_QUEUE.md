@@ -1,5 +1,37 @@
 # Redis And Queue
 
+## v1.8.3 Queue Update - 2026-07-12
+
+Encoded:
+
+- Dataset clean enqueue path is covered by unit test.
+- QA document upload/reindex and Blueprint test-run enqueue paths remain wired through `tasks.queue.enqueue_call`.
+- `worker-general` is confirmed to listen to `general,dataset,knowledge,blueprint`; `worker-video` listens to `video`.
+
+Executed:
+
+- Unit tests for cache_service, redis_service, rate_limit_service, runtime_health_service, agent_run_event_bus, QA document enqueue, Dataset clean enqueue, task queue routing, and Blueprint queue routing.
+- Docker queue depth check after service recovery and after the v1.8.3 100-user Locust run.
+- 100-user 15-minute Locust rerun with 140 temporary operator accounts.
+
+Passed:
+
+- `python -m unittest discover -s apps/api/tests`: 71 tests OK.
+- `python -m pytest apps/api/tests`: 71 passed, 2 skipped.
+- Queue depth after Locust recovered to 0 for `general`, `video`, `dataset`, `knowledge`, and `blueprint`.
+- Locust 100 users / 15 minutes: 0 failures, aggregate p95 110ms, `/api/agent-runs` p95 370ms, `/api/agents` p95 64ms, login p95 260ms.
+
+Not executed:
+
+- Real worker crash/restart/retry acceptance.
+- 50 video job queue acceptance.
+- Production Docker end-to-end Dataset/Knowledge/Blueprint job consumption and retry/cancel acceptance.
+- Dedicated dataset/knowledge/blueprint worker services.
+
+Not passed:
+
+- Dataset export queue acceptance is not passed because no public Dataset export queue endpoint exists in the current API.
+
 ## v1.8.2 Queue Update - 2026-07-10
 
 Encoded:
