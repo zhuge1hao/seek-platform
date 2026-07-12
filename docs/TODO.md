@@ -1,5 +1,13 @@
 # TODO
 
+## v1.8.3 Priority
+
+- Re-verify full `mypy apps/api`; fix only real regressions.
+- Complete remaining `_PostgresPool` edge tests without replacing the pool.
+- Prove QA/Knowledge, Dataset, and Blueprint queue paths through Redis/RQ.
+- Run pgvector non-empty migration validation with isolated test data.
+- Keep P3 capacity tests blocked until P2 critical production acceptance passes.
+
 ## v1.8 completed
 
 - PostgreSQL/Alembic schema foundation.

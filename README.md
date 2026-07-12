@@ -1,5 +1,11 @@
 ﻿# meizhaiseek-platform
 
+## Latest v1.8.3 Runtime Note
+
+Branch: `stabilization/v1.8.3`.
+
+`meizhaiseek v1.8.3` is a production-acceptance hardening release on top of v1.8.2. It keeps `meizhaiseek 2.0`, preserves the existing product navigation, and focuses on full type gates, queue closure, pgvector validation, and honest P2/P3 acceptance tracking. It does not add new business agents.
+
 ## Latest v1.8.2 Runtime Note
 
 As of 2026-07-07, the local Docker production topology on branch `stabilization/v1.8.2` has been recovered and started:

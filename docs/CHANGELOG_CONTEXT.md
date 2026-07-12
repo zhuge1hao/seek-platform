@@ -1,5 +1,11 @@
 # Changelog Context
 
+## v1.8.3 Start - 2026-07-12
+
+- Created from `stabilization/v1.8.2` at `51913b4f8eb5e34e9fb170c4fe524c71ae28c6f4`.
+- Scope: full type gate revalidation, queue closure, pgvector non-empty validation, and production acceptance hardening.
+- Out of scope: new business agents, v1.9 upgrade, local video Agent prompt changes, and unverified 500-user claims.
+
 ## v1.8.2 Docker Recovery Update - 2026-07-07
 
 - Restored Docker Desktop Linux Engine on `desktop-linux` without destructive WSL/Docker operations.

@@ -1,5 +1,12 @@
 ﻿# 产品说明 PRD
 
+## meizhaiseek v1.8.3
+
+- Version focus: full type gate, queue closure, pgvector validation, and production acceptance hardening.
+- Model display name remains `meizhaiseek 2.0`.
+- No new business agents are introduced in v1.8.3.
+- 500-user validation remains not executed unless recorded separately with real Locust results.
+
 ## 当前版本
 
 - 版本：meizhaiseek v1.8

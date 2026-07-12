@@ -5,7 +5,7 @@ from services import agent_run_event_bus, app_sqlite, redis_service, security_co
 from tasks import queue as task_queue
 
 
-VERSION = "v1.8.2"
+VERSION = "v1.8.3"
 MODEL = "meizhaiseek 2.0"
 
 

@@ -1,5 +1,14 @@
 # Codex Handoff
 
+## v1.8.3 Handoff Seed - 2026-07-12
+
+- Branch target: `stabilization/v1.8.3`.
+- Base commit: `51913b4f8eb5e34e9fb170c4fe524c71ae28c6f4`.
+- Runtime version target: `v1.8.3`; model remains `meizhaiseek 2.0`.
+- `ARCHITECTURE_EVALUATION_REPORT.md` is protected and must remain unstaged.
+- P0 validation passed: compileall, ruff, full mypy, unittest, pytest, and web build.
+- Do not claim P2/P3 completion until Redis/worker/video/MinIO/pgvector/capacity checks are actually executed.
+
 ## v1.8.2 Handoff - 2026-07-10
 
 - Branch: `stabilization/v1.8.2`.

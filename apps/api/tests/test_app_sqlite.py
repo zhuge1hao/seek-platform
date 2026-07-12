@@ -121,6 +121,56 @@ class AppSQLiteTest(unittest.TestCase):
         self.assertLessEqual(pool._pool.qsize(), 1)
         self.assertTrue(any(conn.closed for conn in raw))
 
+    def test_postgres_pool_discards_closed_connections(self) -> None:
+        from services import app_sqlite
+
+        os.environ["APP_DB_POOL_SIZE"] = "1"
+        os.environ["APP_DB_MAX_OVERFLOW"] = "1"
+        raw: list[FakeRawConnection] = []
+        pool = app_sqlite._PostgresPool()
+
+        def make_conn() -> FakeRawConnection:
+            conn = FakeRawConnection()
+            raw.append(conn)
+            return conn
+
+        with patch.object(pool, "_new_connection", side_effect=make_conn):
+            pooled = pool.acquire()
+            overflow = pool.acquire()
+            pooled_raw = pooled._conn
+            overflow_raw = overflow._conn
+            pooled_raw.closed = True
+            pooled.close()
+            overflow.close()
+            next_conn = pool.acquire()
+
+        self.assertIsNot(next_conn._conn, pooled_raw)
+        self.assertTrue(pooled_raw.closed)
+        self.assertIs(next_conn._conn, overflow_raw)
+        next_conn.close()
+
+    def test_postgres_pool_discards_overflow_when_pool_is_full(self) -> None:
+        from services import app_sqlite
+
+        os.environ["APP_DB_POOL_SIZE"] = "1"
+        os.environ["APP_DB_MAX_OVERFLOW"] = "1"
+        raw: list[FakeRawConnection] = []
+        pool = app_sqlite._PostgresPool()
+
+        def make_conn() -> FakeRawConnection:
+            conn = FakeRawConnection()
+            raw.append(conn)
+            return conn
+
+        with patch.object(pool, "_new_connection", side_effect=make_conn):
+            pooled = pool.acquire()
+            overflow = pool.acquire()
+            overflow_raw = overflow._conn
+            pooled.close()
+            overflow.close()
+
+        self.assertTrue(overflow_raw.closed)
+
     def test_postgres_pool_lifo_cursor_transactions_and_recycle(self) -> None:
         from services import app_sqlite
 

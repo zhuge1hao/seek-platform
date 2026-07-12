@@ -1,5 +1,19 @@
 # Next Tasks
 
+## v1.8.3 Current Plan - 2026-07-12
+
+Completed baseline:
+
+- Branch target: `stabilization/v1.8.3`.
+- Base commit: `51913b4f8eb5e34e9fb170c4fe524c71ae28c6f4`.
+- Protected dirty file remains `ARCHITECTURE_EVALUATION_REPORT.md`; do not stage it.
+
+Next:
+
+- P0: passed and ready to push.
+- P1: queue closure, pgvector non-empty validation, dependency exception review.
+- P2/P3: run only after earlier gates pass; unexecuted items must remain marked `not executed`.
+
 ## v1.8.2 Current State - 2026-07-10
 
 Completed this round:
