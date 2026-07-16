@@ -1,131 +1,63 @@
 # Codex Handoff
 
-## v1.8.3 Handoff Seed - 2026-07-12
+## v1.8.4 Active Handoff
 
-- Branch target: `stabilization/v1.8.3`.
-- Base commit: `51913b4f8eb5e34e9fb170c4fe524c71ae28c6f4`.
-- Runtime version target: `v1.8.3`; model remains `meizhaiseek 2.0`.
-- `ARCHITECTURE_EVALUATION_REPORT.md` is protected and must remain unstaged.
-- P0 validation passed: compileall, ruff, full mypy, unittest, pytest, and web build.
-- P1 validation passed locally after adding Dataset clean queue coverage: compileall, ruff, full mypy, unittest 71 OK, pytest 71 passed / 2 skipped, Bandit High=0 Medium=0, pip-audit exact exception gate passed.
-- Raw pip-audit remains not passed because `transformers 4.57.6` still has three documented accepted advisories.
-- BGE-small-zh smoke passed with 512-dimensional embeddings.
-- pgvector non-empty migration validation passed with isolated 5-document / 60-chunk test data, including execute, verify, resume, and top-k search.
-- 100-user 15-minute Locust rerun passed with 0 failures, aggregate p95 110ms, and submit p95 370ms; the first attempt is marked not passed because environment variables were not loaded under PowerShell execution policy.
-- Docker production topology is running and healthy, with `worker-general` x4 consuming `general,dataset,knowledge,blueprint` and `worker-video` x1 consuming `video`.
-- Dataset export queue acceptance is not passed because the current API has no public Dataset export enqueue endpoint.
-- Do not claim P2/P3 completion until Redis/worker/video/MinIO/pgvector/capacity checks are actually executed.
+- Branch: `stabilization/v1.8.4`
+- Version: `meizhaiseek v1.8.4`
+- Model display: `meizhaiseek 2.0`
+- Protected dirty user work: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-## v1.8.2 Handoff - 2026-07-10
+Current goal: execute and document video E2E, distributed queues, artifact storage, pgvector, and capacity validation without claiming any unexecuted gate as passed.
 
-- Branch: `stabilization/v1.8.2`.
-- P0 was committed and pushed as `645bea682a54d2ffe670a41631ffbf44f5ad6221`.
-- Protected dirty file remains `ARCHITECTURE_EVALUATION_REPORT.md`; do not stage or modify it.
-- Version remains `meizhaiseek v1.8.2`; model remains `meizhaiseek 2.0`.
-- Full `mypy apps/api` passed for 181 source files.
-- Redis client reuse and health error redaction are implemented.
-- Cache refuses sensitive cache entries.
-- QA document ingest/reindex and Blueprint test run queue entry points are implemented for Redis mode; inline/dev mode remains compatible.
-- Production `worker-general` is configured to consume `general,dataset,knowledge,blueprint`; separate dataset/knowledge/blueprint worker services are still not configured.
-- Raw pip-audit still fails for three `transformers 4.57.6` advisories; exact documented exceptions pass.
-- BGE-small-zh SQLite and pgvector smoke passed with 512-dimensional embeddings.
-- Non-empty pgvector migration smoke passed with 5 documents and 50 chunks, including resume checkpoint.
-- 100-user 15-minute Locust on 2026-07-10 passed with 0 failures, aggregate p95 120ms, submit p95 130ms, `/api/agents` p95 27ms, login p95 210ms.
-- General queue recovered from 658 pending jobs to 0 after scaling `worker-general=4`.
-- P2 worker crash/restart, 50 video jobs, full Dataset/Knowledge/Blueprint Docker worker acceptance, and P3 200/300/500 users are not executed.
+Current validation defaults: all P0-P4 gates are `not_run` until real commands prove otherwise; failed gates must be recorded as `failed`.
 
-## v1.8.2 Docker Recovery Handoff - 2026-07-07
+## Project
 
-- Branch: `stabilization/v1.8.2`.
-- Latest pushed code commit before this doc update: `c4f8c4114d82e6de513ce55b1faa7c0f979094ec`.
-- Runtime version: `meizhaiseek v1.8.2`; model display name: `meizhaiseek 2.0`.
-- Docker Desktop Linux Engine was restored without unregistering WSL, pruning Docker data, resetting Docker Desktop, or deleting the relocated VHDX.
-- Docker VHDX link is valid: `C:\Users\Administrator\AppData\Local\Docker\wsl\disk\docker_data.vhdx` -> `E:\USE\Docker\docker-desktop-disk\docker_data.vhdx`.
-- Production compose was rebuilt from empty Docker resources and is running PostgreSQL, Redis, MinIO, API, Web, Nginx, `worker-general`, and `worker-video`.
-- Current compose does not define separate `worker-dataset`, `worker-knowledge`, or `worker-blueprint`; queue-specific P2 acceptance for those queues remains not executed.
-- Alembic current: `20260705_v18_initial (head)`.
-- Host SQLite APP data was backed up under runtime and restored into PostgreSQL. Verify passed for the migration script.
-- pgvector extension is enabled. RAG SQLite-to-pgvector dry-run/execute/verify passed with zero source documents/chunks, so this is an empty migration verification, not a full RAG data migration.
-- `/health`, `/health/live`, `/metrics`, login, runtime health, and a header-auth SSE smoke passed.
-- Local admin password was restored to the legacy default at the user's request. Therefore `/health/ready` is currently `degraded` by design with `default_admin_password_detected=true`.
-- Do not claim production readiness is fully green while the default admin password is active.
-- Protected worktree rule still applies: do not stage or modify `ARCHITECTURE_EVALUATION_REPORT.md`; it remains a user-owned dirty file.
+- Project: `meizhaiseek-platform`
+- Local path: `E:\USE\codexhome\agents-cowork\meizhaiseek-platform`
+- GitHub: `https://github.com/zhuge1hao/seek-platform.git`
+- Branch: `stabilization/v1.8.3`
+- HEAD at handoff: `d83603213ed34fc315d783a98aa1c51467f288f3`
+- Version: `meizhaiseek v1.8.3`
+- Model display: `meizhaiseek 2.0`
+- Protected dirty user work: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-## v1.8.2 Handoff - 2026-07-06
+Do not modify, stage, or whitespace-fix `ARCHITECTURE_EVALUATION_REPORT.md`.
 
-- Current code/runtime version: `meizhaiseek v1.8.2`.
-- Model display name: `meizhaiseek 2.0`.
-- Branch: `main`.
-- Last pushed commit is still `cae7884 refactor: stabilize architecture P1-P3 for v1.7.2`.
-- Worktree is dirty. Do not use `git add .` or `git add -A`.
-- Do not stage `.env`, runtime/logs/uploads/models/node_modules, local Locust CSV/log artifacts, or `ARCHITECTURE_EVALUATION_REPORT.md`.
-- `ARCHITECTURE_EVALUATION_REPORT.md` is a protected user change; do not fix its known line 793 trailing whitespace.
+## Current Goal
 
-P1 status:
+Keep v1.8.3 stable while finishing the real `/agent` task/chat loop:
 
-- Passed minimum quality/capacity gates.
-- `compileall`: passed.
-- `unittest`: 53 OK.
-- `pytest`: 53 passed, 2 skipped, 2 warnings.
-- `ruff`: passed.
-- scoped `mypy`: passed.
-- Bandit: High=0, Medium=0, Low=33.
-- pip-audit raw scan: 未通过 for three `transformers 4.57.6` advisories; exact exceptions documented.
-- Frontend build: passed.
-- 100-user 10m operator-pool Locust: 0 failures, aggregate p95 160ms.
-- Agent submit p95: 600ms, so <=500ms priority target is 未通过.
+1. After a task is submitted in `/agent`, the left conversation list must add a real backend conversation and keep it after refresh.
+2. Switching to another route and returning to `/agent` must restore the selected task/chat/run state.
+3. Script/video breakdown must execute through the platform backend, queue/workflow, and local Agent, not create only UI state.
+4. Run status/result/error must write back to the matching chat record.
 
-P2 status:
+No v1.9 work, no new business agent, no local video-Agent prompt rewrite.
 
-- Redis pause/recovery SSE with API A/API B: passed.
-- Runtime health `multi_instance_sse_verified=passed`.
-- Controlled zombie maintenance repair: passed after terminal-update protection fix.
-- Full worker crash/restart/retry: 未执行.
-- 50 video queue, Dataset queue, Document ingest queue, Blueprint queue, full MinIO, pgvector migration, schema parity: 未执行.
+## Tech Stack And Startup
 
-P3 status:
+- Frontend: Next.js App Router, React 18, TypeScript, Tailwind, SWR, lucide-react.
+- Backend: FastAPI, Pydantic, sqlite3, psycopg, SQLAlchemy async, Alembic.
+- Production: PostgreSQL/pgvector, Redis/RQ, Redis events, MinIO/S3, Prometheus metrics, Nginx.
+- Local video Agent: `http://127.0.0.1:8001`.
+- Docker-to-host video Agent: `http://host.docker.internal:8001`.
 
-- 未执行. Do not run or claim 200/300/500 user validation until P2 is complete.
-
-## 项目名称与当前版本
-
-- 项目：meizhaiseek-platform
-- 当前版本：meizhaiseek v1.8.1
-- 版本名：安全加固、100 用户性能收敛与分布式链路验收
-- 模型名：meizhaiseek 2.0
-- 仓库：https://github.com/zhuge1hao/seek-platform.git
-- 本地路径：`E:\USE\codexhome\agents-cowork\meizhaiseek-platform`
-- 当前分支：main
-- 最近已推送提交：`cae7884 refactor: stabilize architecture P1-P3 for v1.7.2`
-- 当前状态：工作区仍未提交，包含 v1.8 基础改动、v1.8.1 安全/性能改动、文档改动和用户既有 `ARCHITECTURE_EVALUATION_REPORT.md` 改动。不要裸 `git add .`。
-
-## 当前项目目标
-
-meizhaiseek-platform 是本地/私有化 AI 工作台，服务电商经营、内容拆解、QA/RAG、Dataset、Blueprint 和视频脚本拆解。当前目标不是新增业务智能体，而是把 v1.8 分布式生产路径补稳到 v1.8.1：安全前置项、100 用户性能收敛、分布式链路验收，并继续保护 `/agent` 真实任务和聊天持久化。
-
-## 技术栈与启动方式
-
-- 前端：Next.js 14 App Router、React 18、TypeScript、Tailwind、SWR、lucide-react。
-- 后端：FastAPI、Uvicorn、Pydantic、sqlite3、psycopg、SQLAlchemy async、asyncpg、Alembic、Redis、RQ、Prometheus metrics。
-- 默认开发存储：APP SQLite `apps/api/runtime/app/meizhaiseek.sqlite3`，RAG SQLite `apps/api/runtime/rag/rag.sqlite3`。
-- 生产推荐路径：PostgreSQL + Redis/RQ + Redis events + MinIO/S3 + pgvector。
-- 本地视频 Agent：`http://127.0.0.1:8001`；Docker 内访问宿主机使用 `http://host.docker.internal:8001`。
-
-开发启动：
+Dev all-in-one:
 
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
 .\start-dev.ps1
 ```
 
-后端单启：
+Backend only:
 
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api
 python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-前端单启：
+Frontend only:
 
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\web
@@ -133,7 +65,7 @@ $env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'
 npm.cmd run dev -- -p 3000
 ```
 
-生产拓扑：
+Production compose:
 
 ```powershell
 cd E:\USE\codexhome\agents-cowork\meizhaiseek-platform
@@ -141,157 +73,169 @@ docker compose -f docker-compose.prod.yml up -d --build --scale worker-general=4
 docker compose -f docker-compose.prod.yml ps
 ```
 
-## 关键目录结构
+## Key Directories
 
 ```text
-apps/api/main.py                         FastAPI app, health, metrics, startup
-apps/api/routers                         HTTP API routes
-apps/api/schemas                         Pydantic request/response schemas
-apps/api/services                        stores, auth, security, tasks, connectors, QA/RAG, Blueprint
-apps/api/db                              SQLAlchemy async, Alembic, PostgreSQL schema
-apps/api/tasks                           inline/RQ queue facade and task entry points
-apps/api/workers                         RQ worker entry
-apps/api/storage                         artifact storage providers: local/local_shared/s3
-apps/api/rag                             RAG providers: sqlite/pgvector
-apps/api/scripts                         smoke, migration, verification scripts
-apps/api/tests                           unittest/pytest tests
-apps/api/runtime                         local runtime data, never commit
-apps/api/uploads                         uploaded files, never commit
-apps/web/src/app                         Next.js pages
-apps/web/src/components                  Agent, Chat, Dataset, Admin, Blueprint UI
-apps/web/src/hooks                       SWR, SSE, polling hooks
-apps/web/src/lib                         auth, api client, registry, helpers
-load_tests                               Locust scripts
-docs                                    product, API, testing, scaling, handoff docs
+apps/api/main.py              FastAPI app, health, metrics
+apps/api/routers              HTTP routes
+apps/api/services             stores, auth, Connector, Dataset, QA/RAG, Blueprint
+apps/api/db                   PostgreSQL/Alembic/SQLAlchemy schema
+apps/api/tasks                inline/RQ queue facade and task entry points
+apps/api/workers              RQ worker entry
+apps/api/storage              local/local_shared/S3 artifact providers
+apps/api/rag                  SQLite/pgvector RAG providers
+apps/api/scripts              smoke, migration, verification scripts
+apps/api/tests                unittest/pytest coverage
+apps/api/runtime              runtime data, never commit
+apps/api/uploads              uploaded files, never commit
+apps/web/src/app              pages and route UI
+apps/web/src/components       Agent, Chat, Dataset, Admin, Blueprint UI
+apps/web/src/hooks            SWR, SSE, polling hooks
+apps/web/src/lib              API client, auth, query keys, registry
+docs                          handoff, testing, capacity, architecture docs
+load_tests                    Locust scripts
 ```
 
-## 已完成版本记录
+## Completed Version Record
 
-### v1.8.1
+### v1.8.3
 
-- 安全：生产不再回退固定 JWT secret；本地缺 secret 时生成 runtime secret；生产禁止 `admin123` 初始管理员弱密码；runtime health 只显示 secret 状态。
-- 安全：`table_count()` 增加表名白名单；CLI Connector 使用 `shell=False` 并拒绝 shell metacharacters；静默异常改为脱敏日志；迁移/文件 ID 从 SHA1 改 SHA256。
-- 依赖：FastAPI、python-multipart、requests、pytest、pytest-asyncio 升级；`pip check` 通过；`pip-audit` 仅剩 transformers 受 sentence-transformers 约束的 3 个 advisory。
-- 性能：PostgreSQL sync adapter 增加小连接池；`/api/agents` 改轻量摘要、批量蓝图查询、短 TTL cache，不再列表同步探测 8001。
-- 性能：Agent Run submit 缩短请求线程路径，成功审计转 background task，响应包含 `queue_job_id`；Redis 登录限流改 pipeline。
-- 队列：RQ queue 拆为 `general/video/dataset/knowledge/blueprint`；生产 compose 已验证 `worker-general=4`、`worker-video=2` 运行。
-- 验证：compileall 通过；unittest 35 tests OK；pytest 35 passed；ruff 通过；web build 通过；生产 compose rebuild/up/health 通过。
-- 容量：20 用户 2m 0% 错误，aggregate p95 44ms；100 用户 2m 0% 错误，aggregate p95 140ms；100 用户 10m 0% 错误，aggregate p95 140ms，submit p95 520ms。
-- 分布式：多 API SSE 做了 smoke，API A 创建 run，API B 收到 11 个 SSE 事件，事件未泄露 prompt/raw_response/workflow_options/token。
-- 未完成：mypy 未通过；bandit 仍有中/低项；Redis pause/recovery、worker crash/recovery、50 视频队列、Dataset/Document/Blueprint 队列验收、完整 S3 权限、完整 pgvector 迁移、200/300/500 用户压测未执行。
+- Branch `stabilization/v1.8.3` was created from v1.8.2 base `51913b4f8eb5e34e9fb170c4fe524c71ae28c6f4`.
+- P0 commit pushed: `26eb794cb6ae90ae38e2c71b6e12697f3acda4df`.
+- P1 commit pushed: `d83603213ed34fc315d783a98aa1c51467f288f3`.
+- Runtime/frontend version is `meizhaiseek v1.8.3`; model remains `meizhaiseek 2.0`.
+- P1 gates previously passed: compileall, ruff, mypy, unittest 71 OK, pytest 71 passed / 2 skipped, Bandit High=0 Medium=0.
+- BGE-small-zh smoke passed with 512-dimensional embeddings.
+- Isolated pgvector non-empty migration validation passed on 5 docs / 60 chunks.
+- 100-user 15-minute Locust rerun passed: 0 failures, aggregate p95 110ms, submit p95 370ms.
+- Docker production topology previously ran healthy with PostgreSQL, Redis, MinIO, API, Web, Nginx, `worker-general` x4, `worker-video` x1.
+- Dataset export queue acceptance is not passed because no public Dataset export enqueue endpoint exists.
+- P2/P3 remain not executed.
 
-### v1.8
+### v1.8.2
 
-- 新增 PostgreSQL/Alembic schema、22 张 APP 表、SQLite -> PostgreSQL 迁移脚本。
-- 新增 Redis cache/rate-limit/distributed event bus、inline/RQ queue facade、worker entry、Agent Run Redis Pub/Sub wakeup。
-- 新增 artifact storage facade、RAG provider facade、request id、metrics、`/health/live`、`/health/ready`、runtime health v1.8 component status。
-- `agent_runs.row_version` 和终态保护落地；登录限流按 IP + username。
-- Docker production 拓扑包含 PostgreSQL、Redis、MinIO、API、Web、Nginx、worker-general、worker-video。
-- Alembic upgrade/re-run、SQLite -> PostgreSQL dry-run/execute/verify、MinIO 小样本、pgvector 小样本均已真实执行过。
+- Restored Docker Desktop Linux Engine without destructive WSL/Docker operations.
+- Verified Docker VHDX symlink to `E:\USE\Docker\docker-desktop-disk\docker_data.vhdx`.
+- Rebuilt production compose and started PostgreSQL, Redis, MinIO, API, Web, Nginx, worker-general, worker-video.
+- Ran Alembic to `20260705_v18_initial`.
+- Restored APP data from host SQLite into PostgreSQL and verified migration.
+- Enabled pgvector and validated zero-source migration path.
+- Improved type gate, Redis reuse, queue routing, cache safety, and SSE backoff.
 
-### v1.7.2
+### v1.8 / v1.8.1
 
-- 蓝图发布 E2E、release gate、rollback、Registry/Blueprint sync、legacy JSON fallback 默认 false、SSE Event Hub、async store wrapper、Docker production build 配置。
-- 后端 compileall/unittest/pytest、migration verify、web build、smoke、docker compose config 均曾通过。
+- Added PostgreSQL/Alembic schema and SQLite-to-PostgreSQL migration.
+- Added Redis cache/rate limit/events, RQ queue facade, workers.
+- Added artifact storage facade and RAG provider facade.
+- Added `/health/live`, `/health/ready`, `/metrics`, runtime health.
+- Hardened JWT/admin password/table count/CLI connector/secret handling.
+- Split queues into `general`, `video`, `dataset`, `knowledge`, `blueprint`.
+- Optimized `/api/agents`, login rate limit, and Agent Run submit.
 
-### v1.7.1 / v1.7
+### v1.7.x
 
-- Blueprint center、版本、验证、测试、发布、回滚、导入导出。
-- 视频拆解 seeded 为 published blueprint `bp_video_script_breakdown`。
+- Added Blueprint governance: draft/version/test/release gate/publish/rollback/import/export/diff/history.
+- Published video breakdown blueprint seed.
+- Added event hub and SSE/polling foundations.
 
 ### v1.6.x
 
-- 视频拆解智能体生产化，真实调用本地 8001；不可达时真实 failed；artifact、Debug Payload、summary/result、SSE/polling 闭环。
+- Productionized video breakdown: real local Agent execution, failed state when 8001 is unavailable, artifacts, debug payloads, result persistence, SSE/polling lifecycle.
 
-### v1.5.x
+### v1.5.x And Earlier
 
-- APP SQLite 迁移、APP/RAG SQLite 分离、Dataset、字段映射、清洗、导出、安全下载、QA/RAG、知识库、DeepSeek 流式问答。
+- Auth, roles, user isolation.
+- Admin, audit, Connector, Payload Preview, Debug Replay.
+- Dataset, field mapping, clean/export, secure downloads.
+- QA/RAG, knowledge base, DeepSeek streaming QA.
+- APP SQLite migration and APP/RAG SQLite separation.
 
-### v1.2-v1.4
+## Current Problem
 
-- 登录鉴权、角色权限、用户隔离、Connector、Payload Preview、Debug Replay、管理员、审计、权限。
+The main remaining product problem is `/agent` user-facing correctness:
 
-## 当前正在处理的问题
+- The platform has solid production infra, but `/agent` must still be proven end-to-end from submit -> persisted conversation -> real run -> status/result/error chat writeback -> route restore.
+- A small frontend fix is currently dirty in `apps/web/src/app/agent/page.tsx`: it tracks known conversation IDs in a ref so run updates for a newly submitted conversation can trigger conversation refresh without stale React closure state.
+- Backend persistence/writeback coverage exists and was strengthened in `apps/api/tests/test_agent_runs_api.py`.
 
-最近用户要求只生成交接包，不继续写新功能。下一窗口恢复开发时，最优先仍是 `/agent` 回归：
+## Latest Explicit User Request
 
-1. `/agent` 智能体界面执行任务后，左侧聊天记录必须新增并持久保存。
-2. 切换到其他路由再回来，任务和聊天不能消失。
-3. 脚本/视频拆解智能体提交后必须真实调用后端和 local agent，不允许只创建 UI 状态。
-4. 任务状态、结果、错误必须回写到对应聊天记录。
+Generate a new-window handoff package only. Do not continue feature work. Update:
 
-## 最近一次用户明确要求
+- `docs/CODEX_HANDOFF.md`
+- `docs/NEXT_TASKS.md`
+- `docs/CHANGELOG_CONTEXT.md`
+- `AGENTS.md`
 
-为当前项目生成一个新窗口可继续接手的上下文交接包。不要继续写新功能，只做总结和落盘，更新 `docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md`、`AGENTS.md`。
+## Key Files Changed Recently
 
-## 已经改过的关键文件
+- `apps/web/src/app/agent/page.tsx`: keeps `conversationIdsRef` in sync with SWR/refetch data and refreshes conversation list for unknown run conversation IDs.
+- `apps/api/tests/test_agent_runs_api.py`: forces SQLite and explicit test admin password so API tests do not pick up local `.env` production secrets.
+- `docker-compose.prod.yml`: passes `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`, and `DEEPSEEK_MODEL` into `api`, `worker-general`, and `worker-video` from `.env`; no secret value is committed.
+- `.env`: contains local secrets, including DeepSeek config; never print, stage, or commit.
+- `AGENTS.md`, `docs/CODEX_HANDOFF.md`, `docs/NEXT_TASKS.md`, `docs/CHANGELOG_CONTEXT.md`: handoff docs updated.
+- `ARCHITECTURE_EVALUATION_REPORT.md`: dirty protected user work; do not touch.
 
-- 安全/配置：`apps/api/services/security_config_service.py`、`apps/api/services/token_service.py`、`apps/api/services/user_store.py`、`.env.example`
-- DB/生产路径：`apps/api/services/app_sqlite.py`、`apps/api/db/`、`alembic.ini`、`docker-compose.prod.yml`
-- 队列/worker：`apps/api/tasks/`、`apps/api/workers/`、`apps/api/services/runtime_health_service.py`
-- Agent run：`apps/api/routers/agent_runs.py`、`apps/api/services/task_store.py`、`apps/api/services/orchestrator.py`
-- Conversation：`apps/api/services/conversation_store.py`、`apps/api/services/service_events.py`
-- Redis/events/cache：`apps/api/services/redis_service.py`、`cache_service.py`、`rate_limit_service.py`、`agent_run_event_bus.py`
-- Artifact/RAG：`apps/api/storage/`、`apps/api/rag/`、`apps/api/services/artifact_service.py`、`qa_rag_store.py`
-- Frontend：`apps/web/src/app/agent/page.tsx`、`apps/web/src/components/*Agent*`、`DatasetPanel.tsx`、`KnowledgeBasePanel.tsx`、`RuntimeHealthPanel.tsx`
-- Tests：`apps/api/tests/test_security_hardening.py`、`test_auth_service.py`、`test_agent_runs_api.py`、`test_agent_run_events_sse.py`
-- Docs：`docs/CAPACITY_REPORT_V18.md`、`docs/SECURITY_HARDENING_V181.md`、`docs/PERFORMANCE_OPTIMIZATION_V181.md`、`docs/DISTRIBUTED_ACCEPTANCE_V181.md`
+## Database, API, Frontend Status
 
-## 数据库/API/前端状态
+- Database: production path uses PostgreSQL; local path supports SQLite.
+- Queue: production path uses Redis/RQ; inline queue remains for dev.
+- Artifact storage: S3/MinIO production path, local/local_shared compatibility retained.
+- RAG: pgvector production path exists and passed isolated non-empty validation; production corpus migration is not claimed complete.
+- DeepSeek: `.env` has a configured key and compose now forwards it into API/workers. Do not disclose the key.
+- API health: after DeepSeek forwarding, `/health/ready` was observed `ok` with Postgres/Redis/queue/S3/pgvector/security. On 2026-07-16, Docker was not running during this handoff check, so current live health could not be reverified.
+- Frontend: `npm.cmd run build` passed after the `/agent` frontend state fix.
+- Production service startup command should include `--scale worker-general=4 --scale worker-video=2`.
 
-- 当前生产 compose 已重建并保持运行：PostgreSQL healthy、Redis healthy、MinIO healthy、API healthy、Web healthy、Nginx running、worker-general x4、worker-video x2。
-- `/health` 和 `/health/live` 返回 ok。
-- `/health/ready` 返回 Postgres/Redis/queue/events/S3/pgvector/security ok。
-- 登录后 `/api/admin/runtime/health` 返回 `version=v1.8.1`、`model=meizhaiseek 2.0`、database postgres、queue redis、events redis、artifact_storage s3、rag pgvector。
-- 前端生产 build 通过。
-- `ARCHITECTURE_EVALUATION_REPORT.md` 是用户既有未提交改动，已知第 793 行 trailing whitespace，不要擅自修改或 stage。
+## Known Bugs And Risks
 
-## 已知 bug / 风险
+- `/agent` still needs a real browser/API smoke proving submit -> left conversation -> route restore -> real script/video run -> chat writeback.
+- Raw `pip-audit` fails unless exact documented `transformers 4.57.6` exceptions are applied.
+- Dataset export queue has worker code but no public enqueue API endpoint.
+- Standalone dataset/knowledge/blueprint workers are not configured; `worker-general` consumes those queues.
+- Existing Redis recovery and worker recovery tests are marker tests, not true automated fault injection.
+- P2 Redis pause/recovery, worker crash/restart, 50 video jobs, full MinIO chain, and P3 200/300/500 remain not executed.
+- `.env`, runtime, local DBs, logs, uploads, generated secrets, and Docker/MinIO data must not be committed or printed.
 
-- `mypy` 还不是可用门禁：当前 top-level `services` / `tasks` 导入布局缺少 mypy path/config，且有真实类型问题。
-- `bandit` 高危已归零，但仍有中/低项，主要是动态 SQL 片段和已防护 subprocess 的审计提示。
-- `pip-audit` 剩余 `transformers 4.57.6` advisory，受 `sentence-transformers<5` 约束。
-- P2 未完整验收：Redis pause/recovery、worker crash/recovery、50 视频队列、Dataset/Document/Blueprint 队列、完整 S3 权限、完整 pgvector 迁移都未执行。
-- P3 200/300/500 用户压测未执行，不能写支持 500 用户已通过。
-- `.env` 内有本机真实 secret/admin/loadtest 密码，不提交、不输出。
-- runtime/logs/backups/uploads/models/node_modules 不提交。
+## Must Not Break
 
-## 不能破坏的功能
+- Auth, roles, user isolation, admin/audit/permissions.
+- Connector, Payload Preview, Debug Replay.
+- Dataset, field mapping, clean/export, secure downloads.
+- QA/RAG/knowledge base and DeepSeek streaming QA.
+- APP SQLite and RAG SQLite separation.
+- Video breakdown local Agent real execution, debug payloads, artifacts, result persistence.
+- Blueprint publish/test/release gate/import/export/rollback/history.
+- SSE first and polling fallback.
+- PostgreSQL/Redis/RQ/S3/pgvector production path and SQLite/local dev compatibility.
+- Navigation labels: `缇庡畢BI`, `涓囪兘缇庤櫨`.
+- Model display: `meizhaiseek 2.0`.
 
-- v1.2 登录鉴权、角色权限、用户隔离。
-- v1.3 Connector、Payload Preview、Debug Replay。
-- v1.4 管理员、审计、权限。
-- v1.5 Dataset、字段映射、清洗、导出、安全下载。
-- v1.5.2-v1.5.6 QA/RAG、知识库、诊断、流式问答。
-- v1.5.7 APP SQLite 迁移和 APP/RAG SQLite 分离。
-- v1.5.8 conversation 增量 upsert、Dataset SQLite、service_events。
-- v1.6+ 视频拆解真实执行、result normalizer、artifact、Debug Payload。
-- v1.7+ Blueprint 描述层、视频拆解 published 蓝图、发布/回滚/测试/导入导出。
-- v1.8+ PostgreSQL/Redis/RQ/S3/pgvector 生产路径和 SQLite 本地兼容。
-- `/agent` 会话持久化、路由恢复、取消、重试、下载。
-- `/chat` 流式问答。
-
-## 下一窗口必须优先读取的文件
+## Read First In Next Window
 
 1. `AGENTS.md`
 2. `docs/CODEX_HANDOFF.md`
 3. `docs/NEXT_TASKS.md`
 4. `docs/CHANGELOG_CONTEXT.md`
-5. `docs/CAPACITY_REPORT_V18.md`
-6. `docs/SECURITY_HARDENING_V181.md`
-7. `docs/PERFORMANCE_OPTIMIZATION_V181.md`
-8. `docs/DISTRIBUTED_ACCEPTANCE_V181.md`
-9. `docs/API.md`
-10. `docs/PRD.md`
-11. `docs/TESTING.md`
-12. `apps/web/src/app/agent/page.tsx`
-13. `apps/web/src/hooks/useAgentRunEvents.ts`
-14. `apps/api/routers/agent_runs.py`
-15. `apps/api/services/conversation_store.py`
-16. `apps/api/services/task_store.py`
-17. `apps/api/tasks/queue.py`
-18. `apps/api/workers/worker.py`
+5. `docs/TESTING.md`
+6. `docs/CAPACITY_REPORT_V18.md`
+7. `docs/V183_QUEUE_ACCEPTANCE.md`
+8. `docs/V183_PGVECTOR_VALIDATION.md`
+9. `docs/SECURITY_EXCEPTIONS.md`
+10. `apps/web/src/app/agent/page.tsx`
+11. `apps/web/src/components/AgentWorkspace.tsx`
+12. `apps/web/src/components/GenericAgentPanel.tsx`
+13. `apps/web/src/components/VideoScriptAgentPanel.tsx`
+14. `apps/web/src/hooks/useAgentRunEvents.ts`
+15. `apps/web/src/hooks/useAgentRunPolling.ts`
+16. `apps/api/routers/agent_runs.py`
+17. `apps/api/routers/conversations.py`
+18. `apps/api/services/conversation_store.py`
+19. `apps/api/services/task_store.py`
+20. `apps/api/workflows/video_script_workflow.py`
+21. `apps/api/tasks/queue.py`
+22. `docker-compose.prod.yml`
 
-## 新窗口启动提示词
+## New Window Prompt
 
-请继续接手 `E:\USE\codexhome\agents-cowork\meizhaiseek-platform`。当前版本是 `meizhaiseek v1.8.1`，模型名 `meizhaiseek 2.0`，当前分支 `main`，最近已推送提交仍是 `cae7884 refactor: stabilize architecture P1-P3 for v1.7.2`。请先完整读取 `AGENTS.md`、`docs/CODEX_HANDOFF.md`、`docs/NEXT_TASKS.md`、`docs/CHANGELOG_CONTEXT.md`、`docs/CAPACITY_REPORT_V18.md`、`docs/SECURITY_HARDENING_V181.md`、`docs/PERFORMANCE_OPTIMIZATION_V181.md`、`docs/DISTRIBUTED_ACCEPTANCE_V181.md`，再读取代码和 `git status --short`。当前工作区未提交，包含 v1.8/v1.8.1 改动和用户既有 `ARCHITECTURE_EVALUATION_REPORT.md` 改动；不要裸 `git add .`，不要提交 `.env`、runtime、logs、uploads、models、node_modules，也不要修改/暂存评估报告第 793 行 trailing whitespace。最优先任务是回归 `/agent`：任务提交后左侧聊天记录必须新增并持久保存；切路由回来任务/聊天不能消失；脚本/视频拆解智能体必须真实调用后端和 local agent；任务状态、结果、错误必须回写到对应聊天记录。不要破坏已有鉴权、Connector、Debug、管理员、Dataset、QA/RAG、SQLite、视频拆解、SSE/polling、Blueprint、Postgres/Redis/RQ/S3/pgvector 能力。
+Continue `E:\USE\codexhome\agents-cowork\meizhaiseek-platform` on branch `stabilization/v1.8.3`, current HEAD `d83603213ed34fc315d783a98aa1c51467f288f3`, version `meizhaiseek v1.8.3`, model `meizhaiseek 2.0`. First read `AGENTS.md`, `docs/CODEX_HANDOFF.md`, `docs/NEXT_TASKS.md`, `docs/CHANGELOG_CONTEXT.md`, then inspect `git status --short` and the relevant code. `ARCHITECTURE_EVALUATION_REPORT.md` is protected dirty user work; do not modify, stage, or fix whitespace. Do not commit `.env`, runtime, logs, uploads, models, node_modules, DB files, Docker data, MinIO data, local videos, or Locust raw output. Current dirty functional files include `apps/web/src/app/agent/page.tsx`, `apps/api/tests/test_agent_runs_api.py`, and `docker-compose.prod.yml`; review before editing. Priority is `/agent`: after task submit the left conversation list must add and persist a real conversation; route switching must restore task/chat/run; script/video breakdown must truly execute through backend/local Agent; run status/result/error must write back to the matching chat. Verify with real backend/API or browser smoke, not UI-only state. Preserve auth, Connector, Debug, admin, Dataset, QA/RAG/DeepSeek, SQLite, video breakdown, SSE/polling, Blueprint, Postgres/Redis/RQ/S3/pgvector.

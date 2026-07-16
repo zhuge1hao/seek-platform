@@ -28,7 +28,7 @@ from middleware.metrics import MetricsMiddleware, metrics_enabled, render_metric
 from middleware.request_context import RequestContextMiddleware
 from services import runtime_health_service
 
-app = FastAPI(title="meizhaiseek-api", version="1.8.2")
+app = FastAPI(title="meizhaiseek-api", version="1.8.4")
 
 app.add_middleware(
     CORSMiddleware,

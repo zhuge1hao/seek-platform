@@ -1,5 +1,14 @@
 ﻿# Testing
 
+## v1.8.4 Validation Gates
+
+Use `not_run`, `failed`, and `passed` only. Older v1.8.3 results are historical evidence and must not be copied as v1.8.4 pass results.
+
+- Backend gates: compileall, ruff, mypy, unittest, pytest.
+- Security gates: Bandit medium+ and pip-audit with only documented exceptions.
+- Frontend gate: `npm.cmd ci` and `npm.cmd run build`.
+- P0-P4 operational gates are documented in the `docs/V184_*` files.
+
 ## meizhaiseek v1.8.3 P0/P1 update, 2026-07-12
 
 Executed and passed:

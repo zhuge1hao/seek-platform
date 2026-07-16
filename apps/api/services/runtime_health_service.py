@@ -5,8 +5,14 @@ from services import agent_run_event_bus, app_sqlite, redis_service, security_co
 from tasks import queue as task_queue
 
 
-VERSION = "v1.8.3"
+VERSION = "v1.8.4"
 MODEL = "meizhaiseek 2.0"
+VALIDATION_VALUES = {"not_run", "failed", "passed"}
+
+
+def _validation_status(env_name: str) -> str:
+    value = os.getenv(env_name, "not_run").lower()
+    return value if value in VALIDATION_VALUES else "failed"
 
 
 def database_health() -> dict[str, Any]:
@@ -69,12 +75,17 @@ def runtime_health(warnings: list[str] | None = None) -> dict[str, Any]:
         "service": "meizhaiseek-api",
         **components,
         "validation": {
-            "multi_instance_sse_verified": os.getenv("MULTI_INSTANCE_SSE_VERIFIED", "not_run"),
-            "worker_recovery_verified": os.getenv("WORKER_RECOVERY_VERIFIED", "not_run"),
-            "artifact_s3_verified": os.getenv("ARTIFACT_S3_VERIFIED", "not_run"),
-            "pgvector_migration_verified": os.getenv("PGVECTOR_MIGRATION_VERIFIED", "not_run"),
+            "multi_instance_sse_verified": _validation_status("MULTI_INSTANCE_SSE_VERIFIED"),
+            "redis_recovery_verified": _validation_status("REDIS_RECOVERY_VERIFIED"),
+            "worker_recovery_verified": _validation_status("WORKER_RECOVERY_VERIFIED"),
+            "video_queue_50_verified": _validation_status("VIDEO_QUEUE_50_VERIFIED"),
+            "dataset_queue_verified": _validation_status("DATASET_QUEUE_VERIFIED"),
+            "knowledge_queue_verified": _validation_status("KNOWLEDGE_QUEUE_VERIFIED"),
+            "blueprint_queue_verified": _validation_status("BLUEPRINT_QUEUE_VERIFIED"),
+            "artifact_s3_verified": _validation_status("ARTIFACT_S3_VERIFIED"),
+            "pgvector_migration_verified": _validation_status("PGVECTOR_MIGRATION_VERIFIED"),
             "capacity_last_verified_users": int(os.getenv("CAPACITY_LAST_VERIFIED_USERS", "0")),
-            "capacity_last_test_passed": os.getenv("CAPACITY_LAST_TEST_PASSED", "false").lower() in {"1", "true", "yes", "passed"},
+            "capacity_last_test_passed": _validation_status("CAPACITY_LAST_TEST_PASSED"),
         },
         "warnings": warnings or [],
     }

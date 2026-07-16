@@ -1,5 +1,14 @@
 # Artifact Storage
 
+## v1.8.4 Acceptance Status
+
+- MinIO permission checks: `not_run`
+- Signed URL TTL checks: `not_run`
+- Streaming upload/download checks: `not_run`
+- Video Excel/JSON/evidence artifact checks: `not_run`
+
+S3/MinIO secrets must never be returned to frontend responses or committed documentation.
+
 v1.8 adds an artifact storage provider facade.
 
 Backends:

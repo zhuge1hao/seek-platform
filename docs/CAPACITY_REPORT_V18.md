@@ -1,3 +1,16 @@
+# Capacity Report v1.8/v1.8.4 Update - 2026-07-16
+
+## v1.8.4 Cycle Start Status
+
+- Version under validation: `meizhaiseek v1.8.4`.
+- Model display: `meizhaiseek 2.0`.
+- 100-user v1.8.4 run: `not_run`.
+- 200-user v1.8.4 run: `not_run`.
+- 300-user v1.8.4 run: `not_run`.
+- 500-user v1.8.4 run: `not_run`.
+- Current maximum stable users for v1.8.4: not established.
+- Do not reuse older v1.8.3 capacity results as v1.8.4 pass evidence.
+
 # Capacity Report v1.8/v1.8.3 Update - 2026-07-12
 
 Executed:

@@ -202,11 +202,17 @@ class CacheRateLimitEventBusTest(unittest.TestCase):
             patch.dict(os.environ, {"MULTI_INSTANCE_SSE_VERIFIED": "passed", "PGVECTOR_MIGRATION_VERIFIED": "failed", "CAPACITY_LAST_VERIFIED_USERS": "100"}),
         ):
             health = runtime_health_service.runtime_health()
-        self.assertEqual(health["version"], "v1.8.3")
+        self.assertEqual(health["version"], "v1.8.4")
         self.assertEqual(health["model"], "meizhaiseek 2.0")
         self.assertEqual(health["validation"]["multi_instance_sse_verified"], "passed")
+        self.assertEqual(health["validation"]["redis_recovery_verified"], "not_run")
+        self.assertEqual(health["validation"]["video_queue_50_verified"], "not_run")
+        self.assertEqual(health["validation"]["dataset_queue_verified"], "not_run")
+        self.assertEqual(health["validation"]["knowledge_queue_verified"], "not_run")
+        self.assertEqual(health["validation"]["blueprint_queue_verified"], "not_run")
         self.assertEqual(health["validation"]["pgvector_migration_verified"], "failed")
         self.assertEqual(health["validation"]["capacity_last_verified_users"], 100)
+        self.assertEqual(health["validation"]["capacity_last_test_passed"], "not_run")
         self.assertNotIn("top-secret", str(health).lower())
 
 

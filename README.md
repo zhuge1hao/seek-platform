@@ -1,5 +1,13 @@
 ﻿# meizhaiseek-platform
 
+## Latest v1.8.4 Validation Cycle
+
+Branch: `stabilization/v1.8.4`.
+
+`meizhaiseek v1.8.4` starts the video end-to-end, distributed queue, storage, pgvector, and capacity validation cycle. Model display remains `meizhaiseek 2.0`. No new business agents, v1.9 upgrade, or local video Agent prompt changes are included.
+
+Current acceptance status at cycle start: P0 8001 full video E2E `not_run`; P1 worker/50-video/Redis recovery `not_run`; P2 Dataset/Knowledge/Blueprint/pgvector non-empty validation `not_run`; P3 MinIO/backup/Docker runtime validation `not_run`; P4 100/200/300/500-user capacity validation `not_run`.
+
 ## Latest v1.8.3 Runtime Note
 
 Branch: `stabilization/v1.8.3`.

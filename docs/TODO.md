@@ -1,5 +1,14 @@
 # TODO
 
+## v1.8.4 Priority
+
+- Commit the v1.8.3 `/agent` run-card/conversation-refresh frontend fix cleanly.
+- Validate real 8001 video Agent E2E through backend, Redis/RQ, worker-video, artifacts, SSE, and frontend restore.
+- Validate worker crash/restart, zombie recovery, 50 video jobs, and Redis pause/recovery.
+- Validate Dataset, Knowledge, Blueprint queues and pgvector non-empty migration with resume.
+- Validate MinIO permissions/TTL/streaming, backup recovery, Docker runtime health, and 100/200/300/500-user capacity gates.
+- Record unexecuted items as `not_run` and failed gates as `failed`.
+
 ## v1.8.3 Priority
 
 - Re-verify full `mypy apps/api`; fix only real regressions.

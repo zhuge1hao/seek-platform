@@ -12,11 +12,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 class AgentRunsApiTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
+        os.environ["APP_DB_BACKEND"] = "sqlite"
         os.environ["APP_SQLITE_PATH"] = str(Path(self.tmp.name) / "app.sqlite3")
         os.environ["APP_LEGACY_JSON_FALLBACK"] = "false"
         os.environ["APP_SQLITE_AUTO_MIGRATE"] = "false"
         os.environ.pop("APP_ENV", None)
-        os.environ.pop("INITIAL_ADMIN_PASSWORD", None)
+        os.environ["INITIAL_ADMIN_PASSWORD"] = "admin123"
         os.environ["AUTH_TOKEN_SECRET"] = "test-secret"
         os.environ["MEIZHAISEEK_ADMIN_USERNAME"] = "admin"
         os.environ["MEIZHAISEEK_ADMIN_INITIAL_PASSWORD"] = "admin123"
@@ -35,7 +36,7 @@ class AgentRunsApiTest(unittest.TestCase):
             token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
             headers = {"Authorization": f"Bearer {token}"}
             runtime = client.get("/api/admin/runtime/health", headers=headers).json()
-            self.assertEqual(runtime["version"], "v1.8.3")
+            self.assertEqual(runtime["version"], "v1.8.4")
             self.assertEqual(runtime["model"], "meizhaiseek 2.0")
             self.assertIn("database", runtime)
             self.assertIn("redis", runtime)

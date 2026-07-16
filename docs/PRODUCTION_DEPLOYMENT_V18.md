@@ -1,5 +1,20 @@
 # Production Deployment v1.8
 
+## v1.8.4 Validation Note - 2026-07-16
+
+Runtime target: `meizhaiseek v1.8.4`, model display `meizhaiseek 2.0`.
+
+Required production runtime health for final acceptance:
+
+- `database.backend=postgres`
+- `redis.status=ok`
+- `queue.backend=redis`
+- `artifact_storage.backend=s3`
+- `rag.backend=pgvector`
+- no secrets in responses
+
+Current v1.8.4 production Docker, MinIO, pgvector, and capacity gates remain `not_run` until the commands in the v1.8.4 acceptance docs are executed.
+
 ## v1.8.2 Docker Recovery Note - 2026-07-07
 
 The local production compose was recovered and started after Docker Desktop Linux Engine was unavailable.

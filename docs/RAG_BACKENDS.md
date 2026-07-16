@@ -1,5 +1,15 @@
 # RAG Backends
 
+## v1.8.4 pgvector Status
+
+- Non-empty migration dry-run: `not_run`
+- Non-empty migration execute: `not_run`
+- Verify: `not_run`
+- Interrupted resume: `not_run`
+- Top-k comparison: `not_run`
+
+Do not mark pgvector migration `passed` for v1.8.4 until `docs/V184_PGVECTOR_NONEMPTY_VALIDATION.md` contains real command output and counts.
+
 ## v1.8.3 pgvector Validation - 2026-07-12
 
 Encoded:

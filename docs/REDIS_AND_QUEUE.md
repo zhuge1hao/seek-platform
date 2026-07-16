@@ -1,5 +1,17 @@
 # Redis And Queue
 
+## v1.8.4 Acceptance Status
+
+- Redis pause/recovery: `not_run`
+- Worker crash/restart: `not_run`
+- Zombie recovery: `not_run`
+- 50 video jobs: `not_run`
+- Dataset queue: `not_run`
+- Knowledge queue: `not_run`
+- Blueprint queue: `not_run`
+
+Redis/RQ is execution infrastructure only. PostgreSQL remains the business state source of truth.
+
 ## v1.8.3 Queue Update - 2026-07-12
 
 Encoded:

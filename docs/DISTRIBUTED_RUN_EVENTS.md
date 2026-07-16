@@ -1,5 +1,13 @@
 # Distributed Run Events
 
+## v1.8.4 Acceptance Status
+
+- Multi-instance SSE: `not_run`
+- Redis interruption fallback: `not_run`
+- Polling fallback: `not_run`
+- Terminal event close: `not_run`
+- Secret/raw payload redaction: `not_run`
+
 SSE remains the public realtime protocol:
 
 ```text

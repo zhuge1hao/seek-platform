@@ -1,5 +1,12 @@
 ﻿# 产品说明 PRD
 
+## meizhaiseek v1.8.4
+
+- Version focus: video Agent E2E acceptance, distributed queue closure, storage/pgvector validation, and honest capacity reporting.
+- Model display name remains `meizhaiseek 2.0`.
+- No new business agents, v1.9 upgrade, local video Agent refactor, or local video Agent Prompt change are introduced in v1.8.4.
+- P0-P4 acceptance items remain `not_run` until real commands and evidence are recorded.
+
 ## meizhaiseek v1.8.3
 
 - Version focus: full type gate, queue closure, pgvector validation, and production acceptance hardening.
