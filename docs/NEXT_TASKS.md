@@ -7,14 +7,14 @@
 - Model: `meizhaiseek 2.0`
 - Protected dirty file: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-P0 backend video Agent E2E passed on real Docker/API/RQ/worker-video/8001/SSE/S3 chain. Direct `/agent` browser Run-card smoke is still `not_run`. Next priority is P1 worker recovery, 50 video jobs, and Redis pause/recovery. P1-P4 must stay `not_run` until actually executed. Do not start v1.9, add new business agents, refactor local video Agent, or change local video Agent Prompt.
+P0 backend video Agent E2E passed on real Docker/API/RQ/worker-video/8001/SSE/S3 chain. P1 worker crash/restart, zombie recovery, 50 video jobs, and Redis pause/recovery passed on 2026-07-16. Direct `/agent` browser Run-card smoke is still `not_run`. P2-P4 must stay `not_run` until actually executed. Do not start v1.9, add new business agents, refactor local video Agent, or change local video Agent Prompt.
 
 Acceptance marker defaults:
 
 - `multi_instance_sse_verified=not_run`
-- `redis_recovery_verified=not_run`
-- `worker_recovery_verified=not_run`
-- `video_queue_50_verified=not_run`
+- `redis_recovery_verified=passed` when the deployment environment sets `REDIS_RECOVERY_VERIFIED=passed`
+- `worker_recovery_verified=passed` when the deployment environment sets `WORKER_RECOVERY_VERIFIED=passed`
+- `video_queue_50_verified=passed` when the deployment environment sets `VIDEO_QUEUE_50_VERIFIED=passed`
 - `dataset_queue_verified=not_run`
 - `knowledge_queue_verified=not_run`
 - `blueprint_queue_verified=not_run`
@@ -33,6 +33,19 @@ Latest P0 evidence:
 - Shot consistency: `final_shots=45`, `data_columns=45`, `embedded_images=45`.
 - Failure-path run: `run_20260716093735_2b597cc0`, terminal `failed`, one assistant failed message, no duplicate assistant message observed.
 - Not executed: browser Run-card visual smoke, cancel/retry/user-isolation browser flows.
+
+Latest P1 evidence:
+
+- Worker recovery runs:
+  - general: `run_20260716181405_cd91a5c3`, job `acceptance-worker-general-run_20260716181405_cd91a5c3`, final `failed`, passed.
+  - video: `run_20260716181410_d867a363`, job `acceptance-worker-video-run_20260716181410_d867a363`, final `failed`, passed.
+  - knowledge: `run_20260716181414_1a49583d`, job `acceptance-worker-knowledge-run_20260716181414_1a49583d`, final `failed`, passed.
+  - dataset: `run_20260716181418_21f5a012`, job `acceptance-worker-dataset-run_20260716181418_21f5a012`, final `failed`, passed.
+  - blueprint: `run_20260716181423_15894ff1`, job `acceptance-worker-blueprint-run_20260716181423_15894ff1`, final `failed`, passed.
+- Zombie stale run: `run_20260716181429_b42b4460`, final `failed`, passed.
+- 50 video jobs: submitted `50`, mock `48`, real `2`, completed `49`, failed `0`, cancelled `1`, max executing `2`, final queued/started `0`.
+- Redis recovery: run `run_20260716181758_d2867ca8`, post-recovery run `run_20260716181802_b723d0bd`, pause `1.064s`, recovery `0s`, event p95 `2.014s`, passed.
+- Not executed: P2 Dataset/Knowledge/Blueprint business queue acceptance, P3 MinIO/backup validation, 100/200/300/500-user v1.8.4 capacity tests.
 
 ## Current State
 

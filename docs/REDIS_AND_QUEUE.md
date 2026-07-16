@@ -2,15 +2,46 @@
 
 ## v1.8.4 Acceptance Status
 
-- Redis pause/recovery: `not_run`
-- Worker crash/restart: `not_run`
-- Zombie recovery: `not_run`
-- 50 video jobs: `not_run`
+- Redis pause/recovery: `passed`
+- Worker crash/restart: `passed`
+- Zombie recovery: `passed`
+- 50 video jobs: `passed`
 - Dataset queue: `not_run`
 - Knowledge queue: `not_run`
 - Blueprint queue: `not_run`
 
 Redis/RQ is execution infrastructure only. PostgreSQL remains the business state source of truth.
+
+## v1.8.4 P1 Queue Validation - 2026-07-16
+
+Executed:
+
+- Worker crash/restart for `general`, `video`, `knowledge`, `dataset`, and `blueprint`.
+- Zombie recovery for stale `running` runs.
+- Terminal state protection for `completed`, `failed`, and `cancelled`.
+- 50 video jobs: 48 controlled mock jobs and 2 real small-video jobs.
+- Redis pause/recovery with API B SSE subscription and DB summary fallback.
+
+Passed:
+
+- `worker-general` x4 and `worker-video` x2 recovered after forced worker kills.
+- No tested run stayed permanently `running`.
+- Crash/restart runs reached terminal `failed` with queryable errors and `row_version` increments.
+- Acceptance jobs produced `0` artifacts, so no duplicate artifacts were generated.
+- Final RQ depths after P1 were `queued=0, started=0` for `general`, `video`, `dataset`, `knowledge`, and `blueprint`.
+- Video queue max executing was `2`; max queued was `48`.
+- Redis pause lasted `1.064s`; DB summary fallback returned the current run state while Redis was paused.
+- Redis recovery restored event delivery; no duplicate terminal or duplicate assistant message was observed.
+
+Not executed:
+
+- Dataset `dataset_clean` and `dataset_export` end-to-end queue acceptance.
+- Knowledge `document_ingest` and `reindex` end-to-end queue acceptance.
+- Blueprint `blueprint_test_run` end-to-end release gate acceptance.
+
+Environment limitation:
+
+- Standalone `worker-dataset`, `worker-knowledge`, and `worker-blueprint` services are not configured. Current production topology has `worker-general` consume `dataset`, `knowledge`, and `blueprint`.
 
 ## v1.8.3 Queue Update - 2026-07-12
 

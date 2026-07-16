@@ -29,7 +29,35 @@ Passed:
 Not executed:
 
 - v1.8.4 Locust 100/200/300/500-user capacity gates.
-- P1 50 video jobs and worker crash/restart.
+- Direct `/agent` browser Run-card visual smoke.
+
+## v1.8.4 P1 Worker And Queue Validation - 2026-07-16
+
+Executed:
+
+- Worker crash/restart acceptance for `general`, `video`, `knowledge`, `dataset`, and `blueprint`.
+- Zombie recovery and terminal status protection.
+- 50 video jobs: 48 controlled mock jobs, 2 real small-video jobs, and 1 queued cancellation.
+- Redis pause/recovery with API B SSE subscription and DB summary fallback.
+
+Passed:
+
+- Worker recovery: all tested queues reached terminal `failed` after stale repair, with `row_version` advancing and `artifact_count=0`.
+- Zombie recovery: stale `running` became `failed`; active `running`, `completed`, `failed`, and `cancelled` were protected.
+- 50 video jobs: `completed=49`, `failed=0`, `cancelled=1`, max queued `48`, max executing `2`.
+- Final RQ depths: `queued=0`, `started=0` for `general`, `video`, `dataset`, `knowledge`, `blueprint`.
+- Redis pause/recovery: pause `1.064s`, recovery `0s`, event p95 `2.014s`, no duplicate terminal, no duplicate assistant message, no sensitive event leak observed.
+
+Not executed:
+
+- v1.8.4 Locust 100/200/300/500-user capacity gates.
+- P2 Dataset/Knowledge/Blueprint business queue acceptance.
+- P3 MinIO TTL/streaming and backup/restore validation.
+
+Conclusion:
+
+- v1.8.4 P1 worker recovery, zombie recovery, video queue 50, and Redis pause/recovery passed on the current Docker topology.
+- v1.8.4 capacity remains not established; older v1.8.3 capacity results must not be reused as v1.8.4 pass evidence.
 
 # Capacity Report v1.8/v1.8.3 Update - 2026-07-12
 
