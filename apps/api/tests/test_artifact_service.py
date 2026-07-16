@@ -66,6 +66,14 @@ class ArtifactServiceTest(unittest.TestCase):
         self.assertNotIn("super-secret", str(info))
         self.assertRaises(ValueError, S3ArtifactStorage().put_file, source, "artifacts/../file.txt")
 
+    def test_content_disposition_supports_non_ascii_filename(self) -> None:
+        from routers.artifacts import _content_disposition
+
+        header = _content_disposition("Excel 拆解本.xlsx")
+        self.assertIn("filename=", header)
+        self.assertIn("filename*=UTF-8''Excel%20", header)
+        header.encode("latin-1")
+
 
 if __name__ == "__main__":
     unittest.main()

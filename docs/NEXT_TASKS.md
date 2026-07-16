@@ -7,7 +7,7 @@
 - Model: `meizhaiseek 2.0`
 - Protected dirty file: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-P0 is real 8001 video Agent E2E. P1-P4 must stay `not_run` until actually executed. Do not start v1.9, add new business agents, refactor local video Agent, or change local video Agent Prompt.
+P0 backend video Agent E2E passed on real Docker/API/RQ/worker-video/8001/SSE/S3 chain. Direct `/agent` browser Run-card smoke is still `not_run`. Next priority is P1 worker recovery, 50 video jobs, and Redis pause/recovery. P1-P4 must stay `not_run` until actually executed. Do not start v1.9, add new business agents, refactor local video Agent, or change local video Agent Prompt.
 
 Acceptance marker defaults:
 
@@ -22,6 +22,17 @@ Acceptance marker defaults:
 - `pgvector_migration_verified=not_run`
 - `capacity_last_verified_users=0`
 - `capacity_last_test_passed=not_run`
+
+Latest P0 evidence:
+
+- Success run: `run_20260716094829_ecf1360b`.
+- Conversation: `conv_20260716094829_e4b8023b`.
+- Queue job: `agent-run-run_20260716094829_ecf1360b`.
+- DB rows: `agent_runs=1`, `agent_conversations=1`, `agent_messages=2`, `artifacts=260`, `debug_payloads=1`.
+- Artifact downloads: Excel `passed`, JSON `passed`, evidence image `passed`, folder manifest `passed`.
+- Shot consistency: `final_shots=45`, `data_columns=45`, `embedded_images=45`.
+- Failure-path run: `run_20260716093735_2b597cc0`, terminal `failed`, one assistant failed message, no duplicate assistant message observed.
+- Not executed: browser Run-card visual smoke, cancel/retry/user-isolation browser flows.
 
 ## Current State
 

@@ -7,9 +7,46 @@
 - Model display: `meizhaiseek 2.0`
 - Protected dirty user work: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-Current goal: execute and document video E2E, distributed queues, artifact storage, pgvector, and capacity validation without claiming any unexecuted gate as passed.
+Current goal: continue from completed P0 backend video E2E into P1 distributed worker recovery, 50 video jobs, and Redis pause/recovery without claiming any unexecuted gate as passed.
 
-Current validation defaults: all P0-P4 gates are `not_run` until real commands prove otherwise; failed gates must be recorded as `failed`.
+Current validation defaults: P0 backend video E2E is passed; direct frontend browser smoke is still `not_run`; P1-P4 gates remain `not_run` until real commands prove otherwise; failed gates must be recorded as `failed`.
+
+## v1.8.4 P0 Video E2E Result - 2026-07-16
+
+Passed:
+
+- Production Docker stack used API + PostgreSQL + Redis/RQ + MinIO/S3 + `worker-video` x2.
+- Local 8001 video Agent health returned `status=ok`; API container reached `http://host.docker.internal:8001/health`.
+- Real video run `run_20260716094829_ecf1360b` completed.
+- Conversation `conv_20260716094829_e4b8023b` was listed after submit.
+- Queue job `agent-run-run_20260716094829_ecf1360b` was consumed by `worker-video`.
+- DB counts for the successful run: `agent_runs=1`, `agent_conversations=1`, `agent_messages=2`, `artifacts=260`, `debug_payloads=1`.
+- SSE emitted running/progress/completed events.
+- Assistant message status was `completed`.
+- Excel, JSON report, evidence image, and folder manifest downloads all returned HTTP 200 through S3 artifact route.
+- `final_shots=45`, `data_columns=45`, `embedded_images=45`.
+
+Failure path:
+
+- Run `run_20260716093735_2b597cc0` failed when the Docker worker could not reach a loopback-only 8001 Connector URL.
+- Conversation `conv_20260716093735_f215d04d` contains one user completed message and one assistant failed message.
+- No duplicate assistant message was observed.
+
+Fixes included:
+
+- Docker workers now repair loopback video Connector URLs to `VIDEO_AGENT_BASE_URL` when set.
+- Artifact resolution translates Windows host paths under `apps/api/runtime` to the mounted container path.
+- Video result normalization handles Windows `video_file` stem/name correctly.
+- S3 artifact downloads support non-ASCII filenames in `Content-Disposition`.
+
+Still `not_run`:
+
+- Direct browser `/agent` Run-card smoke.
+- Direct browser left conversation refresh smoke.
+- P1 worker recovery, 50 video jobs, Redis pause/recovery.
+- P2 Dataset/Knowledge/Blueprint and pgvector non-empty migration.
+- P3 full MinIO TTL/permission/streaming and backup recovery.
+- P4 100/200/300/500-user capacity and deployment pipeline.
 
 ## Project
 

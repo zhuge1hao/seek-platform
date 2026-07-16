@@ -1,4 +1,5 @@
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
@@ -10,6 +11,12 @@ from storage.factory import provider as storage_provider
 
 
 router = APIRouter()
+
+
+def _content_disposition(filename: str) -> str:
+    safe = "".join(char if 32 <= ord(char) < 127 and char not in {'"', "\\", ";"} else "_" for char in filename).strip("._")
+    fallback = safe or "artifact"
+    return f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{quote(filename)}"
 
 
 @router.get("/artifacts/download")
@@ -43,7 +50,7 @@ def download_run_artifact(run_id: str, artifact_id: str, request: Request, user:
             raise HTTPException(status_code=404, detail="artifact not found")
         audit_log_service.write_log(audit_action, "success", user, artifact_id, {"run_id": run_id, "file_type": row["content_type"], "storage_backend": "s3"}, audit_log_service.client_ip(request))
         body = storage_provider().open_file(object_key)
-        return StreamingResponse(body.iter_chunks(), media_type=row["content_type"] or "application/octet-stream", headers={"Content-Disposition": f'attachment; filename="{row["filename"] or artifact_id}"'})
+        return StreamingResponse(body.iter_chunks(), media_type=row["content_type"] or "application/octet-stream", headers={"Content-Disposition": _content_disposition(row["filename"] or artifact_id)})
     storage_path = row["storage_path"]
     if not is_user_artifact_path(storage_path, user):
         raise HTTPException(status_code=403, detail="文件不在当前账号允许下载的安全目录内。")

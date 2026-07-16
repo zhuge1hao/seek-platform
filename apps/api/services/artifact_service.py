@@ -76,13 +76,50 @@ def artifact_type_for_path(path: str) -> str:
 
 
 def _safe_resolve(file_path: str) -> Path:
-    path = Path(file_path)
+    path = _translate_container_mounted_path(file_path) or Path(file_path)
     if not path.is_absolute():
         if file_path.startswith("./outputs/"):
             path = _resolve_configured_path(file_path.replace("./outputs/", "runtime/artifacts/", 1))
         else:
             path = _resolve_configured_path(file_path)
     return path.resolve()
+
+
+def _windows_relative_path(path_value: str, root_value: str) -> Path | None:
+    path_text = path_value.replace("/", "\\")
+    root_text = root_value.replace("/", "\\").rstrip("\\")
+    if path_text.lower() == root_text.lower():
+        return Path()
+    prefix = f"{root_text}\\"
+    if not path_text.lower().startswith(prefix.lower()):
+        return None
+    rel = path_text[len(prefix):]
+    return Path(PureWindowsPath(rel).as_posix())
+
+
+def _translate_container_mounted_path(file_path: str) -> Path | None:
+    if not re.match(r"^[A-Za-z]:[\\/]", file_path):
+        return None
+
+    mounted_runtime = API_ROOT / "runtime"
+    runtime_marker = "\\apps\\api\\runtime\\"
+    normalized = file_path.replace("/", "\\")
+    marker_index = normalized.lower().find(runtime_marker)
+    if marker_index >= 0 and mounted_runtime.exists():
+        rel = normalized[marker_index + len(runtime_marker):]
+        return mounted_runtime / PureWindowsPath(rel).as_posix()
+
+    mount_root = os.getenv("LOCAL_VIDEO_AGENT_OUTPUT_MOUNT", "").strip()
+    host_root = os.getenv("LOCAL_VIDEO_AGENT_OUTPUT_ROOT", "").strip()
+    if mount_root and host_root:
+        mounted_rel = _windows_relative_path(file_path, host_root)
+        if mounted_rel is not None:
+            return Path(mount_root) / mounted_rel
+    return None
+
+
+def resolve_artifact_path(file_path: str) -> Path:
+    return _safe_resolve(file_path)
 
 
 def build_download_url(file_path: str) -> str:

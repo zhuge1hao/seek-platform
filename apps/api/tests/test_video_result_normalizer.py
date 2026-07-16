@@ -55,6 +55,19 @@ class VideoResultNormalizerTest(unittest.TestCase):
             self.assertIn("excel", types)
             self.assertIn("json", types)
 
+    def test_output_root_named_like_video_includes_evidence_images(self) -> None:
+        from services.video_breakdown_result_normalizer import normalize_video_breakdown_result
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "1"
+            evidence = root / "evidence"
+            evidence.mkdir(parents=True)
+            (evidence / "Shot_001_000000.jpg").write_bytes(b"jpg")
+            result = normalize_video_breakdown_result({"status": "completed", "data": {"output_dir": str(root), "video_file": r"E:\videos\test\1.mp4"}}, {"video_path": r"E:\videos\test\1.mp4"}, str(root), [])
+            types = {item.get("file_type") or item.get("type") for item in result["files"]}
+            self.assertIn("image", types)
+            self.assertEqual(result["summary"]["video_name"], "1.mp4")
+
 
 if __name__ == "__main__":
     unittest.main()

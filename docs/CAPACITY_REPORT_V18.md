@@ -11,6 +11,26 @@
 - Current maximum stable users for v1.8.4: not established.
 - Do not reuse older v1.8.3 capacity results as v1.8.4 pass evidence.
 
+## v1.8.4 P0 Video E2E Note - 2026-07-16
+
+Executed:
+
+- Production Docker API + PostgreSQL + Redis/RQ + MinIO/S3 + `worker-video` x2.
+- Local video Agent 8001 health and Docker-to-host access.
+- One real `video_script_breakdown` job with `E:\USE\codexhome\fenge\videos\test\1.mp4`.
+
+Passed:
+
+- Run `run_20260716094829_ecf1360b` completed through worker-video and local 8001.
+- `final_shots=45`, `data_columns=45`, `embedded_images=45`.
+- 260 artifacts persisted, including 251 evidence images.
+- Excel, JSON report, evidence image, and folder manifest downloaded from S3-backed artifact route.
+
+Not executed:
+
+- v1.8.4 Locust 100/200/300/500-user capacity gates.
+- P1 50 video jobs and worker crash/restart.
+
 # Capacity Report v1.8/v1.8.3 Update - 2026-07-12
 
 Executed:

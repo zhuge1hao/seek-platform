@@ -36,12 +36,13 @@ def _store_path() -> Path:
 def _connector(connector_id: str, name: str, agent_type: str, enabled: bool, mode: str = "mock", description: str = "") -> dict[str, Any]:
     now = _now()
     is_video = connector_id == "video_script_agent"
+    video_base_url = (os.getenv("VIDEO_AGENT_BASE_URL") or os.getenv("LOCAL_AGENT_BASE_URL") or "http://127.0.0.1:8001").rstrip("/")
     return {
         "connector_id": connector_id,
         "name": name,
         "agent_type": agent_type,
         "mode": "http" if is_video else mode,
-        "base_url": "http://127.0.0.1:8001" if is_video else "http://localhost:8001",
+        "base_url": video_base_url if is_video else "http://localhost:8001",
         "health_path": "/health",
         "endpoint": "/run" if is_video else "/api/agent/run",
         "cli_command": "",
@@ -60,7 +61,12 @@ def _repair_video_connector_defaults(connector: dict[str, Any]) -> tuple[dict[st
         return connector, False
     repaired = dict(connector)
     changed = False
-    if repaired.get("base_url") == "http://localhost:8001":
+    env_base_url = (os.getenv("VIDEO_AGENT_BASE_URL") or os.getenv("LOCAL_AGENT_BASE_URL") or "").rstrip("/")
+    local_urls = {"http://localhost:8001", "http://127.0.0.1:8001"}
+    if env_base_url and repaired.get("base_url") in local_urls:
+        repaired["base_url"] = env_base_url
+        changed = True
+    elif repaired.get("base_url") == "http://localhost:8001":
         repaired["base_url"] = "http://127.0.0.1:8001"
         changed = True
     if repaired.get("endpoint") == "/api/agent/run":
@@ -155,6 +161,7 @@ def _load() -> dict[str, dict[str, Any]]:
     with app_sqlite.connection() as conn:
         rows = conn.execute("SELECT * FROM local_agent_connectors").fetchall()
     if rows:
+        env_video_base_url = (os.getenv("VIDEO_AGENT_BASE_URL") or os.getenv("LOCAL_AGENT_BASE_URL") or "").rstrip("/")
         loaded: dict[str, dict[str, Any]] = {}
         for row in rows:
             metadata = app_sqlite.json_load(row["metadata_json"], {}) or {}
@@ -176,7 +183,15 @@ def _load() -> dict[str, dict[str, Any]]:
             loaded.setdefault(connector_id, item)
         if len(loaded) > len(rows) or any(
             row["connector_id"] == "video_script_agent"
-            and (row["base_url"] == "http://localhost:8001" or (app_sqlite.json_load(row["metadata_json"], {}) or {}).get("endpoint") == "/api/agent/run")
+            and (
+                row["base_url"] == "http://localhost:8001"
+                or (
+                    bool(env_video_base_url)
+                    and row["base_url"] in {"http://localhost:8001", "http://127.0.0.1:8001"}
+                    and row["base_url"] != env_video_base_url
+                )
+                or (app_sqlite.json_load(row["metadata_json"], {}) or {}).get("endpoint") == "/api/agent/run"
+            )
             for row in rows
         ):
             _write(loaded)

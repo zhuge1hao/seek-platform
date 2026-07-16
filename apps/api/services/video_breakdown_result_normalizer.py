@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
-from services.artifact_service import normalize_artifact_file, normalize_artifact_files
+from services.artifact_service import normalize_artifact_file, normalize_artifact_files, resolve_artifact_path
 
 SKIP_OUTPUT_SCAN_DIRS = {"node_modules", ".git", ".next", "__pycache__", "_artifact_qa", ".pnpm"}
 
@@ -70,7 +70,7 @@ def _read_report(path_value: str, warnings: list[str]) -> dict[str, Any]:
     if not path_value:
         return {}
     try:
-        path = Path(path_value)
+        path = resolve_artifact_path(path_value)
         if not path.exists() or not path.is_file():
             warnings.append(f"shot_report not found: {path_value}")
             return {}
@@ -81,11 +81,25 @@ def _read_report(path_value: str, warnings: list[str]) -> dict[str, Any]:
 
 
 def _target_stem(video_path: str | None) -> str:
-    return Path(str(video_path or "")).stem
+    value = str(video_path or "")
+    if re.match(r"^[A-Za-z]:[\\/]", value):
+        return PureWindowsPath(value).stem
+    return Path(value).stem
+
+
+def _target_name(video_path: str | None) -> str | None:
+    value = str(video_path or "")
+    if not value:
+        return None
+    if re.match(r"^[A-Za-z]:[\\/]", value):
+        return PureWindowsPath(value).name
+    return Path(value).name
 
 
 def _matches_target(path: Path, root: Path, target_stem: str) -> bool:
     if not target_stem:
+        return True
+    if root.name.lower() == target_stem.lower():
         return True
     try:
         parts = path.relative_to(root).parts
@@ -108,7 +122,7 @@ def _matches_target(path: Path, root: Path, target_stem: str) -> bool:
 def _files_from_output_dir(output_dir: str, video_path: str | None) -> list[dict[str, Any]]:
     if not output_dir:
         return []
-    root = Path(output_dir)
+    root = resolve_artifact_path(output_dir)
     if not root.exists() or not root.is_dir():
         return []
     allowed = {".xlsx", ".json", ".txt", ".md", ".png", ".jpg", ".jpeg", ".webp"}
@@ -180,7 +194,7 @@ def normalize_video_breakdown_result(raw_response: Any, run: dict[str, Any], out
     normalized_files = list(merged.values())
 
     summary = {
-        "video_name": Path(str(video_path or "")).name or None,
+        "video_name": _target_name(video_path),
         "video_path": video_path,
         "status": raw.get("status") or "completed",
         "raw_shot_count": _int(report.get("source_candidate_count"), shot_result.get("shot_count"), shot_result.get("raw_shot_count"), _lookup(raw, "raw_shot_count", "raw shot count", "rawShotCount"), _int_from_text(raw_text, "raw shot count")),
