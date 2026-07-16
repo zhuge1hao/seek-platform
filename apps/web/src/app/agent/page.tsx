@@ -61,6 +61,7 @@ export default function AgentPage() {
 
   const activeRequestRef = useRef<AbortController | null>(null);
   const requestSeqRef = useRef(0);
+  const conversationIdsRef = useRef<Set<string>>(new Set());
   const lastLoadedConversationIdRef = useRef<string | null>(null);
   const loadingConversationIdRef = useRef<string | null>(null);
   const mountedRef = useRef(false);
@@ -70,12 +71,16 @@ export default function AgentPage() {
   const refreshConversations = useCallback(async () => {
     const result = await mutateAgentConversations();
     const items = result?.conversations || [];
+    conversationIdsRef.current = new Set(items.map((item) => item.conversation_id));
     setConversations(items);
     return items;
   }, [mutateAgentConversations]);
 
   useEffect(() => {
-    if (conversationData?.conversations) setConversations(conversationData.conversations);
+    if (conversationData?.conversations) {
+      conversationIdsRef.current = new Set(conversationData.conversations.map((item) => item.conversation_id));
+      setConversations(conversationData.conversations);
+    }
   }, [conversationData]);
 
   useEffect(() => {
@@ -222,8 +227,13 @@ export default function AgentPage() {
 
   const handleRunChange = useCallback((run: AgentRunStatus) => {
     setCurrentRun(run);
-    setConversations((items) => items.map((item) => item.conversation_id === run.conversation_id ? { ...item, latest_run_id: run.run_id, status: run.status, summary: run.error || run.result?.answer || item.summary } : item));
-    if (run.conversation_id && !conversations.some((item) => item.conversation_id === run.conversation_id)) void refreshConversations();
+    const knownConversation = Boolean(run.conversation_id && conversationIdsRef.current.has(run.conversation_id));
+    setConversations((items) => {
+      const nextItems = items.map((item) => item.conversation_id === run.conversation_id ? { ...item, latest_run_id: run.run_id, status: run.status, summary: run.error || run.result?.answer || item.summary } : item);
+      conversationIdsRef.current = new Set(nextItems.map((item) => item.conversation_id));
+      return nextItems;
+    });
+    if (run.conversation_id && !knownConversation) void refreshConversations();
     setCurrentConversation((conversation) => {
       if (!conversation || conversation.conversation_id !== run.conversation_id) return conversation;
       return {
@@ -235,7 +245,7 @@ export default function AgentPage() {
       };
     });
     if (["completed", "failed", "cancelled"].includes(run.status) && run.conversation_id) void refreshConversations();
-  }, [conversations, refreshConversations]);
+  }, [refreshConversations]);
 
   const { pollingError, startPolling, stopPolling } = useAgentRunPolling(handleRunChange);
   const { eventsState, eventsError, startEvents, stopEvents } = useAgentRunEvents(handleRunChange);

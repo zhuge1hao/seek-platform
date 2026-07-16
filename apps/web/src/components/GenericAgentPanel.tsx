@@ -68,7 +68,7 @@ export function GenericAgentPanel({ agent, agentConfig, promptValue, onPromptCha
     setRunStatus(initialRun);
     setIsSubmitting(initialRun.status === "running");
     setRunning(initialRun.status === "running");
-  }, [initialRun?.run_id, initialRun?.status]);
+  }, [initialRun]);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

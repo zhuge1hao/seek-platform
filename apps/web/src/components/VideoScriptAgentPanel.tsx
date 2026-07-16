@@ -133,7 +133,7 @@ export function VideoScriptAgentPanel({ selectedAgentId, onOpenAgentSelector, on
     setRunStatus(initialRun);
     setIsSubmitting(initialRun.status === "running");
     onRunActiveChange?.(initialRun.status === "running");
-  }, [initialRun?.run_id, initialRun?.status, onRunActiveChange]);
+  }, [initialRun, onRunActiveChange]);
 
   const updateOption = <K extends keyof VideoWorkflowOptions>(key: K, value: VideoWorkflowOptions[K]) => {
     setWorkflowOptions((current) => ({ ...current, [key]: value }));
