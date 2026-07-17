@@ -9,7 +9,7 @@
 
 v1.8.7 closes the v1.8.6 failed/not-run evidence: Knowledge queue acceptance, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.7.
 
-Execution update on 2026-07-17: Knowledge queue acceptance passed after accepting `completed` as a ready-equivalent document status and mounting BGE-small-zh into API/worker-general containers. Remaining v1.8.7 work: MinIO full acceptance, pgvector resume/top-k, browser smoke, pip-audit recheck, and 100-user Locust.
+Execution update on 2026-07-17: Knowledge queue acceptance passed after accepting `completed` as a ready-equivalent document status and mounting BGE-small-zh into API/worker-general containers. MinIO full acceptance passed for 10MB and 100MB. pgvector resume/top-k passed. Browser core Run-card smoke passed with Playwright. Remaining v1.8.7 work: browser video/download/cancel/retry closure, pip-audit recheck, and 100-user Locust.
 
 Acceptance marker defaults:
 
@@ -20,9 +20,9 @@ Acceptance marker defaults:
 - `dataset_queue_verified=passed` when the deployment environment sets `DATASET_QUEUE_VERIFIED=passed`
 - `knowledge_queue_verified=passed` when the deployment environment sets `KNOWLEDGE_QUEUE_VERIFIED=passed`
 - `blueprint_queue_verified=passed` when the deployment environment sets `BLUEPRINT_QUEUE_VERIFIED=passed`
-- `artifact_s3_verified=not_run`
+- `artifact_s3_verified=passed` when the deployment environment sets `ARTIFACT_S3_VERIFIED=passed`
 - `pgvector_migration_verified=passed` when the deployment environment sets `PGVECTOR_MIGRATION_VERIFIED=passed`
-- `browser_agent_smoke_verified=not_run`
+- `browser_agent_smoke_verified=failed` until video/download/cancel/retry browser checks are executed, even though core Run-card smoke passed
 - `capacity_last_verified_users=0`
 - `capacity_last_test_passed=not_run`
 

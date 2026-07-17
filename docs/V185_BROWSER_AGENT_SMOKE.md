@@ -22,4 +22,9 @@ Browser smoke was not executed in this pass because the production Docker stack 
 
 ## Next Review
 
-Run a real browser or Playwright smoke after API/Web/Nginx are healthy and record console, network, run IDs, conversation IDs, and artifact IDs.
+v1.8.7 follow-up executed a Playwright/Chrome core smoke:
+
+- Run: `run_20260717094756_2c66e2b0`.
+- Conversation: `conv_20260717094756_b1a833d3`.
+- Result: core Run-card/conversation refresh/user isolation smoke `passed`.
+- Remaining: video UI artifacts, cancel, retry, and browser SSE terminal-close checks are still not executed, so the full browser marker is not `passed`.

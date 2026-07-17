@@ -9,7 +9,7 @@
 
 Current goal: close v1.8.6 failed/not-run production evidence for Knowledge queue, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline rerun.
 
-Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, Redis recovery, v1.8.6 Dataset queue, Blueprint queue, pgvector dry-run/execute/verify, SQL guardrails, PostgresPool tests, and distributed service tests have real evidence. v1.8.7 Knowledge queue acceptance passed. MinIO TTL/streaming, pgvector resume/top-k, browser smoke, and v1.8.7 100-user baseline remain `not_run` until real commands prove otherwise.
+Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, Redis recovery, v1.8.6 Dataset queue, Blueprint queue, pgvector dry-run/execute/verify, SQL guardrails, PostgresPool tests, and distributed service tests have real evidence. v1.8.7 Knowledge queue acceptance, MinIO full acceptance, pgvector resume/top-k, and browser core Run-card smoke have real evidence. Browser video/download/cancel/retry, pip-audit recheck, and v1.8.7 100-user baseline still need closure.
 
 Knowledge acceptance evidence on 2026-07-17:
 
@@ -17,6 +17,15 @@ Knowledge acceptance evidence on 2026-07-17:
 - Fix: acceptance accepts `ready` or `completed` with `chunk_count > 0`; SQLite RAG legacy schema allowlist is restored; Docker API and worker-general mount BGE model read-only.
 - BGE worker smoke: `/app/models/bge-small-zh`, loadable, dimension `512`.
 - `acceptance_knowledge_queue.py --json-report`: `passed`, 5 documents, 55 chunks, reindex `completed`, top-k retrieval `source_count=5`.
+
+Browser core smoke evidence on 2026-07-17:
+
+- Playwright/Chrome command: `npm.cmd run e2e:agent -- --project=chrome`.
+- Result: `1 passed`.
+- Run: `run_20260717094756_2c66e2b0`.
+- Conversation: `conv_20260717094756_b1a833d3`.
+- Covered: UI login, normal Agent Run submit, left conversation route refresh, Run-card display, reload restore, failed terminal state, and second-user isolation.
+- Still not covered: video UI artifacts, cancel, retry, and browser SSE terminal-close timing; do not mark the full `BROWSER_AGENT_SMOKE_VERIFIED` marker `passed` from this partial smoke alone.
 
 Execution note for 2026-07-17: do not commit `AGENTS.md`, current `docker-compose.prod.yml` local env pass-through, `.env`, runtime logs, model files, uploads, Docker data, MinIO data, or `ARCHITECTURE_EVALUATION_REPORT.md`.
 

@@ -23,3 +23,5 @@ runtime-codex-logs/
 apps/api/runtime/
 apps/api/uploads/
 apps/api/models/
+apps/web/test-results/
+apps/web/playwright-report/

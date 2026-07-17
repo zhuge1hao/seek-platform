@@ -33,3 +33,10 @@ Not executed:
 
 - v1.8.4 Redis pause/recovery evidence remains the latest passed distributed event record.
 - v1.8.5 browser-side SSE terminal close, retry, cancel, and artifact refresh smoke is `not_run` until the Docker stack and browser smoke are available.
+
+## v1.8.7 Browser Event Smoke
+
+- Playwright/Chrome core smoke passed for run `run_20260717094756_2c66e2b0`.
+- The browser observed the Run-card restore after reload from durable API state.
+- User-isolation checks intentionally produced `403/404` responses and did not reveal another user's run.
+- Browser DevTools timing for SSE terminal close, page unload abort, and run-switch abort remains `not_run`.

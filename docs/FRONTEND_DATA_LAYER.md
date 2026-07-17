@@ -80,3 +80,22 @@ v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Bl
 
 - Browser Run-card and conversation refresh smoke is `not_run` for v1.8.5 in this environment because the production Docker stack was unavailable.
 - Keep `BROWSER_AGENT_SMOKE_VERIFIED=not_run` until a real browser or Playwright run records run IDs, conversation IDs, artifacts, console output, and network/SSE behavior.
+
+## meizhaiseek v1.8.7 Browser Core Smoke
+
+已编码:
+
+- Added optional Playwright smoke under `apps/web/e2e/agent-run-smoke.spec.ts`.
+- The smoke uses environment-provided credentials and does not store passwords in code.
+- The normal `npm.cmd run build` gate does not execute Playwright.
+
+已执行:
+
+- `npm.cmd run e2e:agent -- --project=chrome`: passed.
+- Run `run_20260717094756_2c66e2b0` and conversation `conv_20260717094756_b1a833d3` validated real `/agent` submit, Run-card display, route conversation refresh, reload restore, failed terminal state, and user isolation.
+
+未执行:
+
+- Video Agent browser run with downloadable Excel/JSON/evidence.
+- Cancel/retry UI flow.
+- Browser DevTools-level SSE terminal-close timing.
