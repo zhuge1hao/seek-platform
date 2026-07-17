@@ -6,6 +6,7 @@
 - Model display name remains `meizhaiseek 2.0`.
 - No new business agents, v1.9 upgrade, local video Agent refactor, or local video Agent Prompt change are introduced in v1.8.7.
 - 200/300/500-user capacity validation remains out of scope for v1.8.7 and must stay `not_run`.
+- Final closure: Knowledge, MinIO, pgvector resume/top-k, pip-audit gate, and 100-user baseline have real evidence; browser full matrix remains incomplete because video/download/cancel/retry checks were not executed.
 
 ## meizhaiseek v1.8.6
 

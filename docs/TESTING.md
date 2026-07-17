@@ -1,5 +1,36 @@
 ﻿# Testing
 
+## v1.8.7 Final Validation - 2026-07-17
+
+Executed and passed:
+
+- `python -m compileall apps/api`.
+- `.venv\Scripts\python.exe -m ruff check apps/api`.
+- `.venv\Scripts\python.exe -m mypy apps/api`.
+- `python -m unittest discover -s apps/api/tests`.
+- `.venv\Scripts\python.exe -m pytest apps/api/tests`.
+- `.venv\Scripts\python.exe -m bandit --severity-level medium -r apps/api`.
+- `cd apps/web; npm.cmd ci; npm.cmd run build`.
+- `npm.cmd run e2e:agent -- --project=chrome` for the core `/agent` browser smoke.
+- `apps/api/scripts/check_pip_audit_report.py` against the raw v1.8.7 pip-audit JSON.
+
+Executed and not passed:
+
+- Raw `pip-audit` remains `failed` with 5 documented accepted-risk advisories in `setuptools 81.0.0` and `transformers 4.57.6`.
+- Full browser Agent matrix remains incomplete because video artifact downloads, cancel, retry, and browser SSE terminal-close timing were not executed.
+
+Executed acceptance:
+
+- Knowledge queue: `passed`, 5 documents, 55 chunks, reindex completed, top-k returned 5 sources.
+- MinIO artifact storage: `passed`, including 10MB and 100MB streaming, TTL expiry, cross-user denial, path traversal denial, checksum, content-type, Chinese filename, and JSON/Excel/evidence downloads.
+- pgvector: `passed`, including dry-run, execute, verify, controlled resume, repeat execute/verify, orphan cleanup, and exact SQLite/pgvector top5 match.
+- 100 users, 15 minutes: `passed`, 0 failures, aggregate p95 140ms, p99 310ms, final queue depth 0.
+
+Not executed:
+
+- 200/300/500-user capacity tests.
+- Full browser video/download/cancel/retry matrix.
+
 ## v1.8.4 Validation Gates
 
 Use `not_run`, `failed`, and `passed` only. Older v1.8.3 results are historical evidence and must not be copied as v1.8.4 pass results.

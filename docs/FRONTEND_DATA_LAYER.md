@@ -99,3 +99,7 @@ v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Bl
 - Video Agent browser run with downloadable Excel/JSON/evidence.
 - Cancel/retry UI flow.
 - Browser DevTools-level SSE terminal-close timing.
+
+Runtime marker:
+
+- Keep `browser_agent_smoke_verified=failed` for v1.8.7 because the core smoke passed but the full browser matrix did not.

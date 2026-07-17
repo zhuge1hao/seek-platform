@@ -1,5 +1,14 @@
 # Redis And Queue
 
+## v1.8.7 Production Closure Queue Evidence
+
+- Dataset queue marker remains `passed` from the v1.8.6 real acceptance.
+- Knowledge queue acceptance is now `passed`: 5 ingest jobs were consumed by `worker-general`, reached `completed` with chunks, and reindex completed.
+- Blueprint queue marker remains `passed` from the v1.8.6 real acceptance.
+- The v1.8.7 100-user Locust baseline ended with RQ depths `general=0`, `video=0`, `dataset=0`, `knowledge=0`, and `blueprint=0`.
+- PostgreSQL remains the business state source of truth. Redis remains queue and event transport only.
+- Standalone dataset/knowledge/blueprint workers are still not configured; `worker-general` consumes those queues.
+
 ## v1.8.4 Acceptance Status
 
 - Redis pause/recovery: `passed`

@@ -98,3 +98,5 @@ Status: `passed` on 2026-07-17.
 - Delete cleanup removed 12 chunks for the deleted fixture document and left no orphan chunks for that document.
 
 Evidence: `docs/V187_PGVECTOR_RESUME_TOPK.md`.
+
+The current raw pip-audit risk remains in the `transformers 4.57.6` embedding dependency path; the exact exception gate passed, and no Transformers 5.x upgrade is claimed.

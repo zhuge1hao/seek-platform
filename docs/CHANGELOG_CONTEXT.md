@@ -1,18 +1,24 @@
 # Changelog Context
 
-## v1.8.7 - Production Closure Cycle Started
+## v1.8.7 - Production Closure Cycle Closed
 
 Date: 2026-07-17
 
 Branch: `stabilization/v1.8.7`
 
-Planned focus:
+Completed with real evidence:
 
-- Fix Knowledge queue acceptance failure from v1.8.6.
-- Complete MinIO permission, TTL, 10MB streaming, optional 100MB streaming, and artifact access validation.
-- Complete pgvector resume and top-k comparison evidence.
-- Run browser `/agent` smoke.
-- Recheck pip-audit accepted risks and rerun the 100-user baseline.
+- Fixed Knowledge queue acceptance: 5 documents, 55 chunks, reindex, pgvector write, and top-k retrieval passed.
+- Completed MinIO permission, TTL, 10MB streaming, 100MB streaming, cross-user denial, path traversal denial, and artifact download validation.
+- Completed pgvector dry-run, execute, verify, controlled resume, repeated idempotency, orphan cleanup, and SQLite/pgvector top-k comparison.
+- Ran Playwright browser core `/agent` smoke for login, normal run submit, left conversation refresh, Run-card restore, failed terminal state, and user isolation.
+- Rechecked pip-audit: raw audit remains failed with documented accepted risks; exact exception gate passed.
+- Reran 100-user 15-minute Locust baseline: passed with 0 failures, aggregate p95 140ms, p99 310ms, and final queue depth 0.
+
+Not passed or not executed:
+
+- Full browser video/download/cancel/retry/SSE-close matrix remains incomplete; `browser_agent_smoke_verified=failed`.
+- 200/300/500-user capacity tests remain `not_run`.
 
 Out of scope:
 

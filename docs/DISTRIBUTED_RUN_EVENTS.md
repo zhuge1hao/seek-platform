@@ -1,5 +1,13 @@
 # Distributed Run Events
 
+## v1.8.7 Runtime Event Status
+
+- v1.8.4 Redis pause/recovery remains the latest full distributed-event acceptance and is still the source for `redis_recovery_verified=passed`.
+- v1.8.7 Playwright core smoke observed Run-card restoration after reload through durable API state.
+- Second-user access checks returned `403/404` without exposing another user's run or conversation data.
+- Browser DevTools-level SSE terminal-close timing, page unload abort, and run-switch abort remain `not_run`.
+- The full browser marker is therefore `failed` for v1.8.7 even though the core Run-card smoke passed.
+
 ## v1.8.4 Acceptance Status
 
 - Multi-instance SSE: `passed`

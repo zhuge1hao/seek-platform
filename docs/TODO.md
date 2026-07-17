@@ -2,12 +2,13 @@
 
 ## v1.8.7 Priority
 
-- Fix Knowledge queue acceptance so completed ingests with chunks count as ready for validation.
-- Complete MinIO permission, TTL, 10MB streaming, optional 100MB streaming, and user-isolation acceptance.
-- Complete pgvector resume and top-k comparison evidence.
-- Run browser `/agent` smoke for Run-card refresh, conversation refresh, cancel/retry, user isolation, and download checks.
-- Recheck pip-audit accepted risks without forcing a transformers upgrade that breaks BGE/RAG.
-- Rerun only the 100-user baseline; keep 200/300/500-user tests out of v1.8.7.
+- Done: Knowledge queue acceptance passed.
+- Done: MinIO permission, TTL, 10MB streaming, 100MB streaming, and user-isolation acceptance passed.
+- Done: pgvector resume and top-k comparison evidence passed.
+- Done: pip-audit accepted-risk recheck passed through the exact exception gate; raw pip-audit still fails.
+- Done: 100-user baseline passed.
+- Remaining: complete browser `/agent` video/download/cancel/retry checks before setting the full browser marker to `passed`.
+- Deferred: keep 200/300/500-user tests out of v1.8.7.
 
 ## v1.8.6 Priority
 

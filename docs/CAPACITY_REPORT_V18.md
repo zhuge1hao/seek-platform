@@ -745,7 +745,7 @@ MinIO artifact storage acceptance is now `passed` for the v1.8.7 required matrix
 - Checksum, content-type, Chinese filename, object-key partitioning, and secret redaction: passed.
 - JSON report, Excel workbook, and evidence image artifact downloads: passed.
 
-This does not change the current maximum stable user count. The v1.8.7 100-user 15-minute Locust baseline is still `not_run`.
+This evidence did not by itself change the current maximum stable user count. The later v1.8.7 100-user 15-minute Locust baseline passed and set the current maximum stable user count to `100`.
 
 ## v1.8.7 Production Closure Evidence - pgvector
 
@@ -761,7 +761,7 @@ pgvector non-empty migration acceptance is now `passed` for resume and top-k:
 - SQLite vs pgvector top-k: exact ordered top5 match after fixture vectors were changed to hash-derived values.
 - Orphan cleanup after delete: passed.
 
-This does not change the current maximum stable user count. The v1.8.7 100-user 15-minute Locust baseline is still `not_run`.
+This evidence did not by itself change the current maximum stable user count. The later v1.8.7 100-user 15-minute Locust baseline passed and set the current maximum stable user count to `100`.
 
 ### v1.8.1 Quality And Security Follow-up
 

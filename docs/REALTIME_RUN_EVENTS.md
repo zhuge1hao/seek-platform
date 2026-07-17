@@ -40,3 +40,4 @@ Not executed:
 - The browser observed the Run-card restore after reload from durable API state.
 - User-isolation checks intentionally produced `403/404` responses and did not reveal another user's run.
 - Browser DevTools timing for SSE terminal close, page unload abort, and run-switch abort remains `not_run`.
+- Keep `browser_agent_smoke_verified=failed` until those browser event timing checks and cancel/retry paths are executed.

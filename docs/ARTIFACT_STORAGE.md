@@ -53,3 +53,5 @@ Validated behavior:
 - Signed URL JSON responses do not include S3 secret fields.
 
 Evidence: `docs/V187_MINIO_FULL_ACCEPTANCE.md`.
+
+Runtime marker: `artifact_s3_verified=passed` only in deployments that set `ARTIFACT_S3_VERIFIED=passed` after this acceptance. S3/MinIO access keys and secret keys remain excluded from frontend responses and committed documentation.

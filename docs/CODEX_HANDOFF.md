@@ -7,9 +7,9 @@
 - Model display: `meizhaiseek 2.0`
 - Protected dirty user work: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-Current goal: close v1.8.6 failed/not-run production evidence for Knowledge queue, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline rerun.
+Current goal: v1.8.7 production closure is complete except for the intentionally failed/incomplete full browser matrix and deferred 200/300/500-user capacity tests.
 
-Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, Redis recovery, v1.8.6 Dataset queue, Blueprint queue, pgvector dry-run/execute/verify, SQL guardrails, PostgresPool tests, and distributed service tests have real evidence. v1.8.7 Knowledge queue acceptance, MinIO full acceptance, pgvector resume/top-k, and browser core Run-card smoke have real evidence. Browser video/download/cancel/retry, pip-audit recheck, and v1.8.7 100-user baseline still need closure.
+Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, Redis recovery, v1.8.6 Dataset queue, Blueprint queue, SQL guardrails, PostgresPool tests, and distributed service tests have real evidence. v1.8.7 Knowledge queue acceptance, MinIO full acceptance, pgvector resume/top-k, browser core Run-card smoke, pip-audit exception-gate recheck, and 100-user baseline have real evidence. Browser video/download/cancel/retry and browser SSE terminal-close timing remain incomplete.
 
 Knowledge acceptance evidence on 2026-07-17:
 
@@ -33,6 +33,13 @@ Security audit recheck on 2026-07-17:
 - Gate: `passed` with exact, unexpired entries in `docs/SECURITY_EXCEPTIONS.md`.
 - Production API container `pip check`: passed and shows `setuptools 83.0.0`.
 - Local `.venv` still shows `setuptools 81.0.0`; keep its short accepted risk until 2026-08-17.
+
+100-user baseline evidence on 2026-07-17:
+
+- Locust command: `locust -f load_tests/locustfile.py --headless -u 100 -r 10 -t 15m --host http://127.0.0.1`.
+- Result: `passed`, 85,784 requests, 0 failures, aggregate p95 140ms, p99 310ms.
+- Final queue depth: `general=0`, `video=0`, `dataset=0`, `knowledge=0`, `blueprint=0`.
+- Current maximum stable users: `100`; 200/300/500 remain `not_run`.
 
 Execution note for 2026-07-17: do not commit `AGENTS.md`, current `docker-compose.prod.yml` local env pass-through, `.env`, runtime logs, model files, uploads, Docker data, MinIO data, or `ARCHITECTURE_EVALUATION_REPORT.md`.
 

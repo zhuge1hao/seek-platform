@@ -14,15 +14,17 @@ Required production runtime health for final v1.8.7 acceptance:
 - `artifact_storage.backend=s3`
 - `rag.backend=pgvector`
 
-v1.8.7 must not claim Knowledge, MinIO, pgvector resume/top-k, browser smoke, pip-audit gate, or 100-user baseline as `passed` until the corresponding evidence docs record real execution.
+v1.8.7 closure uses only real evidence from the corresponding docs. The browser full matrix is not fully passed because video/download/cancel/retry checks were not executed.
 
 Current v1.8.7 production evidence:
 
 - Knowledge queue acceptance: `passed`; see `docs/V187_KNOWLEDGE_QUEUE_FIX.md`.
 - MinIO S3 artifact acceptance: `passed` for 10MB and 100MB streaming, TTL, ownership, path traversal, and JSON/Excel/evidence downloads; see `docs/V187_MINIO_FULL_ACCEPTANCE.md`.
-- pgvector resume/top-k: `not_run`.
-- browser Agent smoke: `not_run`.
-- 100-user Locust baseline: `not_run`.
+- pgvector resume/top-k: `passed`; see `docs/V187_PGVECTOR_RESUME_TOPK.md`.
+- browser Agent core Run-card smoke: `passed`; full browser matrix `failed`/incomplete; see `docs/V187_BROWSER_AGENT_SMOKE.md`.
+- pip-audit gate: `passed`; raw pip-audit `failed`; see `docs/V187_SECURITY_AUDIT_RECHECK.md`.
+- 100-user Locust baseline: `passed`; current maximum stable users `100`; 200/300/500 `not_run`.
+- Runtime health marker check: `version=v1.8.7`, `model=meizhaiseek 2.0`, Postgres/Redis/RQ/S3/pgvector all `ok`.
 
 ## v1.8.6 Validation Note - 2026-07-17
 
