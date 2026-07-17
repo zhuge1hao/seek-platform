@@ -85,6 +85,7 @@ def migrate(args: argparse.Namespace) -> dict[str, Any]:
         done = _checkpoint(args.checkpoint) if args.resume else set()
         migrated_docs = 0
         migrated_chunks = 0
+        processed_items = 0
         for doc in documents:
             doc_id = str(doc["doc_id"])
             if f"doc:{doc_id}" in done:
@@ -100,8 +101,13 @@ def migrate(args: argparse.Namespace) -> dict[str, Any]:
             provider.update_document_status(str(doc.get("user_id") or ""), doc_id, str(doc.get("status") or "completed"), int(doc.get("chunk_count") or 0))
             done.add(f"doc:{doc_id}")
             migrated_docs += 1
+            processed_items += 1
             if migrated_docs % max(1, args.batch_size) == 0:
                 _write_checkpoint(args.checkpoint, done)
+            if args.stop_after_items and processed_items >= args.stop_after_items:
+                _write_checkpoint(args.checkpoint, done)
+                result.update({"status": "interrupted", "migrated_documents": migrated_docs, "migrated_chunks": migrated_chunks, "checkpoint_count": len(done)})
+                return result
         for chunk in chunks:
             chunk_id = str(chunk["chunk_id"])
             if f"chunk:{chunk_id}" in done:
@@ -117,8 +123,13 @@ def migrate(args: argparse.Namespace) -> dict[str, Any]:
             )
             done.add(f"chunk:{chunk_id}")
             migrated_chunks += 1
+            processed_items += 1
             if migrated_chunks % max(1, args.batch_size) == 0:
                 _write_checkpoint(args.checkpoint, done)
+            if args.stop_after_items and processed_items >= args.stop_after_items:
+                _write_checkpoint(args.checkpoint, done)
+                result.update({"status": "interrupted", "migrated_documents": migrated_docs, "migrated_chunks": migrated_chunks, "checkpoint_count": len(done)})
+                return result
         _write_checkpoint(args.checkpoint, done)
         result.update({"migrated_documents": migrated_docs, "migrated_chunks": migrated_chunks})
 
@@ -139,6 +150,7 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=500)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--checkpoint")
+    parser.add_argument("--stop-after-items", type=int, default=0)
     parser.add_argument("--json-report", action="store_true")
     args = parser.parse_args()
     result = migrate(args)
@@ -146,6 +158,8 @@ def main() -> int:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
         print(result["status"])
+    if result["status"] == "interrupted":
+        return 3
     return 0 if result["status"] == "passed" else 1
 
 

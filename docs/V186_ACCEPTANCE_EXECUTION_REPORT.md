@@ -117,6 +117,10 @@ Not run:
 - Explicit interrupted resume test.
 - SQLite vs pgvector top-k comparison.
 
+v1.8.7 follow-up:
+
+- Resume and top-k comparison were executed and passed; see `docs/V187_PGVECTOR_RESUME_TOPK.md`.
+
 ## Browser Agent Smoke
 
 Status: `not_run`

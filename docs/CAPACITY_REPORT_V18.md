@@ -722,6 +722,22 @@ MinIO artifact storage acceptance is now `passed` for the v1.8.7 required matrix
 
 This does not change the current maximum stable user count. The v1.8.7 100-user 15-minute Locust baseline is still `not_run`.
 
+## v1.8.7 Production Closure Evidence - pgvector
+
+Date: 2026-07-17.
+
+pgvector non-empty migration acceptance is now `passed` for resume and top-k:
+
+- Fixture: 5 documents, 60 chunks, 2 users, 2 knowledge bases, 512-dimensional embeddings.
+- Dry-run/execute/verify: passed.
+- Repeat execute/verify: passed without duplicate insertion.
+- Controlled interruption after 10 items: passed with checkpoint count 10.
+- Resume: passed, migrated the remaining 55 chunks.
+- SQLite vs pgvector top-k: exact ordered top5 match after fixture vectors were changed to hash-derived values.
+- Orphan cleanup after delete: passed.
+
+This does not change the current maximum stable user count. The v1.8.7 100-user 15-minute Locust baseline is still `not_run`.
+
 ### v1.8.1 Quality And Security Follow-up
 
 - Dependency hardening: upgraded FastAPI to 0.139.0, python-multipart to 0.0.32, requests to 2.34.2, pytest to 9.1.1, and pytest-asyncio to 1.4.0. `pip check` passed.

@@ -85,3 +85,16 @@ Current status: SQLite remains the working implementation. pgvector is reported 
 - Production Knowledge acceptance requires API and worker-general containers to see the same local BGE model directory.
 - v1.8.7 compose mounts `./apps/api/models` to `/app/models:ro` and sets `BGE_SMALL_ZH_MODEL_PATH=/app/models/bge-small-zh`.
 - Successful document statuses `ready` and `completed` are both searchable terminal states for SQLite and pgvector RAG.
+
+# v1.8.7 pgvector Resume And Top-k
+
+Status: `passed` on 2026-07-17.
+
+- `acceptance_pgvector_nonempty.py` now creates an isolated non-sensitive SQLite fixture when `--sqlite-path` is omitted.
+- Fixture shape: 5 documents, 60 chunks, 2 users, 2 knowledge bases, 512-dimensional embeddings.
+- Migration modes executed in Docker API container: dry-run, execute, verify, repeat execute, repeat verify.
+- Resume executed with a controlled checkpoint interruption after 10 items, then completed the remaining rows.
+- SQLite top-k and pgvector top-k returned the same ordered top5 after hash-derived fixture vectors removed artificial ties.
+- Delete cleanup removed 12 chunks for the deleted fixture document and left no orphan chunks for that document.
+
+Evidence: `docs/V187_PGVECTOR_RESUME_TOPK.md`.
