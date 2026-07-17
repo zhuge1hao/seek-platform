@@ -33,3 +33,23 @@ Current status: local/local_shared metadata is wired. S3 actual upload and mock/
 - Authenticated run artifact signed-url endpoint is coded.
 - `apps/api/scripts/acceptance_minio_storage.py` is available for 10MB default and explicit 100MB reruns.
 - Real MinIO permission, TTL, streaming, and cross-user download acceptance is `not_run` for v1.8.5 in the current environment because Docker/MinIO was unavailable.
+
+## v1.8.7 MinIO Acceptance
+
+Status on 2026-07-17: `passed` for the required 10MB matrix and the resource-allowed 100MB matrix.
+
+Validated behavior:
+
+- Run artifact downloads stream through the API from S3/MinIO.
+- Authenticated signed URL route enforces run/artifact ownership.
+- Cross-user artifact access returns HTTP 403.
+- Missing artifact returns HTTP 404.
+- Path traversal through the legacy local artifact download route returns HTTP 403.
+- Short TTL presigned URLs work immediately and expire with HTTP 403.
+- Object keys are partitioned by `user_id/run_id/artifact_id`.
+- Checksums match for 10MB and 100MB objects.
+- Chinese filenames use RFC 5987 `filename*` Content-Disposition.
+- JSON report, Excel workbook, and evidence image artifacts download with expected content types.
+- Signed URL JSON responses do not include S3 secret fields.
+
+Evidence: `docs/V187_MINIO_FULL_ACCEPTANCE.md`.

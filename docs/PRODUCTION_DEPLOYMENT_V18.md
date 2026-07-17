@@ -16,6 +16,14 @@ Required production runtime health for final v1.8.7 acceptance:
 
 v1.8.7 must not claim Knowledge, MinIO, pgvector resume/top-k, browser smoke, pip-audit gate, or 100-user baseline as `passed` until the corresponding evidence docs record real execution.
 
+Current v1.8.7 production evidence:
+
+- Knowledge queue acceptance: `passed`; see `docs/V187_KNOWLEDGE_QUEUE_FIX.md`.
+- MinIO S3 artifact acceptance: `passed` for 10MB and 100MB streaming, TTL, ownership, path traversal, and JSON/Excel/evidence downloads; see `docs/V187_MINIO_FULL_ACCEPTANCE.md`.
+- pgvector resume/top-k: `not_run`.
+- browser Agent smoke: `not_run`.
+- 100-user Locust baseline: `not_run`.
+
 ## v1.8.6 Validation Note - 2026-07-17
 
 Runtime target: `meizhaiseek v1.8.6`, model display `meizhaiseek 2.0`.

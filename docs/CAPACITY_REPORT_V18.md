@@ -704,6 +704,24 @@ Full API restart/failover, Redis pause/recovery, and 100/500 dedicated SSE conne
 - Full S3 signed URL expiration and large-file streaming test: not executed.
 - Full SQLite RAG to pgvector resumable migration: not executed.
 
+## v1.8.7 Production Closure Evidence - MinIO
+
+Date: 2026-07-17.
+
+MinIO artifact storage acceptance is now `passed` for the v1.8.7 required matrix:
+
+- 10MB streaming upload/register/download: passed.
+- 100MB streaming upload/register/download: passed.
+- User A download: passed.
+- User B forbidden: passed with HTTP 403.
+- Missing artifact: passed with HTTP 404.
+- Path traversal rejection: passed with HTTP 403.
+- Signed URL TTL: passed, immediate HTTP 200 and expired HTTP 403.
+- Checksum, content-type, Chinese filename, object-key partitioning, and secret redaction: passed.
+- JSON report, Excel workbook, and evidence image artifact downloads: passed.
+
+This does not change the current maximum stable user count. The v1.8.7 100-user 15-minute Locust baseline is still `not_run`.
+
 ### v1.8.1 Quality And Security Follow-up
 
 - Dependency hardening: upgraded FastAPI to 0.139.0, python-multipart to 0.0.32, requests to 2.34.2, pytest to 9.1.1, and pytest-asyncio to 1.4.0. `pip check` passed.

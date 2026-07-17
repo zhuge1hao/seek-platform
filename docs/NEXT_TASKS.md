@@ -253,3 +253,17 @@ Acceptance:
 - Standalone dataset/knowledge/blueprint workers are not configured; `worker-general` consumes those queues.
 - Raw `pip-audit` still fails unless exact documented `transformers 4.57.6` exceptions are applied.
 - Existing Redis/worker integration tests are marker tests, not true fault-injection automation.
+
+## v1.8.7 Completed During Production Closure
+
+- Knowledge queue acceptance passed after accepting `completed` as a retrievable terminal ingest state when chunks exist and after restoring the SQLite RAG schema allowlist.
+- API and worker-general now have the read-only BGE model mount required by Docker production knowledge ingestion.
+- MinIO artifact acceptance passed for 10MB and 100MB streaming, TTL expiry, cross-user denial, path traversal denial, checksum, content-type, Chinese filename, and JSON/Excel/evidence downloads.
+
+## v1.8.7 Still Pending
+
+- pgvector resume and top-k comparison.
+- Browser Agent smoke.
+- pip-audit v1.8.7 recheck and exception review.
+- 100-user 15-minute Locust baseline.
+- 200/300/500-user tests remain out of scope for v1.8.7.
