@@ -289,6 +289,7 @@ Generate a new-window handoff package only. Do not continue feature work. Update
 - Baseline: `docs/sql_safety_baseline_v186.json`.
 - Evidence: `docs/V186_SQL_SAFETY_GUARDRAILS.md`.
 - CI now blocks new dynamic SQL findings with `--fail-on-new`.
+- Runtime marker closeout: `docs/V186_RUNTIME_HEALTH_MARKERS.md`.
 
 ## New Window Prompt
 

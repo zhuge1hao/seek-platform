@@ -140,3 +140,5 @@ Remain `not_run` or `failed`:
 - `KNOWLEDGE_QUEUE_VERIFIED=failed`.
 - `ARTIFACT_S3_VERIFIED=not_run` for full acceptance; partial signed-url/download evidence only.
 - `BROWSER_AGENT_SMOKE_VERIFIED=not_run`.
+
+Runtime marker closeout: `docs/V186_RUNTIME_HEALTH_MARKERS.md`.
