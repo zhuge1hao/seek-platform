@@ -1,3 +1,18 @@
+# Capacity Report v1.8/v1.8.5 Update - 2026-07-17
+
+## v1.8.5 Cycle Start Status
+
+- Version under validation: `meizhaiseek v1.8.5`.
+- Model display: `meizhaiseek 2.0`.
+- Business queue acceptance: `not_run`.
+- MinIO artifact storage acceptance: `not_run`.
+- pgvector non-empty migration/resume: `not_run`.
+- Browser Agent smoke: `not_run`.
+- 100-user v1.8.5 run: `not_run`.
+- 200/300/500-user v1.8.5 runs: `not_run` and intentionally deferred to v1.8.6.
+- Current maximum stable users for v1.8.5: not established.
+- Do not reuse older v1.8.3/v1.8.4 capacity results as v1.8.5 pass evidence.
+
 # Capacity Report v1.8/v1.8.4 Update - 2026-07-16
 
 ## v1.8.4 Cycle Start Status

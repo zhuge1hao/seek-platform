@@ -1,5 +1,13 @@
 ﻿# meizhaiseek-platform
 
+## Latest v1.8.5 Validation Cycle
+
+Branch: `stabilization/v1.8.5`.
+
+`meizhaiseek v1.8.5` focuses on business queue closure, MinIO artifact storage acceptance, pgvector non-empty migration/resume, browser Agent smoke, and runtime marker closeout. Model display remains `meizhaiseek 2.0`. No new business agents, v1.9 upgrade, local video Agent refactor, or local video Agent prompt changes are included.
+
+Current acceptance status at cycle start: v1.8.4 video E2E, worker recovery, 50 video jobs, and Redis recovery have real evidence; Dataset/Knowledge/Blueprint business queues, MinIO TTL/streaming, pgvector non-empty production migration, browser smoke, and v1.8.5 final runtime markers remain `not_run` until executed in this cycle.
+
 ## Latest v1.8.4 Validation Cycle
 
 Branch: `stabilization/v1.8.4`.

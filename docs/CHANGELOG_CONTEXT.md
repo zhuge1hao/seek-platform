@@ -1,5 +1,26 @@
 # Changelog Context
 
+## v1.8.5 - Business Queue And Storage Validation Cycle Started
+
+Date: 2026-07-17
+
+Branch: `stabilization/v1.8.5`
+
+Planned focus:
+
+- Dataset/Knowledge/Blueprint business queue closure.
+- MinIO permission, TTL, streaming, and artifact download acceptance.
+- pgvector non-empty migration, resume, idempotency, and top-k comparison.
+- Browser `/agent` Run-card and conversation refresh smoke.
+- Runtime health marker closeout for only real executed gates.
+
+Out of scope:
+
+- No new business agents.
+- No v1.9 upgrade.
+- No local video Agent refactor or Prompt change.
+- No 200/300/500-user capacity tests.
+
 ## v1.8.4 - Validation Cycle Started
 
 Date: 2026-07-16

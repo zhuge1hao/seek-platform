@@ -1,5 +1,14 @@
 # TODO
 
+## v1.8.5 Priority
+
+- Validate Dataset, Knowledge, and Blueprint business queues end to end through Redis/RQ and worker-general.
+- Validate MinIO permissions, TTL, streaming, user isolation, and artifact HTTP downloads.
+- Validate pgvector non-empty migration, resume, idempotency, and top-k comparison.
+- Run real browser `/agent` smoke for Run-card refresh, conversation list refresh, cancel/retry, and user isolation.
+- Close runtime health markers only for items with real command evidence.
+- Keep 200/300/500-user capacity tests for v1.8.6; do not claim 500 users in v1.8.5.
+
 ## v1.8.4 Priority
 
 - Commit the v1.8.3 `/agent` run-card/conversation-refresh frontend fix cleanly.

@@ -1,5 +1,21 @@
 # Production Deployment v1.8
 
+## v1.8.5 Validation Note - 2026-07-17
+
+Runtime target: `meizhaiseek v1.8.5`, model display `meizhaiseek 2.0`.
+
+Required production runtime health for final v1.8.5 acceptance:
+
+- `version=v1.8.5`
+- `model=meizhaiseek 2.0`
+- `database.backend=postgres`
+- `redis.status=ok`
+- `queue.backend=redis`
+- `artifact_storage.backend=s3`
+- `rag.backend=pgvector`
+
+v1.8.5 must not claim Dataset/Knowledge/Blueprint queues, MinIO, pgvector, browser smoke, or runtime markers as `passed` until the corresponding v1.8.5 evidence docs record real execution.
+
 ## v1.8.4 Validation Note - 2026-07-16
 
 Runtime target: `meizhaiseek v1.8.4`, model display `meizhaiseek 2.0`.

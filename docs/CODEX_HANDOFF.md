@@ -1,15 +1,23 @@
 # Codex Handoff
 
-## v1.8.4 Active Handoff
+## v1.8.5 Active Handoff
 
-- Branch: `stabilization/v1.8.4`
-- Version: `meizhaiseek v1.8.4`
+- Branch: `stabilization/v1.8.5`
+- Version: `meizhaiseek v1.8.5`
 - Model display: `meizhaiseek 2.0`
 - Protected dirty user work: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-Current goal: continue from completed P0 backend video E2E into P1 distributed worker recovery, 50 video jobs, and Redis pause/recovery without claiming any unexecuted gate as passed.
+Current goal: continue from completed v1.8.4 video E2E and P1 worker/queue recovery into v1.8.5 business queue closure, MinIO artifact storage acceptance, pgvector non-empty migration/resume, browser Agent smoke, and runtime marker closeout.
 
-Current validation defaults: P0 backend video E2E is passed; direct frontend browser smoke is still `not_run`; P1-P4 gates remain `not_run` until real commands prove otherwise; failed gates must be recorded as `failed`.
+Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, and Redis recovery have real evidence. v1.8.5 Dataset/Knowledge/Blueprint queues, MinIO, pgvector, browser smoke, and final runtime markers remain `not_run` until real commands prove otherwise; failed gates must be recorded as `failed`.
+
+## v1.8.5 Scope
+
+- Do not add business agents.
+- Do not upgrade to v1.9.
+- Do not refactor local video Agent or modify its Prompt.
+- Do not run 200/300/500-user capacity tests; leave them for v1.8.6.
+- Do not modify or stage `ARCHITECTURE_EVALUATION_REPORT.md`.
 
 ## v1.8.4 P0 Video E2E Result - 2026-07-16
 

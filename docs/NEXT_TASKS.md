@@ -1,13 +1,13 @@
 # Next Tasks
 
-## v1.8.4 Current Priority
+## v1.8.5 Current Priority
 
-- Branch: `stabilization/v1.8.4`
-- Version: `meizhaiseek v1.8.4`
+- Branch: `stabilization/v1.8.5`
+- Version: `meizhaiseek v1.8.5`
 - Model: `meizhaiseek 2.0`
 - Protected dirty file: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-P0 backend video Agent E2E passed on real Docker/API/RQ/worker-video/8001/SSE/S3 chain. P1 worker crash/restart, zombie recovery, 50 video jobs, and Redis pause/recovery passed on 2026-07-16. Direct `/agent` browser Run-card smoke is still `not_run`. P2-P4 must stay `not_run` until actually executed. Do not start v1.9, add new business agents, refactor local video Agent, or change local video Agent Prompt.
+v1.8.4 backend video Agent E2E, worker crash/restart, zombie recovery, 50 video jobs, and Redis pause/recovery passed with real evidence. v1.8.5 now focuses on Dataset/Knowledge/Blueprint business queues, MinIO artifact storage, pgvector non-empty migration/resume, browser `/agent` smoke, and runtime marker closeout. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.5.
 
 Acceptance marker defaults:
 
@@ -20,6 +20,7 @@ Acceptance marker defaults:
 - `blueprint_queue_verified=not_run`
 - `artifact_s3_verified=not_run`
 - `pgvector_migration_verified=not_run`
+- `browser_agent_smoke_verified=not_run`
 - `capacity_last_verified_users=0`
 - `capacity_last_test_passed=not_run`
 

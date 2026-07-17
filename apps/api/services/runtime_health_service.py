@@ -5,7 +5,7 @@ from services import agent_run_event_bus, app_sqlite, redis_service, security_co
 from tasks import queue as task_queue
 
 
-VERSION = "v1.8.4"
+VERSION = "v1.8.5"
 MODEL = "meizhaiseek 2.0"
 VALIDATION_VALUES = {"not_run", "failed", "passed"}
 
@@ -84,6 +84,7 @@ def runtime_health(warnings: list[str] | None = None) -> dict[str, Any]:
             "blueprint_queue_verified": _validation_status("BLUEPRINT_QUEUE_VERIFIED"),
             "artifact_s3_verified": _validation_status("ARTIFACT_S3_VERIFIED"),
             "pgvector_migration_verified": _validation_status("PGVECTOR_MIGRATION_VERIFIED"),
+            "browser_agent_smoke_verified": _validation_status("BROWSER_AGENT_SMOKE_VERIFIED"),
             "capacity_last_verified_users": int(os.getenv("CAPACITY_LAST_VERIFIED_USERS", "0")),
             "capacity_last_test_passed": _validation_status("CAPACITY_LAST_TEST_PASSED"),
         },

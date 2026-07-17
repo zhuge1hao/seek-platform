@@ -67,13 +67,13 @@ export function RuntimeHealthPanel({ open, onClose, onChanged }: RuntimeHealthPa
   };
 
   return (
-    <SafeDrawer open={open} title="后台状态" eyebrow="meizhaiseek v1.8.4" onClose={onClose} maxWidth="max-w-3xl">
+    <SafeDrawer open={open} title="后台状态" eyebrow="meizhaiseek v1.8.5" onClose={onClose} maxWidth="max-w-3xl">
         <div className="mb-5 flex items-center gap-2"><Activity className="h-5 w-5 text-violet-600" /><p className="text-sm text-slate-500">运行时配置与缓存健康检查</p></div>
 
         <div className="rounded-[24px] border border-slate-100 bg-slate-50 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-violet-700">meizhaiseek v1.8.4</p>
+              <p className="text-sm font-semibold text-violet-700">meizhaiseek v1.8.5</p>
               <h4 className="mt-1 text-2xl font-bold text-slate-950">{health?.service || "meizhaiseek-api"}</h4>
               <p className="mt-2 text-sm text-slate-500">运行时配置、缓存、任务状态和 debug payload 自检。</p>
             </div>
