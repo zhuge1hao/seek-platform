@@ -4,13 +4,38 @@
 
 - Version under validation: `meizhaiseek v1.8.7`.
 - Model display: `meizhaiseek 2.0`.
-- Knowledge queue acceptance: `failed` at v1.8.6 start of this cycle.
-- MinIO TTL/10MB/100MB streaming: `not_run`.
-- pgvector resume/top-k: `not_run`.
-- Browser Agent smoke: `not_run`.
-- 100-user v1.8.7 run: `not_run`.
+- Knowledge queue acceptance: `passed`.
+- MinIO TTL/10MB/100MB streaming: `passed`.
+- pgvector resume/top-k: `passed`.
+- Browser Agent core Run-card smoke: `passed`; full video/download/cancel/retry browser matrix remains incomplete.
+- 100-user v1.8.7 run: `passed`.
 - 200/300/500-user v1.8.7 runs: `not_run` and intentionally deferred.
-- Current maximum stable user count remains the last truly validated 100-user result until a new v1.8.7 Locust run passes.
+- Current maximum stable user count: `100`.
+
+## v1.8.7 100-User Baseline - 2026-07-17
+
+- Result: `passed`.
+- Command: `locust -f load_tests/locustfile.py --headless -u 100 -r 10 -t 15m --host http://127.0.0.1`.
+- Temporary operator users: `120`; credentials were not committed.
+- Agent workload: `blue_ocean` generic Agent; no real video workload.
+- Total requests: `85,784`.
+- Failures: `0`, error rate `0.00%`.
+- Aggregate p95: `140 ms`.
+- Aggregate p99: `310 ms`.
+- `/api/agents` p95: `79 ms`.
+- Login p95: `230 ms`.
+- Agent submit p95: `480 ms`.
+- Queue depths after run: `general=0`, `video=0`, `dataset=0`, `knowledge=0`, `blueprint=0`.
+- `/health/ready` after run: `ok`.
+- API RSS after run: approximately `158 MB`; no sustained memory growth was observed in the post-run check.
+- Pool wait p95: `not_run`, not currently exported separately by metrics.
+- 200/300/500-user tests: `not_run`.
+
+Capacity marker target:
+
+- `CAPACITY_LAST_VERIFIED_USERS=100`.
+- `CAPACITY_LAST_TEST_PASSED=passed`.
+- Current maximum stable users: `100`.
 
 ## v1.8.7 Knowledge Queue Result - 2026-07-17
 

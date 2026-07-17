@@ -1,5 +1,15 @@
 # Scalability 500 Users
 
+## v1.8.7 Capacity Status
+
+- 100 users: `passed` on 2026-07-17.
+- 200 users: `not_run`.
+- 300 users: `not_run`.
+- 500 users: `not_run`.
+- Current maximum stable users: `100`.
+
+Do not claim 500-user support unless the real 500-user Locust command passes and is recorded in `docs/CAPACITY_REPORT_V18.md`.
+
 ## v1.8.4 Capacity Status
 
 - 100 users: `not_run`
