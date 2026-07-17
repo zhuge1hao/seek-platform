@@ -9,6 +9,8 @@
 
 v1.8.7 closes the v1.8.6 failed/not-run evidence: Knowledge queue acceptance, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.7.
 
+Execution update on 2026-07-17: Knowledge queue acceptance passed after accepting `completed` as a ready-equivalent document status and mounting BGE-small-zh into API/worker-general containers. Remaining v1.8.7 work: MinIO full acceptance, pgvector resume/top-k, browser smoke, pip-audit recheck, and 100-user Locust.
+
 Acceptance marker defaults:
 
 - `multi_instance_sse_verified=not_run`
@@ -16,7 +18,7 @@ Acceptance marker defaults:
 - `worker_recovery_verified=passed` when the deployment environment sets `WORKER_RECOVERY_VERIFIED=passed`
 - `video_queue_50_verified=passed` when the deployment environment sets `VIDEO_QUEUE_50_VERIFIED=passed`
 - `dataset_queue_verified=passed` when the deployment environment sets `DATASET_QUEUE_VERIFIED=passed`
-- `knowledge_queue_verified=failed` until v1.8.7 Knowledge acceptance passes
+- `knowledge_queue_verified=passed` when the deployment environment sets `KNOWLEDGE_QUEUE_VERIFIED=passed`
 - `blueprint_queue_verified=passed` when the deployment environment sets `BLUEPRINT_QUEUE_VERIFIED=passed`
 - `artifact_s3_verified=not_run`
 - `pgvector_migration_verified=passed` when the deployment environment sets `PGVECTOR_MIGRATION_VERIFIED=passed`

@@ -108,12 +108,30 @@ def main() -> int:
         uploaded[0] = ready_docs[0]
         reindex_status, reindex_body = _json("POST", f"{base}/api/qa/knowledge/documents/{uploaded[0]}/reindex", token, {})
         report["checks"]["reindex"] = {"status_code": reindex_status, "body": reindex_body}
+        reindex_deadline = time.time() + 180
+        while time.time() < reindex_deadline:
+            time.sleep(2)
+            detail_status, detail_body = _request("GET", f"{base}/api/qa/knowledge/documents/{uploaded[0]}", token)
+            document = detail_body.get("document") or {}
+            if document.get("status") in {"ready", "completed", "failed"}:
+                report["checks"]["reindex_after_completion"] = {"status_code": detail_status, "body": {"document": document}}
+                break
+        retrieval_status, retrieval_body = _json("POST", f"{base}/api/qa/test-retrieval", token, {"question": "commerce BI controlled acceptance document", "top_k": 5})
+        report["checks"]["top_k_retrieval"] = {"status_code": retrieval_status, "body": retrieval_body}
     if args.cleanup:
         for doc_id in uploaded:
             status, body = _request("DELETE", f"{base}/api/qa/knowledge/documents/{doc_id}", token)
             report["checks"][f"delete:{doc_id}"] = {"status_code": status, "body": body}
 
-    ok = len(ready_docs) >= min(5, len(args.seed_documents)) and stats_status == 200 and docs_status == 200
+    reindex_document = (report["checks"].get("reindex_after_completion", {}).get("body") or {}).get("document") or {}
+    retrieval_body = (report["checks"].get("top_k_retrieval", {}).get("body") or {})
+    ok = (
+        len(ready_docs) >= min(5, len(args.seed_documents))
+        and stats_status == 200
+        and docs_status == 200
+        and (not ready_docs or (reindex_document.get("status") in {"ready", "completed"} and int(reindex_document.get("chunk_count") or 0) > 0))
+        and (not ready_docs or int(retrieval_body.get("source_count") or 0) > 0)
+    )
     report["uploaded_documents"] = uploaded
     report["ready_documents"] = ready_docs
     report["status"] = "passed" if ok else "failed"

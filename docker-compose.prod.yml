@@ -79,6 +79,7 @@ services:
       APP_SQLITE_PATH: apps/api/runtime/app/meizhaiseek.sqlite3
       RAG_SQLITE_PATH: apps/api/runtime/rag/rag.sqlite3
       RAG_BACKEND: ${RAG_BACKEND:-pgvector}
+      BGE_SMALL_ZH_MODEL_PATH: /app/models/bge-small-zh
       APP_LEGACY_JSON_FALLBACK: "false"
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CACHE_BACKEND: ${CACHE_BACKEND:-redis}
@@ -109,6 +110,7 @@ services:
     volumes:
       - ./apps/api/runtime:/app/apps/api/runtime
       - ./apps/api/uploads:/app/apps/api/uploads
+      - ./apps/api/models:/app/models:ro
     working_dir: /app/apps/api
     command: sh -c "if [ \"$${APP_DB_BACKEND}\" = \"postgres\" ]; then cd /app && alembic upgrade head; cd /app/apps/api; fi; python -m uvicorn main:app --host 0.0.0.0 --port 8000"
     depends_on:
@@ -145,6 +147,7 @@ services:
       RQ_QUEUES: general,dataset,knowledge,blueprint
       EVENT_BACKEND: ${EVENT_BACKEND:-redis}
       RAG_BACKEND: ${RAG_BACKEND:-pgvector}
+      BGE_SMALL_ZH_MODEL_PATH: /app/models/bge-small-zh
       ARTIFACT_STORAGE_BACKEND: ${ARTIFACT_STORAGE_BACKEND:-s3}
       S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://minio:9000}
       S3_BUCKET: ${S3_BUCKET:-meizhaiseek-artifacts}
@@ -170,6 +173,7 @@ services:
     volumes:
       - ./apps/api/runtime:/app/apps/api/runtime
       - ./apps/api/uploads:/app/apps/api/uploads
+      - ./apps/api/models:/app/models:ro
     depends_on:
       postgres:
         condition: service_healthy

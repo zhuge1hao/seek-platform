@@ -125,3 +125,9 @@ Current status: Agent Run execution is wired through the queue facade. Dataset/d
 - `apps/api/scripts/acceptance_dataset_queue.py`, `acceptance_knowledge_queue.py`, and `acceptance_blueprint_queue.py` are available for real-stack reruns.
 - Real Dataset/Knowledge/Blueprint queue acceptance is `not_run` for v1.8.5 until Docker PostgreSQL/Redis/workers are reachable.
 - Redis remains queue/event transport only; PostgreSQL/SQLite app storage is the business state source of truth.
+# v1.8.7 Knowledge Queue Evidence
+
+- Knowledge queue is consumed by `worker-general` in the current production compose.
+- v1.8.7 acceptance submitted 5 document ingest jobs, all reached `completed` with chunks.
+- Reindex job `document-reindex-doc_20260717090831_b87b7459` reached `completed`.
+- Queue depth returned to zero after the run.

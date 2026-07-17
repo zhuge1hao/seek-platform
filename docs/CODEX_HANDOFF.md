@@ -9,7 +9,14 @@
 
 Current goal: close v1.8.6 failed/not-run production evidence for Knowledge queue, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline rerun.
 
-Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, Redis recovery, v1.8.6 Dataset queue, Blueprint queue, pgvector dry-run/execute/verify, SQL guardrails, PostgresPool tests, and distributed service tests have real evidence. Knowledge queue remains `failed`; MinIO TTL/streaming, pgvector resume/top-k, browser smoke, and v1.8.7 100-user baseline remain `not_run` until real commands prove otherwise.
+Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, Redis recovery, v1.8.6 Dataset queue, Blueprint queue, pgvector dry-run/execute/verify, SQL guardrails, PostgresPool tests, and distributed service tests have real evidence. v1.8.7 Knowledge queue acceptance passed. MinIO TTL/streaming, pgvector resume/top-k, browser smoke, and v1.8.7 100-user baseline remain `not_run` until real commands prove otherwise.
+
+Knowledge acceptance evidence on 2026-07-17:
+
+- Root cause: backend successful ingest status is `completed`, while v1.8.6 acceptance only accepted `ready`.
+- Fix: acceptance accepts `ready` or `completed` with `chunk_count > 0`; SQLite RAG legacy schema allowlist is restored; Docker API and worker-general mount BGE model read-only.
+- BGE worker smoke: `/app/models/bge-small-zh`, loadable, dimension `512`.
+- `acceptance_knowledge_queue.py --json-report`: `passed`, 5 documents, 55 chunks, reindex `completed`, top-k retrieval `source_count=5`.
 
 Execution note for 2026-07-17: do not commit `AGENTS.md`, current `docker-compose.prod.yml` local env pass-through, `.env`, runtime logs, model files, uploads, Docker data, MinIO data, or `ARCHITECTURE_EVALUATION_REPORT.md`.
 

@@ -12,6 +12,17 @@
 - 200/300/500-user v1.8.7 runs: `not_run` and intentionally deferred.
 - Current maximum stable user count remains the last truly validated 100-user result until a new v1.8.7 Locust run passes.
 
+## v1.8.7 Knowledge Queue Result - 2026-07-17
+
+- Knowledge queue acceptance: `passed`.
+- Root cause fixed: acceptance now treats backend success status `completed` as ready-equivalent when chunks exist.
+- Model mount fixed: API and worker-general use `/app/models/bge-small-zh`, verified loadable with 512-dimensional embeddings.
+- Documents: `5`.
+- Chunks: `55`.
+- Reindex: `passed`.
+- Top-k retrieval: `passed`, `source_count=5`.
+- Runtime marker target: `KNOWLEDGE_QUEUE_VERIFIED=passed` for deployments that include this evidence and model mount.
+
 # Capacity Report v1.8/v1.8.6 Update - 2026-07-17
 
 ## v1.8.6 Cycle Start Status

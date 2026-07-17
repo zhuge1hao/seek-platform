@@ -80,3 +80,8 @@ Current status: SQLite remains the working implementation. pgvector is reported 
 - `apps/api/scripts/acceptance_pgvector_nonempty.py` wraps dry-run, execute, verify, and repeat verify for non-empty migration reruns.
 - Non-empty pgvector migration, resume, and top-k comparison are `not_run` for v1.8.5 in the current environment because Docker PostgreSQL/pgvector was unavailable.
 - Production mode must not silently fall back to SQLite when `RAG_BACKEND=pgvector`.
+# v1.8.7 Knowledge Queue Note
+
+- Production Knowledge acceptance requires API and worker-general containers to see the same local BGE model directory.
+- v1.8.7 compose mounts `./apps/api/models` to `/app/models:ro` and sets `BGE_SMALL_ZH_MODEL_PATH=/app/models/bge-small-zh`.
+- Successful document statuses `ready` and `completed` are both searchable terminal states for SQLite and pgvector RAG.
