@@ -1,11 +1,11 @@
-﻿# 产品说明 PRD
+# 产品说明 PRD
 
-## meizhaiseek v1.8.5
+## meizhaiseek v1.8.6
 
 - Version focus: business queue closure, MinIO artifact storage acceptance, pgvector non-empty migration/resume, browser Agent smoke, and runtime marker closeout.
 - Model display name remains `meizhaiseek 2.0`.
-- No new business agents, v1.9 upgrade, local video Agent refactor, or local video Agent Prompt change are introduced in v1.8.5.
-- 200/300/500-user capacity validation remains out of scope for v1.8.5 and must stay `not_run`.
+- No new business agents, v1.9 upgrade, local video Agent refactor, or local video Agent Prompt change are introduced in v1.8.6.
+- 200/300/500-user capacity validation remains out of scope for v1.8.6 and must stay `not_run`.
 
 ## meizhaiseek v1.8.4
 

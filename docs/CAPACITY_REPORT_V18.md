@@ -1,25 +1,25 @@
-# Capacity Report v1.8/v1.8.5 Update - 2026-07-17
+# Capacity Report v1.8/v1.8.6 Update - 2026-07-17
 
-## v1.8.5 Cycle Start Status
+## v1.8.6 Cycle Start Status
 
-- Version under validation: `meizhaiseek v1.8.5`.
+- Version under validation: `meizhaiseek v1.8.6`.
 - Model display: `meizhaiseek 2.0`.
 - Business queue acceptance: `not_run`.
 - MinIO artifact storage acceptance: `not_run`.
 - pgvector non-empty migration/resume: `not_run`.
 - Browser Agent smoke: `not_run`.
-- 100-user v1.8.5 run: `not_run`.
-- 200/300/500-user v1.8.5 runs: `not_run` and intentionally deferred to v1.8.6.
-- Current maximum stable users for v1.8.5: not established.
-- Do not reuse older v1.8.3/v1.8.4 capacity results as v1.8.5 pass evidence.
+- 100-user v1.8.6 run: `not_run`.
+- 200/300/500-user v1.8.6 runs: `not_run` and intentionally deferred to a later version.
+- Current maximum stable users for v1.8.6: not established.
+- Do not reuse older v1.8.3/v1.8.4 capacity results as v1.8.6 pass evidence.
 
-## v1.8.5 Execution Status - 2026-07-17
+## v1.8.6 Execution Status - 2026-07-17
 
 - Dataset/Knowledge/Blueprint real queue acceptance: `not_run`, Docker daemon unavailable.
 - MinIO permission/TTL/streaming acceptance: `not_run`, Docker daemon unavailable.
 - pgvector non-empty migration/resume/top-k: `not_run`, Docker daemon unavailable.
 - Browser Agent smoke: `not_run`, production stack unavailable.
-- Current maximum stable user count remains the last truly validated 100-user result; v1.8.5 does not claim 200/300/500 users.
+- Current maximum stable user count remains the last truly validated 100-user result; v1.8.6 does not claim 200/300/500 users.
 
 # Capacity Report v1.8/v1.8.4 Update - 2026-07-16
 

@@ -34,7 +34,7 @@ def _json_request(method: str, url: str, token: str | None = None, payload: dict
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="v1.8.5 MinIO artifact storage acceptance")
+    parser = argparse.ArgumentParser(description="v1.8.6 MinIO artifact storage acceptance")
     parser.add_argument("--base-url", default="http://127.0.0.1")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="admin123")

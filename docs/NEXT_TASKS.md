@@ -1,13 +1,13 @@
 # Next Tasks
 
-## v1.8.5 Current Priority
+## v1.8.6 Current Priority
 
-- Branch: `stabilization/v1.8.5`
-- Version: `meizhaiseek v1.8.5`
+- Branch: `stabilization/v1.8.6`
+- Version: `meizhaiseek v1.8.6`
 - Model: `meizhaiseek 2.0`
 - Protected dirty file: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-v1.8.4 backend video Agent E2E, worker crash/restart, zombie recovery, 50 video jobs, and Redis pause/recovery passed with real evidence. v1.8.5 now focuses on Dataset/Knowledge/Blueprint business queues, MinIO artifact storage, pgvector non-empty migration/resume, browser `/agent` smoke, and runtime marker closeout. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.5.
+v1.8.4 backend video Agent E2E, worker crash/restart, zombie recovery, 50 video jobs, and Redis pause/recovery passed with real evidence. v1.8.6 now focuses on Dataset/Knowledge/Blueprint business queues, MinIO artifact storage, pgvector non-empty migration/resume, browser `/agent` smoke, and runtime marker closeout. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.6.
 
 Acceptance marker defaults:
 
@@ -24,7 +24,7 @@ Acceptance marker defaults:
 - `capacity_last_verified_users=0`
 - `capacity_last_test_passed=not_run`
 
-v1.8.5 execution blocker on 2026-07-17:
+v1.8.6 execution blocker on 2026-07-17:
 
 - Docker daemon is unavailable at `npipe:////./pipe/dockerDesktopLinuxEngine`.
 - Dataset/Knowledge/Blueprint business queue acceptance remains `not_run`.

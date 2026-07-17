@@ -1,12 +1,12 @@
 # Production Deployment v1.8
 
-## v1.8.5 Validation Note - 2026-07-17
+## v1.8.6 Validation Note - 2026-07-17
 
-Runtime target: `meizhaiseek v1.8.5`, model display `meizhaiseek 2.0`.
+Runtime target: `meizhaiseek v1.8.6`, model display `meizhaiseek 2.0`.
 
-Required production runtime health for final v1.8.5 acceptance:
+Required production runtime health for final v1.8.6 acceptance:
 
-- `version=v1.8.5`
+- `version=v1.8.6`
 - `model=meizhaiseek 2.0`
 - `database.backend=postgres`
 - `redis.status=ok`
@@ -14,13 +14,13 @@ Required production runtime health for final v1.8.5 acceptance:
 - `artifact_storage.backend=s3`
 - `rag.backend=pgvector`
 
-v1.8.5 must not claim Dataset/Knowledge/Blueprint queues, MinIO, pgvector, browser smoke, or runtime markers as `passed` until the corresponding v1.8.5 evidence docs record real execution.
+v1.8.6 must not claim Dataset/Knowledge/Blueprint queues, MinIO, pgvector, browser smoke, or runtime markers as `passed` until the corresponding v1.8.6 evidence docs record real execution.
 
 Current blocker on 2026-07-17:
 
 - `docker compose -f docker-compose.prod.yml config --quiet` passed.
 - `docker info` failed because `npipe:////./pipe/dockerDesktopLinuxEngine` was unavailable.
-- Keep v1.8.5 production acceptance markers at `not_run` until Docker services are healthy and acceptance scripts complete.
+- Keep v1.8.6 production acceptance markers at `not_run` until Docker services are healthy and acceptance scripts complete.
 
 ## v1.8.4 Validation Note - 2026-07-16
 

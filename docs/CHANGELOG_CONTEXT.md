@@ -1,10 +1,10 @@
 # Changelog Context
 
-## v1.8.5 - Business Queue And Storage Validation Cycle Started
+## v1.8.6 - Business Queue And Storage Validation Cycle Started
 
 Date: 2026-07-17
 
-Branch: `stabilization/v1.8.5`
+Branch: `stabilization/v1.8.6`
 
 Planned focus:
 
