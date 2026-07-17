@@ -27,3 +27,9 @@ Artifact metadata now includes:
 Downloads remain served by the API and must pass existing user/run ownership checks.
 
 Current status: local/local_shared metadata is wired. S3 actual upload and mock/provider tests remain follow-up work.
+# v1.8.5 Artifact Storage Status
+
+- S3 provider now exposes presigned download URL generation with bounded TTL.
+- Authenticated run artifact signed-url endpoint is coded.
+- `apps/api/scripts/acceptance_minio_storage.py` is available for 10MB default and explicit 100MB reruns.
+- Real MinIO permission, TTL, streaming, and cross-user download acceptance is `not_run` for v1.8.5 in the current environment because Docker/MinIO was unavailable.

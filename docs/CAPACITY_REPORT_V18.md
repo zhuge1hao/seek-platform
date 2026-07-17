@@ -13,6 +13,14 @@
 - Current maximum stable users for v1.8.5: not established.
 - Do not reuse older v1.8.3/v1.8.4 capacity results as v1.8.5 pass evidence.
 
+## v1.8.5 Execution Status - 2026-07-17
+
+- Dataset/Knowledge/Blueprint real queue acceptance: `not_run`, Docker daemon unavailable.
+- MinIO permission/TTL/streaming acceptance: `not_run`, Docker daemon unavailable.
+- pgvector non-empty migration/resume/top-k: `not_run`, Docker daemon unavailable.
+- Browser Agent smoke: `not_run`, production stack unavailable.
+- Current maximum stable user count remains the last truly validated 100-user result; v1.8.5 does not claim 200/300/500 users.
+
 # Capacity Report v1.8/v1.8.4 Update - 2026-07-16
 
 ## v1.8.4 Cycle Start Status

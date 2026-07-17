@@ -76,3 +76,7 @@ v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Bl
 未执行:
 
 - Multi-tab browser stress test for duplicate SSE connection reduction.
+# v1.8.5 Browser Smoke Status
+
+- Browser Run-card and conversation refresh smoke is `not_run` for v1.8.5 in this environment because the production Docker stack was unavailable.
+- Keep `BROWSER_AGENT_SMOKE_VERIFIED=not_run` until a real browser or Playwright run records run IDs, conversation IDs, artifacts, console output, and network/SSE behavior.

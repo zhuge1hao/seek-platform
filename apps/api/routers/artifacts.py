@@ -59,3 +59,29 @@ def download_run_artifact(run_id: str, artifact_id: str, request: Request, user:
         raise HTTPException(status_code=404, detail="文件不存在。")
     audit_log_service.write_log(audit_action, "success", user, artifact_id, {"run_id": run_id, "file_type": row["content_type"]}, audit_log_service.client_ip(request))
     return FileResponse(path=file_path, filename=row["filename"] or file_path.name)
+
+
+@router.get("/agent-runs/{run_id}/artifacts/{artifact_id}/signed-url")
+def signed_run_artifact_url(run_id: str, artifact_id: str, request: Request, ttl_seconds: int = Query(60, ge=1, le=900), user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
+    run = task_store.get_run(run_id) if user.get("role") == "admin" else task_store.get_run(run_id, user["user_id"], include_legacy=False)
+    if run is None:
+        raise HTTPException(status_code=404, detail="run not found")
+    with app_sqlite.connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM artifacts WHERE artifact_id=? AND run_id=? LIMIT 1",
+            (artifact_id, run_id),
+        ).fetchone()
+    if row is None or (user.get("role") != "admin" and row["user_id"] != user["user_id"]):
+        raise HTTPException(status_code=404, detail="artifact not found")
+    storage_backend = row["storage_backend"] if "storage_backend" in row.keys() else "local"
+    object_key = row["object_key"] if "object_key" in row.keys() else ""
+    if storage_backend == "s3":
+        signer = getattr(storage_provider(), "presigned_download_url", None)
+        if signer is None or not object_key:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        url = signer(object_key, ttl_seconds)
+    else:
+        url = f"/api/agent-runs/{run_id}/artifacts/{artifact_id}/download"
+    audit_action = "agent.video.artifact_signed_url" if run.get("agent_type") == "video_script_breakdown" else "artifact.signed_url"
+    audit_log_service.write_log(audit_action, "success", user, artifact_id, {"run_id": run_id, "storage_backend": storage_backend, "ttl_seconds": ttl_seconds}, audit_log_service.client_ip(request))
+    return {"artifact_id": artifact_id, "run_id": run_id, "storage_backend": storage_backend, "ttl_seconds": ttl_seconds, "url": url}

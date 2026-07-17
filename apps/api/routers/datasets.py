@@ -26,11 +26,21 @@ class CleaningRequest(BaseModel):
     rules: dict[str, Any] = Field(default_factory=dict)
 
 
+class ExportRequest(BaseModel):
+    format: str = "xlsx"
+
+
 def _dataset_or_404(dataset_id: str, user: dict[str, Any]) -> dict[str, Any]:
     dataset = dataset_store.get_dataset(dataset_id, user["user_id"], include_all_users=user.get("role") == "admin")
     if not dataset:
         raise HTTPException(status_code=404, detail="数据集不存在。")
     return dataset
+
+
+def _enqueue_dataset_job(job: dict[str, Any], background_tasks: BackgroundTasks) -> None:
+    from tasks.queue import enqueue_call
+
+    enqueue_call("tasks.dataset_tasks.execute_dataset_job", (job["job_id"], job["user_id"]), job["job_id"], background_tasks, timeout_seconds=3600)
 
 
 @router.post("/datasets/from-file")
@@ -64,6 +74,42 @@ def list_datasets(status: str | None = None, limit: int = 50, include_all_users:
 @router.get("/datasets/mapping-templates")
 def mapping_templates(user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
     return {"templates": field_mapping_service.list_mapping_templates(user["user_id"])}
+
+
+@router.get("/datasets/jobs/{job_id}")
+def get_dataset_job(job_id: str, user: dict[str, Any] = Depends(require_viewer_or_above)) -> dict[str, Any]:
+    job = dataset_store.get_dataset_job(job_id, user["user_id"] if user.get("role") != "admin" else None)
+    if not job:
+        raise HTTPException(status_code=404, detail="dataset job not found")
+    if user.get("role") != "admin" and job["user_id"] != user["user_id"]:
+        raise HTTPException(status_code=403, detail="dataset job access denied")
+    return {"job": job}
+
+
+@router.post("/datasets/jobs/{job_id}/cancel")
+def cancel_dataset_job(job_id: str, request: Request, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, Any]:
+    job = dataset_store.cancel_dataset_job(job_id, user["user_id"] if user.get("role") != "admin" else None)
+    if not job:
+        raise HTTPException(status_code=404, detail="dataset job not found")
+    if user.get("role") != "admin" and job["user_id"] != user["user_id"]:
+        raise HTTPException(status_code=403, detail="dataset job access denied")
+    audit_log_service.write_log("dataset.job.cancel", "success", user, job_id, {"status": job["status"]}, audit_log_service.client_ip(request))
+    return {"status": job["status"], "job": job}
+
+
+@router.post("/datasets/jobs/{job_id}/retry")
+def retry_dataset_job(job_id: str, request: Request, background_tasks: BackgroundTasks, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, Any]:
+    source = dataset_store.get_dataset_job(job_id, user["user_id"] if user.get("role") != "admin" else None)
+    if not source:
+        raise HTTPException(status_code=404, detail="dataset job not found")
+    if user.get("role") != "admin" and source["user_id"] != user["user_id"]:
+        raise HTTPException(status_code=403, detail="dataset job access denied")
+    job = dataset_store.retry_dataset_job(job_id, source["user_id"])
+    if not job:
+        raise HTTPException(status_code=404, detail="dataset job not found")
+    _enqueue_dataset_job(job, background_tasks)
+    audit_log_service.write_log("dataset.job.retry", "success", user, job_id, {"new_job_id": job["job_id"]}, audit_log_service.client_ip(request))
+    return {"status": "queued", "job_id": job["job_id"], "job": job}
 
 
 @router.get("/datasets/{dataset_id}")
@@ -128,6 +174,22 @@ def clean_dataset(dataset_id: str, payload: CleaningRequest, request: Request, b
         raise HTTPException(status_code=400, detail=f"数据清洗失败：{exc}") from exc
     audit_log_service.write_log("dataset.clean", "success", user, dataset_id, {"rules": payload.rules, "profile": result["profile"]}, audit_log_service.client_ip(request))
     return result
+
+
+@router.post("/datasets/{dataset_id}/export")
+def export_dataset(dataset_id: str, payload: ExportRequest, request: Request, background_tasks: BackgroundTasks, user: dict[str, Any] = Depends(require_operator_or_admin)) -> dict[str, Any]:
+    dataset = _dataset_or_404(dataset_id, user)
+    if user.get("role") != "admin" and dataset["user_id"] != user["user_id"]:
+        raise HTTPException(status_code=403, detail="dataset access denied")
+    from tasks.queue import backend as queue_backend
+    if queue_backend() == "redis":
+        job = dataset_store.create_dataset_job(dataset_id, dataset["user_id"], "dataset_export", {"format": payload.format})
+        _enqueue_dataset_job(job, background_tasks)
+        audit_log_service.write_log("dataset.export.enqueue", "success", user, dataset_id, {"job_id": job["job_id"], "format": payload.format}, audit_log_service.client_ip(request))
+        return {"status": "queued", "dataset_id": dataset_id, "job_id": job["job_id"], "job": job}
+    files = dataset_store.dataset_files(dataset)
+    audit_log_service.write_log("dataset.export", "success", user, dataset_id, {"format": payload.format}, audit_log_service.client_ip(request))
+    return {"status": "completed", "dataset_id": dataset_id, "files": files}
 
 
 @router.get("/datasets/{dataset_id}/profile")

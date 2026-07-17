@@ -28,6 +28,15 @@ class S3ArtifactStorage:
         response = self._client().get_object(Bucket=self._bucket(), Key=object_key)
         return response["Body"]
 
+    def presigned_download_url(self, object_key: str, expires_in: int = 60) -> str:
+        object_key = validate_object_key(object_key)
+        ttl = max(1, min(int(expires_in), 900))
+        return self._client().generate_presigned_url(
+            "get_object",
+            Params={"Bucket": self._bucket(), "Key": object_key},
+            ExpiresIn=ttl,
+        )
+
     def _bucket(self) -> str:
         bucket = os.getenv("S3_BUCKET", "").strip()
         if not bucket:

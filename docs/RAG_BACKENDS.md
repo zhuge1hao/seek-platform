@@ -75,3 +75,8 @@ Backends:
 - `RAG_BACKEND=pgvector`: production target placeholder.
 
 Current status: SQLite remains the working implementation. pgvector is reported as not migrated and must not be described as complete until document/chunk/vector writes and reads move behind the provider.
+# v1.8.5 pgvector Status
+
+- `apps/api/scripts/acceptance_pgvector_nonempty.py` wraps dry-run, execute, verify, and repeat verify for non-empty migration reruns.
+- Non-empty pgvector migration, resume, and top-k comparison are `not_run` for v1.8.5 in the current environment because Docker PostgreSQL/pgvector was unavailable.
+- Production mode must not silently fall back to SQLite when `RAG_BACKEND=pgvector`.

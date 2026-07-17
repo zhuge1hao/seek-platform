@@ -11,6 +11,8 @@ Current goal: continue from completed v1.8.4 video E2E and P1 worker/queue recov
 
 Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, and Redis recovery have real evidence. v1.8.5 Dataset/Knowledge/Blueprint queues, MinIO, pgvector, browser smoke, and final runtime markers remain `not_run` until real commands prove otherwise; failed gates must be recorded as `failed`.
 
+Execution note for 2026-07-17: Dataset export enqueue, Dataset job status/cancel/retry, S3 signed URL support, and acceptance script entry points are coded. Docker daemon is unavailable, so real Dataset/Knowledge/Blueprint queue, MinIO, pgvector, and browser production-stack acceptance remains `not_run`.
+
 ## v1.8.5 Scope
 
 - Do not add business agents.

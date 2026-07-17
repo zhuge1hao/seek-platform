@@ -29,3 +29,7 @@ Not executed:
 
 - Redis pause/recovery browser-level reconnection timing test.
 - Multi-tab duplicate SSE connection stress test.
+# v1.8.5 Browser/SSE Status
+
+- v1.8.4 Redis pause/recovery evidence remains the latest passed distributed event record.
+- v1.8.5 browser-side SSE terminal close, retry, cancel, and artifact refresh smoke is `not_run` until the Docker stack and browser smoke are available.

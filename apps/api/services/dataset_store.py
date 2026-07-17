@@ -392,3 +392,19 @@ def update_dataset_job(job_id: str, updates: dict[str, Any]) -> dict[str, Any] |
             ),
         )
     return get_dataset_job(job_id)
+
+
+def cancel_dataset_job(job_id: str, user_id: str | None) -> dict[str, Any] | None:
+    job = get_dataset_job(job_id, user_id)
+    if not job:
+        return None
+    if job["status"] in {"completed", "failed", "cancelled"}:
+        return job
+    return update_dataset_job(job_id, {"status": "cancelled", "metadata": {**job.get("metadata", {}), "cancelled_at": _now()}})
+
+
+def retry_dataset_job(job_id: str, user_id: str) -> dict[str, Any] | None:
+    job = get_dataset_job(job_id, user_id)
+    if not job:
+        return None
+    return create_dataset_job(job["dataset_id"], user_id, job["job_type"], job.get("input") or {})

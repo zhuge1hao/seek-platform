@@ -16,6 +16,12 @@ Required production runtime health for final v1.8.5 acceptance:
 
 v1.8.5 must not claim Dataset/Knowledge/Blueprint queues, MinIO, pgvector, browser smoke, or runtime markers as `passed` until the corresponding v1.8.5 evidence docs record real execution.
 
+Current blocker on 2026-07-17:
+
+- `docker compose -f docker-compose.prod.yml config --quiet` passed.
+- `docker info` failed because `npipe:////./pipe/dockerDesktopLinuxEngine` was unavailable.
+- Keep v1.8.5 production acceptance markers at `not_run` until Docker services are healthy and acceptance scripts complete.
+
 ## v1.8.4 Validation Note - 2026-07-16
 
 Runtime target: `meizhaiseek v1.8.4`, model display `meizhaiseek 2.0`.

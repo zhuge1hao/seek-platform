@@ -24,6 +24,15 @@ Acceptance marker defaults:
 - `capacity_last_verified_users=0`
 - `capacity_last_test_passed=not_run`
 
+v1.8.5 execution blocker on 2026-07-17:
+
+- Docker daemon is unavailable at `npipe:////./pipe/dockerDesktopLinuxEngine`.
+- Dataset/Knowledge/Blueprint business queue acceptance remains `not_run`.
+- MinIO permission/TTL/streaming acceptance remains `not_run`.
+- pgvector non-empty migration/resume/top-k acceptance remains `not_run`.
+- Browser `/agent` smoke remains `not_run`.
+- New rerun entry points: `acceptance_dataset_queue.py`, `acceptance_knowledge_queue.py`, `acceptance_blueprint_queue.py`, `acceptance_minio_storage.py`, `acceptance_pgvector_nonempty.py`.
+
 Latest P0 evidence:
 
 - Success run: `run_20260716094829_ecf1360b`.

@@ -119,3 +119,9 @@ python -m workers.worker
 ```
 
 Current status: Agent Run execution is wired through the queue facade. Dataset/document/Blueprint test run queue migration remains a v1.8 follow-up.
+# v1.8.5 Queue Status
+
+- Dataset export enqueue API and Dataset job status/cancel/retry endpoints are coded.
+- `apps/api/scripts/acceptance_dataset_queue.py`, `acceptance_knowledge_queue.py`, and `acceptance_blueprint_queue.py` are available for real-stack reruns.
+- Real Dataset/Knowledge/Blueprint queue acceptance is `not_run` for v1.8.5 until Docker PostgreSQL/Redis/workers are reachable.
+- Redis remains queue/event transport only; PostgreSQL/SQLite app storage is the business state source of truth.
