@@ -202,7 +202,7 @@ class CacheRateLimitEventBusTest(unittest.TestCase):
             patch.dict(os.environ, {"MULTI_INSTANCE_SSE_VERIFIED": "passed", "PGVECTOR_MIGRATION_VERIFIED": "failed", "CAPACITY_LAST_VERIFIED_USERS": "100"}),
         ):
             health = runtime_health_service.runtime_health()
-        self.assertEqual(health["version"], "v1.8.6")
+        self.assertEqual(health["version"], "v1.8.7")
         self.assertEqual(health["model"], "meizhaiseek 2.0")
         self.assertEqual(health["validation"]["multi_instance_sse_verified"], "passed")
         self.assertEqual(health["validation"]["redis_recovery_verified"], "not_run")

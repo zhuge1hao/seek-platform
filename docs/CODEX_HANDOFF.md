@@ -1,24 +1,24 @@
 # Codex Handoff
 
-## v1.8.6 Active Handoff
+## v1.8.7 Active Handoff
 
-- Branch: `stabilization/v1.8.6`
-- Version: `meizhaiseek v1.8.6`
+- Branch: `stabilization/v1.8.7`
+- Version: `meizhaiseek v1.8.7`
 - Model display: `meizhaiseek 2.0`
 - Protected dirty user work: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-Current goal: recover Docker Desktop Linux Engine, execute the prepared v1.8.5 Dataset/Knowledge/Blueprint, MinIO, pgvector, and browser acceptance scripts with real evidence, close pip-audit/security exceptions, add SQL safety guardrails, and finish runtime marker evidence for v1.8.6.
+Current goal: close v1.8.6 failed/not-run production evidence for Knowledge queue, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline rerun.
 
-Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, and Redis recovery have real evidence. v1.8.6 Dataset/Knowledge/Blueprint queues, MinIO, pgvector, browser smoke, and final runtime markers remain `not_run` until real commands prove otherwise; failed gates must be recorded as `failed`.
+Current validation defaults: v1.8.4 video E2E, worker recovery, video queue 50, Redis recovery, v1.8.6 Dataset queue, Blueprint queue, pgvector dry-run/execute/verify, SQL guardrails, PostgresPool tests, and distributed service tests have real evidence. Knowledge queue remains `failed`; MinIO TTL/streaming, pgvector resume/top-k, browser smoke, and v1.8.7 100-user baseline remain `not_run` until real commands prove otherwise.
 
-Execution note for 2026-07-17: Dataset export enqueue, Dataset job status/cancel/retry, S3 signed URL support, and acceptance script entry points are coded. Docker daemon is unavailable, so real Dataset/Knowledge/Blueprint queue, MinIO, pgvector, and browser production-stack acceptance remains `not_run`.
+Execution note for 2026-07-17: do not commit `AGENTS.md`, current `docker-compose.prod.yml` local env pass-through, `.env`, runtime logs, model files, uploads, Docker data, MinIO data, or `ARCHITECTURE_EVALUATION_REPORT.md`.
 
-## v1.8.6 Scope
+## v1.8.7 Scope
 
 - Do not add business agents.
 - Do not upgrade to v1.9.
 - Do not refactor local video Agent or modify its Prompt.
-- Do not run 200/300/500-user capacity tests in v1.8.6; leave them for a later version.
+- Do not run 200/300/500-user capacity tests in v1.8.7; leave them for a later version.
 - Do not modify or stage `ARCHITECTURE_EVALUATION_REPORT.md`.
 
 ## v1.8.4 P0 Video E2E Result - 2026-07-16

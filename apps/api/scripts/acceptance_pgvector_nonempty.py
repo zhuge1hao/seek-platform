@@ -23,7 +23,7 @@ def _run(cmd: list[str], env: dict[str, str]) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="v1.8.6 pgvector non-empty migration acceptance")
+    parser = argparse.ArgumentParser(description="v1.8.7 pgvector non-empty migration acceptance")
     parser.add_argument("--sqlite-path", default="")
     parser.add_argument("--batch-size", default="500")
     parser.add_argument("--json-report", action="store_true")

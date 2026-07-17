@@ -1,3 +1,17 @@
+# Capacity Report v1.8/v1.8.7 Update - 2026-07-17
+
+## v1.8.7 Cycle Start Status
+
+- Version under validation: `meizhaiseek v1.8.7`.
+- Model display: `meizhaiseek 2.0`.
+- Knowledge queue acceptance: `failed` at v1.8.6 start of this cycle.
+- MinIO TTL/10MB/100MB streaming: `not_run`.
+- pgvector resume/top-k: `not_run`.
+- Browser Agent smoke: `not_run`.
+- 100-user v1.8.7 run: `not_run`.
+- 200/300/500-user v1.8.7 runs: `not_run` and intentionally deferred.
+- Current maximum stable user count remains the last truly validated 100-user result until a new v1.8.7 Locust run passes.
+
 # Capacity Report v1.8/v1.8.6 Update - 2026-07-17
 
 ## v1.8.6 Cycle Start Status

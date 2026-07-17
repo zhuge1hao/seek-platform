@@ -40,7 +40,7 @@ def _login(base_url: str, username: str, password: str) -> str | None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="v1.8.6 knowledge queue acceptance")
+    parser = argparse.ArgumentParser(description="v1.8.7 knowledge queue acceptance")
     parser.add_argument("--base-url", default="http://127.0.0.1")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="admin123")
@@ -58,12 +58,12 @@ def main() -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 2
     if not args.seed_documents:
-        seed_dir = Path("runtime/logs/v186_knowledge_seed")
+        seed_dir = Path("runtime/logs/v187_knowledge_seed")
         seed_dir.mkdir(parents=True, exist_ok=True)
         generated = []
         for idx in range(5):
             path = seed_dir / f"knowledge_seed_{idx + 1}.md"
-            path.write_text((f"# v1.8.6 knowledge seed {idx + 1}\n\n" + "This controlled acceptance document has non-sensitive commerce BI text. " * 80), encoding="utf-8")
+            path.write_text((f"# v1.8.7 knowledge seed {idx + 1}\n\n" + "This controlled acceptance document has non-sensitive commerce BI text. " * 80), encoding="utf-8")
             generated.append(str(path))
         args.seed_documents = generated
         report["generated_seed_documents"] = len(generated)
@@ -99,10 +99,10 @@ def main() -> int:
         docs = poll_body.get("documents") or []
         by_id = {str(item.get("doc_id")): item for item in docs}
         terminal = {doc_id: by_id.get(doc_id, {}) for doc_id in uploaded}
-        if all((item.get("status") in {"ready", "failed"}) for item in terminal.values()):
+        if all((item.get("status") in {"ready", "completed", "failed"}) for item in terminal.values()):
             report["checks"]["documents_after_ingest"] = {"status_code": poll_status, "body": {"uploaded": terminal}}
             break
-    ready_docs = [doc_id for doc_id, item in terminal.items() if item.get("status") == "ready" and int(item.get("chunk_count") or 0) > 0]
+    ready_docs = [doc_id for doc_id, item in terminal.items() if item.get("status") in {"ready", "completed"} and int(item.get("chunk_count") or 0) > 0]
 
     if ready_docs:
         uploaded[0] = ready_docs[0]

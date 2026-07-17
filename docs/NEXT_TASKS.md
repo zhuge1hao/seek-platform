@@ -1,13 +1,13 @@
 # Next Tasks
 
-## v1.8.6 Current Priority
+## v1.8.7 Current Priority
 
-- Branch: `stabilization/v1.8.6`
-- Version: `meizhaiseek v1.8.6`
+- Branch: `stabilization/v1.8.7`
+- Version: `meizhaiseek v1.8.7`
 - Model: `meizhaiseek 2.0`
 - Protected dirty file: `ARCHITECTURE_EVALUATION_REPORT.md`
 
-v1.8.4 backend video Agent E2E, worker crash/restart, zombie recovery, 50 video jobs, and Redis pause/recovery passed with real evidence. v1.8.6 now focuses on Dataset/Knowledge/Blueprint business queues, MinIO artifact storage, pgvector non-empty migration/resume, browser `/agent` smoke, and runtime marker closeout. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.6.
+v1.8.7 closes the v1.8.6 failed/not-run evidence: Knowledge queue acceptance, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.7.
 
 Acceptance marker defaults:
 
@@ -15,11 +15,11 @@ Acceptance marker defaults:
 - `redis_recovery_verified=passed` when the deployment environment sets `REDIS_RECOVERY_VERIFIED=passed`
 - `worker_recovery_verified=passed` when the deployment environment sets `WORKER_RECOVERY_VERIFIED=passed`
 - `video_queue_50_verified=passed` when the deployment environment sets `VIDEO_QUEUE_50_VERIFIED=passed`
-- `dataset_queue_verified=not_run`
-- `knowledge_queue_verified=not_run`
-- `blueprint_queue_verified=not_run`
+- `dataset_queue_verified=passed` when the deployment environment sets `DATASET_QUEUE_VERIFIED=passed`
+- `knowledge_queue_verified=failed` until v1.8.7 Knowledge acceptance passes
+- `blueprint_queue_verified=passed` when the deployment environment sets `BLUEPRINT_QUEUE_VERIFIED=passed`
 - `artifact_s3_verified=not_run`
-- `pgvector_migration_verified=not_run`
+- `pgvector_migration_verified=passed` when the deployment environment sets `PGVECTOR_MIGRATION_VERIFIED=passed`
 - `browser_agent_smoke_verified=not_run`
 - `capacity_last_verified_users=0`
 - `capacity_last_test_passed=not_run`

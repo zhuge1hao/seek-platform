@@ -1,5 +1,13 @@
 # meizhaiseek-platform
 
+## Latest v1.8.7 Production Closure Cycle
+
+Branch: `stabilization/v1.8.7`.
+
+`meizhaiseek v1.8.7` focuses on closing the remaining v1.8.6 failed or not-run validation items: Knowledge queue acceptance, MinIO permission/TTL/streaming, pgvector resume/top-k, browser Agent smoke, pip-audit risk recheck, and a 100-user baseline rerun. Model display remains `meizhaiseek 2.0`. No new business agents, v1.9 upgrade, local video Agent refactor, local video Agent prompt changes, or 200/300/500-user load tests are included.
+
+Cycle-start status: Knowledge queue `failed`; raw pip-audit `failed`; MinIO TTL/10MB/100MB, pgvector resume/top-k, browser smoke, and 100-user v1.8.7 baseline are `not_run` until real commands are recorded.
+
 ## Latest v1.8.6 Validation Cycle
 
 Branch: `stabilization/v1.8.6`.

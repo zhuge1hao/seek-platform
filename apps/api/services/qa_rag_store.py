@@ -8,7 +8,12 @@ from typing import Any
 from services.config_backup_service import resolve_runtime_path
 
 _ALLOWED_SCHEMA_COLUMNS = {
+    ("documents", "user_id", "TEXT"),
+    ("documents", "status", "TEXT"),
+    ("documents", "chunk_count", "INTEGER DEFAULT 0"),
+    ("documents", "updated_at", "TEXT"),
     ("documents", "metadata_json", "TEXT"),
+    ("chunks", "user_id", "TEXT"),
     ("chunks", "metadata_json", "TEXT"),
 }
 _RAG_TABLES = {"documents", "chunks"}

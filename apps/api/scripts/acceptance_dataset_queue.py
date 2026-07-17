@@ -35,7 +35,7 @@ def _login(base_url: str, username: str, password: str) -> tuple[str | None, dic
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="v1.8.6 dataset queue acceptance")
+    parser = argparse.ArgumentParser(description="v1.8.7 dataset queue acceptance")
     parser.add_argument("--base-url", default="http://127.0.0.1")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="admin123")

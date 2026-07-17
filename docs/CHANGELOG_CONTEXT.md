@@ -1,5 +1,26 @@
 # Changelog Context
 
+## v1.8.7 - Production Closure Cycle Started
+
+Date: 2026-07-17
+
+Branch: `stabilization/v1.8.7`
+
+Planned focus:
+
+- Fix Knowledge queue acceptance failure from v1.8.6.
+- Complete MinIO permission, TTL, 10MB streaming, optional 100MB streaming, and artifact access validation.
+- Complete pgvector resume and top-k comparison evidence.
+- Run browser `/agent` smoke.
+- Recheck pip-audit accepted risks and rerun the 100-user baseline.
+
+Out of scope:
+
+- No v1.9 upgrade.
+- No new business agents.
+- No local video Agent refactor or Prompt change.
+- No 200/300/500-user capacity tests.
+
 ## v1.8.6 - Business Queue And Storage Validation Cycle Started
 
 Date: 2026-07-17

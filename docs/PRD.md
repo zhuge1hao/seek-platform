@@ -1,5 +1,12 @@
 # 产品说明 PRD
 
+## meizhaiseek v1.8.7
+
+- Version focus: Knowledge ingestion fix, MinIO full acceptance, pgvector resume/top-k, browser Agent smoke, pip-audit recheck, and 100-user baseline rerun.
+- Model display name remains `meizhaiseek 2.0`.
+- No new business agents, v1.9 upgrade, local video Agent refactor, or local video Agent Prompt change are introduced in v1.8.7.
+- 200/300/500-user capacity validation remains out of scope for v1.8.7 and must stay `not_run`.
+
 ## meizhaiseek v1.8.6
 
 - Version focus: business queue closure, MinIO artifact storage acceptance, pgvector non-empty migration/resume, browser Agent smoke, and runtime marker closeout.
