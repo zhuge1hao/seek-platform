@@ -1,5 +1,34 @@
 # Security Exceptions
 
+## v1.8.7 Recheck - 2026-07-17
+
+Status: raw `pip-audit` remains not clean in the local `.venv`; the exception gate passes with only exact, unexpired advisories.
+
+Executed:
+
+- Ran raw `.venv\Scripts\python.exe -m pip_audit --format json > apps/api/runtime/logs/pip_audit_v187_raw.json`.
+- Raw result: 5 advisories in 2 packages.
+- Ran `apps/api/scripts/check_pip_audit_report.py apps/api/runtime/logs/pip_audit_v187_raw.json`: passed.
+- Ran local `.venv\Scripts\python.exe -m pip check`: passed.
+- Ran production container `python -m pip check`: passed.
+- Confirmed production API container uses `setuptools 83.0.0`, while the local `.venv` still has `setuptools 81.0.0`.
+- Checked current package sources on 2026-07-17: `setuptools 83.0.0` is the current fix path; Sentence Transformers 5.x has a Transformers 5 support path, but no production upgrade was attempted without a full BGE/RAG smoke.
+
+Accepted risk:
+
+| Advisory ID | Package | Current version | Fix version | Scope | Reason | Review date | Expiry date |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `PYSEC-2026-3447` | `setuptools` | `81.0.0` in local `.venv`; `83.0.0` in production API container | `83.0.0` | Local/dev audit environment only after v1.8.7 production image check | Production image no longer shows `setuptools 81.0.0`; local upgrade remains tied to the local `torch 2.12.1` constraint and must be rechecked with environment refresh. | 2026-07-17 | 2026-08-17 |
+| `PYSEC-2025-217` | `transformers` | `4.57.6` | none listed | Local BGE-small-zh embedding dependency path | Production API does not expose Trainer checkpoint loading or user-supplied model checkpoint execution. | 2026-07-17 | 2026-09-17 |
+| `PYSEC-2026-2290` | `transformers` | `4.57.6` | none listed | Local BGE-small-zh embedding dependency path | Same restricted embedding scope; upgrade requires BGE/RAG smoke proof. | 2026-07-17 | 2026-09-17 |
+| `PYSEC-2026-2288` | `transformers` | `4.57.6` | `5.0.0` | Local BGE-small-zh embedding dependency path | Fix requires Transformers 5.x and compatible `sentence-transformers`; not upgraded without full embedding/RAG smoke. | 2026-07-17 | 2026-09-17 |
+| `PYSEC-2026-2289` | `transformers` | `4.57.6` | `5.3.0` | Local BGE-small-zh embedding dependency path | Fix requires Transformers 5.3+ and compatible `sentence-transformers`; not upgraded without full embedding/RAG smoke. | 2026-07-17 | 2026-09-17 |
+
+Not passed:
+
+- Raw `pip-audit`.
+- Transformers 5.x upgrade.
+
 ## v1.8.6 Review Update - 2026-07-17
 
 Status: raw `pip-audit` is not clean. The gate passes only if the exact package/advisory exceptions below are present and not expired.

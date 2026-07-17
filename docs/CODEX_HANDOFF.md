@@ -27,6 +27,13 @@ Browser core smoke evidence on 2026-07-17:
 - Covered: UI login, normal Agent Run submit, left conversation route refresh, Run-card display, reload restore, failed terminal state, and second-user isolation.
 - Still not covered: video UI artifacts, cancel, retry, and browser SSE terminal-close timing; do not mark the full `BROWSER_AGENT_SMOKE_VERIFIED` marker `passed` from this partial smoke alone.
 
+Security audit recheck on 2026-07-17:
+
+- Raw pip-audit: `failed`, 5 known advisories in `setuptools 81.0.0` and `transformers 4.57.6`.
+- Gate: `passed` with exact, unexpired entries in `docs/SECURITY_EXCEPTIONS.md`.
+- Production API container `pip check`: passed and shows `setuptools 83.0.0`.
+- Local `.venv` still shows `setuptools 81.0.0`; keep its short accepted risk until 2026-08-17.
+
 Execution note for 2026-07-17: do not commit `AGENTS.md`, current `docker-compose.prod.yml` local env pass-through, `.env`, runtime logs, model files, uploads, Docker data, MinIO data, or `ARCHITECTURE_EVALUATION_REPORT.md`.
 
 ## v1.8.7 Scope

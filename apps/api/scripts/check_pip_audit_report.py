@@ -15,12 +15,22 @@ APPROVED_EXCEPTIONS = {
 }
 
 
+def _read_report(path: Path) -> dict:
+    raw = path.read_bytes()
+    for encoding in ("utf-8", "utf-8-sig", "utf-16"):
+        try:
+            return json.loads(raw.decode(encoding))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+    raise ValueError(f"could not decode pip-audit JSON report: {path}")
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print("usage: check_pip_audit_report.py <pip-audit-json>", file=sys.stderr)
         return 2
     today = date.today()
-    report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    report = _read_report(Path(sys.argv[1]))
     blocking: list[str] = []
     for dep in report.get("dependencies", []):
         for vuln in dep.get("vulns") or []:

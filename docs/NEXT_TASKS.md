@@ -9,7 +9,7 @@
 
 v1.8.7 closes the v1.8.6 failed/not-run evidence: Knowledge queue acceptance, MinIO permission/TTL/streaming, pgvector resume/top-k, browser `/agent` smoke, pip-audit risk recheck, and 100-user baseline. Do not start v1.9, add new business agents, refactor local video Agent, change local video Agent Prompt, or run 200/300/500-user capacity tests in v1.8.7.
 
-Execution update on 2026-07-17: Knowledge queue acceptance passed after accepting `completed` as a ready-equivalent document status and mounting BGE-small-zh into API/worker-general containers. MinIO full acceptance passed for 10MB and 100MB. pgvector resume/top-k passed. Browser core Run-card smoke passed with Playwright. Remaining v1.8.7 work: browser video/download/cancel/retry closure, pip-audit recheck, and 100-user Locust.
+Execution update on 2026-07-17: Knowledge queue acceptance passed after accepting `completed` as a ready-equivalent document status and mounting BGE-small-zh into API/worker-general containers. MinIO full acceptance passed for 10MB and 100MB. pgvector resume/top-k passed. Browser core Run-card smoke passed with Playwright. pip-audit raw remains failed but the exact exception gate passed. Remaining v1.8.7 work: browser video/download/cancel/retry closure and 100-user Locust.
 
 Acceptance marker defaults:
 

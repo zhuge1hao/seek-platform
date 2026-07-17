@@ -1,4 +1,5 @@
 import os
+import json
 import sys
 import tempfile
 import unittest
@@ -66,6 +67,14 @@ class SecurityHardeningTest(unittest.TestCase):
         for command in ("python worker.py & whoami", "python worker.py | more", "python worker.py; rm x", "python worker.py > out", "python `whoami`"):
             with self.assertRaises(ValueError):
                 _safe_cli_args(command)
+
+    def test_pip_audit_gate_reads_powershell_utf16_json(self) -> None:
+        from scripts.check_pip_audit_report import _read_report
+
+        path = Path(self.tmp.name) / "pip_audit.json"
+        report = {"dependencies": [{"name": "setuptools", "version": "81.0.0", "vulns": [{"id": "PYSEC-2026-3447"}]}]}
+        path.write_text(json.dumps(report), encoding="utf-16")
+        self.assertEqual(_read_report(path), report)
 
 
 if __name__ == "__main__":
