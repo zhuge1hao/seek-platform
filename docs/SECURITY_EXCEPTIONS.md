@@ -1,5 +1,35 @@
 # Security Exceptions
 
+## v1.8.6 Review Update - 2026-07-17
+
+Status: raw `pip-audit` is not clean. The gate passes only if the exact package/advisory exceptions below are present and not expired.
+
+Executed:
+
+- Ran raw `.venv\Scripts\python.exe -m pip_audit --format json`.
+- Observed 5 advisories: one `setuptools 81.0.0` advisory and four `transformers 4.57.6` advisories.
+- Attempted `setuptools==83.0.0`; raw audit removed the setuptools advisory, but `pip check` failed because `torch 2.12.1` requires `setuptools<82`.
+- Reverted to `setuptools==81.0.0`; `pip check` passed.
+- Updated CI to save raw pip-audit JSON and run `apps/api/scripts/check_pip_audit_report.py`.
+- Checked package index: `sentence-transformers` latest observed `5.6.0`; `transformers` latest observed `5.14.1`.
+- Ran the v1.8.6 gate script against the raw JSON report: passed with only the exact package/advisory exceptions listed below.
+
+Accepted risk:
+
+| Advisory ID | Package | Current version | Fix version | Scope | Reason | Review date | Expiry date |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `PYSEC-2026-3447` | `setuptools` | `81.0.0` | `83.0.0` | Local/dev and build audit environment | Direct upgrade currently violates the installed `torch 2.12.1` requirement `setuptools<82`; this must be revisited with the torch/embedding dependency upgrade. | 2026-08-17 | 2026-08-17 |
+| `PYSEC-2025-217` | `transformers` | `4.57.6` | none listed | Local BGE-small-zh embedding dependency path | Production API does not expose Trainer checkpoint loading or user-supplied model checkpoint execution. | 2026-08-17 | 2026-09-17 |
+| `PYSEC-2026-2290` | `transformers` | `4.57.6` | none listed | Local BGE-small-zh embedding dependency path | Same restricted embedding scope; upgrade requires BGE/RAG smoke proof. | 2026-08-17 | 2026-09-17 |
+| `PYSEC-2026-2288` | `transformers` | `4.57.6` | `5.0.0` | Local BGE-small-zh embedding dependency path | Fix requires Transformers 5.x and compatible `sentence-transformers`; not upgraded without full embedding/RAG smoke. | 2026-08-17 | 2026-09-17 |
+| `PYSEC-2026-2289` | `transformers` | `4.57.6` | `5.3.0` | Local BGE-small-zh embedding dependency path | Fix requires Transformers 5.3+ and compatible `sentence-transformers`; not upgraded without full embedding/RAG smoke. | 2026-08-17 | 2026-09-17 |
+
+Not passed:
+
+- Raw `pip-audit` without exception gate.
+- Safe setuptools upgrade, because `pip check` failed with current torch metadata.
+- Transformers 5.x upgrade, because the required BGE/RAG smoke was not executed in this phase.
+
 ## v1.8.3 Review Update - 2026-07-12
 
 Status: reviewed again for v1.8.3. Raw `pip-audit` remains not clean; the security gate remains clean only with the three exact documented advisory exceptions below.

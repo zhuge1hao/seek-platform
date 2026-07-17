@@ -7,9 +7,11 @@ from pathlib import Path
 
 
 APPROVED_EXCEPTIONS = {
-    "PYSEC-2025-217": "2026-09-06",
-    "GHSA-69w3-r845-3855": "2026-09-06",
-    "GHSA-29pf-2h5f-8g72": "2026-09-06",
+    ("setuptools", "PYSEC-2026-3447"): "2026-08-17",
+    ("transformers", "PYSEC-2025-217"): "2026-09-17",
+    ("transformers", "PYSEC-2026-2290"): "2026-09-17",
+    ("transformers", "PYSEC-2026-2288"): "2026-09-17",
+    ("transformers", "PYSEC-2026-2289"): "2026-09-17",
 }
 
 
@@ -22,8 +24,9 @@ def main() -> int:
     blocking: list[str] = []
     for dep in report.get("dependencies", []):
         for vuln in dep.get("vulns") or []:
+            package_name = str(dep.get("name") or "").lower()
             vuln_id = str(vuln.get("id") or "")
-            review_until = APPROVED_EXCEPTIONS.get(vuln_id)
+            review_until = APPROVED_EXCEPTIONS.get((package_name, vuln_id))
             if not review_until:
                 blocking.append(f"{dep.get('name')} {dep.get('version')} {vuln_id}: new vulnerability")
                 continue

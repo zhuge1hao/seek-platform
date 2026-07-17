@@ -71,12 +71,11 @@ jobs:
           python -m bandit -r apps/api --severity-level medium -f json -o apps/api/runtime/logs/bandit-ci.json
           python apps/api/scripts/check_bandit_report.py apps/api/runtime/logs/bandit-ci.json
 
-      - name: pip-audit with documented exceptions
+      - name: pip-audit raw report and exception gate
         run: |
-          python -m pip_audit \
-            --ignore-vuln PYSEC-2025-217 \
-            --ignore-vuln GHSA-69w3-r845-3855 \
-            --ignore-vuln GHSA-29pf-2h5f-8g72
+          mkdir -p apps/api/runtime/logs
+          python -m pip_audit --format json > apps/api/runtime/logs/pip-audit-ci.json || true
+          python apps/api/scripts/check_pip_audit_report.py apps/api/runtime/logs/pip-audit-ci.json
 
       - name: Unit tests
         run: python -m unittest discover -s apps/api/tests
