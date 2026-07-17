@@ -15,10 +15,12 @@
 
 ## v1.8.6 Execution Status - 2026-07-17
 
-- Dataset/Knowledge/Blueprint real queue acceptance: `not_run`, Docker daemon unavailable.
-- MinIO permission/TTL/streaming acceptance: `not_run`, Docker daemon unavailable.
-- pgvector non-empty migration/resume/top-k: `not_run`, Docker daemon unavailable.
-- Browser Agent smoke: `not_run`, production stack unavailable.
+- Dataset queue acceptance: `passed`.
+- Knowledge queue acceptance: `failed`, worker processing did not produce 5 ready documents with chunks.
+- Blueprint queue acceptance: `passed`.
+- MinIO signed-url/download/secret-leak: `passed`; full TTL/permission/streaming acceptance remains `not_run`.
+- pgvector non-empty migration dry-run/execute/verify/repeat verify: `passed`; resume/top-k remain `not_run`.
+- Browser Agent smoke: `not_run`, browser-control tooling was unavailable and Playwright was not installed.
 - Current maximum stable user count remains the last truly validated 100-user result; v1.8.6 does not claim 200/300/500 users.
 
 # Capacity Report v1.8/v1.8.4 Update - 2026-07-16

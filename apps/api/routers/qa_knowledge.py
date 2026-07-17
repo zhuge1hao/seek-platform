@@ -34,10 +34,11 @@ def upload_knowledge_document(
         if queue_backend() == "redis":
             document = qa_document_ingest_service.prepare_upload(user["user_id"], file, title)
             doc_id = document["doc_id"]
+            job_id = f"document-ingest-{doc_id}"
             enqueue_call(
                 "tasks.knowledge_tasks.execute_document_ingest",
                 (doc_id, user["user_id"]),
-                job_id=f"document_ingest:{doc_id}",
+                job_id=job_id,
                 background_tasks=background_tasks,
                 timeout_seconds=1800,
             )
@@ -49,7 +50,7 @@ def upload_knowledge_document(
                 {"title": document["title"], "status": "pending"},
                 audit_log_service.client_ip(request),
             )
-            return {**document, "status": "pending", "job_id": f"document_ingest:{doc_id}"}
+            return {**document, "status": "pending", "job_id": job_id}
         result = qa_document_ingest_service.ingest_upload(user["user_id"], file, title)
     except qa_document_ingest_service.QAIngestError as exc:
         audit_log_service.write_log("qa.knowledge.failed", "failed", user, "upload", {"title": title or file.filename, "status": "failed"}, audit_log_service.client_ip(request))
@@ -92,7 +93,7 @@ def reindex_knowledge_document(doc_id: str, request: Request, background_tasks: 
             from services import qa_rag_store
 
             qa_rag_store.update_document_status(user["user_id"], doc_id, "pending", chunk_count=0)
-            job_id = f"document_reindex:{doc_id}"
+            job_id = f"document-reindex-{doc_id}"
             enqueue_call(
                 "tasks.knowledge_tasks.execute_document_ingest",
                 (doc_id, user["user_id"]),

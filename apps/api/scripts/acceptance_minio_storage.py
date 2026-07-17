@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from typing import Any
@@ -38,6 +39,7 @@ def main() -> int:
     parser.add_argument("--base-url", default="http://127.0.0.1")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="admin123")
+    parser.add_argument("--token-env", default="MEIZHAISEEK_ACCEPTANCE_TOKEN")
     parser.add_argument("--run-id", default="")
     parser.add_argument("--artifact-id", default="")
     parser.add_argument("--size", default="10MB")
@@ -52,9 +54,12 @@ def main() -> int:
         "started_at_epoch": time.time(),
     }
     base = args.base_url.rstrip("/")
-    login_status, login_body = _json_request("POST", f"{base}/api/auth/login", payload={"username": args.username, "password": args.password})
-    token = login_body.get("token") if login_status == 200 else None
-    report["checks"]["login"] = {"status_code": login_status}
+    token = os.getenv(args.token_env)
+    login_status = 0
+    if not token:
+        login_status, login_body = _json_request("POST", f"{base}/api/auth/login", payload={"username": args.username, "password": args.password})
+        token = login_body.get("token") if login_status == 200 else None
+    report["checks"]["login"] = {"status_code": login_status, "auth": "token_env" if os.getenv(args.token_env) else "password"}
     if not token:
         report["reason"] = "api_login_failed"
         print(json.dumps(report, ensure_ascii=False, indent=2))

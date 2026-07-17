@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from typing import Any
@@ -38,6 +39,7 @@ def main() -> int:
     parser.add_argument("--base-url", default="http://127.0.0.1")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="admin123")
+    parser.add_argument("--token-env", default="MEIZHAISEEK_ACCEPTANCE_TOKEN")
     parser.add_argument("--dataset-id", default="")
     parser.add_argument("--json-report", action="store_true")
     args = parser.parse_args()
@@ -48,12 +50,21 @@ def main() -> int:
         "checks": {},
         "started_at_epoch": time.time(),
     }
-    token, login = _login(args.base_url.rstrip("/"), args.username, args.password)
+    token = os.getenv(args.token_env)
+    login = {"status_code": 0, "body": {"auth": "token_env" if token else "password"}}
+    if not token:
+        token, login = _login(args.base_url.rstrip("/"), args.username, args.password)
     report["checks"]["login"] = login
     if not token:
         report["reason"] = "api_login_failed"
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 2
+    if not args.dataset_id:
+        list_status, list_body = _json_request("GET", f"{args.base_url.rstrip('/')}/api/datasets", token)
+        report["checks"]["dataset_discovery"] = {"status_code": list_status, "body": list_body}
+        datasets = list_body.get("datasets") or []
+        if datasets:
+            args.dataset_id = str(datasets[0].get("dataset_id") or "")
     if not args.dataset_id:
         report["reason"] = "dataset_id_required"
         print(json.dumps(report, ensure_ascii=False, indent=2))

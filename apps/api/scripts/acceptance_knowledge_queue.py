@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -43,6 +44,7 @@ def main() -> int:
     parser.add_argument("--base-url", default="http://127.0.0.1")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="admin123")
+    parser.add_argument("--token-env", default="MEIZHAISEEK_ACCEPTANCE_TOKEN")
     parser.add_argument("--seed-documents", nargs="*", default=[])
     parser.add_argument("--cleanup", action="store_true")
     parser.add_argument("--json-report", action="store_true")
@@ -50,15 +52,21 @@ def main() -> int:
 
     report: dict[str, Any] = {"acceptance": "knowledge_queue", "status": "not_run", "checks": {}, "started_at_epoch": time.time()}
     base = args.base_url.rstrip("/")
-    token = _login(base, args.username, args.password)
+    token = os.getenv(args.token_env) or _login(base, args.username, args.password)
     if not token:
         report["reason"] = "api_login_failed"
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 2
     if not args.seed_documents:
-        report["reason"] = "seed_documents_required"
-        print(json.dumps(report, ensure_ascii=False, indent=2))
-        return 2
+        seed_dir = Path("runtime/logs/v186_knowledge_seed")
+        seed_dir.mkdir(parents=True, exist_ok=True)
+        generated = []
+        for idx in range(5):
+            path = seed_dir / f"knowledge_seed_{idx + 1}.md"
+            path.write_text((f"# v1.8.6 knowledge seed {idx + 1}\n\n" + "This controlled acceptance document has non-sensitive commerce BI text. " * 80), encoding="utf-8")
+            generated.append(str(path))
+        args.seed_documents = generated
+        report["generated_seed_documents"] = len(generated)
 
     uploaded: list[str] = []
     for raw_path in args.seed_documents:
@@ -82,7 +90,22 @@ def main() -> int:
     docs_status, docs_body = _request("GET", f"{base}/api/qa/knowledge/documents", token)
     report["checks"]["stats"] = {"status_code": stats_status, "body": stats_body}
     report["checks"]["documents"] = {"status_code": docs_status, "body": docs_body}
-    if uploaded:
+
+    terminal: dict[str, Any] = {}
+    deadline = time.time() + 180
+    while uploaded and time.time() < deadline:
+        time.sleep(2)
+        poll_status, poll_body = _request("GET", f"{base}/api/qa/knowledge/documents", token)
+        docs = poll_body.get("documents") or []
+        by_id = {str(item.get("doc_id")): item for item in docs}
+        terminal = {doc_id: by_id.get(doc_id, {}) for doc_id in uploaded}
+        if all((item.get("status") in {"ready", "failed"}) for item in terminal.values()):
+            report["checks"]["documents_after_ingest"] = {"status_code": poll_status, "body": {"uploaded": terminal}}
+            break
+    ready_docs = [doc_id for doc_id, item in terminal.items() if item.get("status") == "ready" and int(item.get("chunk_count") or 0) > 0]
+
+    if ready_docs:
+        uploaded[0] = ready_docs[0]
         reindex_status, reindex_body = _json("POST", f"{base}/api/qa/knowledge/documents/{uploaded[0]}/reindex", token, {})
         report["checks"]["reindex"] = {"status_code": reindex_status, "body": reindex_body}
     if args.cleanup:
@@ -90,8 +113,9 @@ def main() -> int:
             status, body = _request("DELETE", f"{base}/api/qa/knowledge/documents/{doc_id}", token)
             report["checks"][f"delete:{doc_id}"] = {"status_code": status, "body": body}
 
-    ok = len(uploaded) >= min(5, len(args.seed_documents)) and stats_status == 200 and docs_status == 200
+    ok = len(ready_docs) >= min(5, len(args.seed_documents)) and stats_status == 200 and docs_status == 200
     report["uploaded_documents"] = uploaded
+    report["ready_documents"] = ready_docs
     report["status"] = "passed" if ok else "failed"
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if ok else 1

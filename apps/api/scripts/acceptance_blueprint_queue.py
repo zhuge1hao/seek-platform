@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from typing import Any
@@ -38,6 +39,7 @@ def main() -> int:
     parser.add_argument("--base-url", default="http://127.0.0.1")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="admin123")
+    parser.add_argument("--token-env", default="MEIZHAISEEK_ACCEPTANCE_TOKEN")
     parser.add_argument("--blueprint-id", default="")
     parser.add_argument("--test-case-id", default="")
     parser.add_argument("--json-report", action="store_true")
@@ -45,11 +47,23 @@ def main() -> int:
 
     report: dict[str, Any] = {"acceptance": "blueprint_queue", "status": "not_run", "checks": {}, "started_at_epoch": time.time()}
     base = args.base_url.rstrip("/")
-    token = _login(base, args.username, args.password)
+    token = os.getenv(args.token_env) or _login(base, args.username, args.password)
     if not token:
         report["reason"] = "api_login_failed"
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 2
+    if not args.blueprint_id:
+        list_status, list_body = _json_request("GET", f"{base}/api/agent-blueprints", token)
+        report["checks"]["blueprint_discovery"] = {"status_code": list_status, "body": list_body}
+        blueprints = list_body.get("blueprints") or list_body.get("items") or []
+        if blueprints:
+            args.blueprint_id = str(blueprints[0].get("blueprint_id") or "")
+    if args.blueprint_id and not args.test_case_id:
+        cases_status, cases_body = _json_request("GET", f"{base}/api/agent-blueprints/{args.blueprint_id}/test-cases", token)
+        report["checks"]["test_case_discovery"] = {"status_code": cases_status, "body": cases_body}
+        cases = cases_body.get("test_cases") or cases_body.get("items") or []
+        if cases:
+            args.test_case_id = str(cases[0].get("test_case_id") or "")
     if not args.blueprint_id or not args.test_case_id:
         report["reason"] = "blueprint_id_and_test_case_id_required"
         print(json.dumps(report, ensure_ascii=False, indent=2))

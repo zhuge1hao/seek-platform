@@ -33,7 +33,7 @@ class QAKnowledgeQueueTest(unittest.TestCase):
             result = qa_knowledge.upload_knowledge_document(object(), BackgroundTasks(), upload, "Doc", user)
 
         self.assertEqual(result["status"], "pending")
-        self.assertEqual(result["job_id"], "document_ingest:doc_1")
+        self.assertEqual(result["job_id"], "document-ingest-doc_1")
         self.assertEqual(enqueued["func_path"], "tasks.knowledge_tasks.execute_document_ingest")
         self.assertEqual(enqueued["args"], ("doc_1", "user_a"))
 
@@ -58,7 +58,7 @@ class QAKnowledgeQueueTest(unittest.TestCase):
         ):
             result = qa_knowledge.reindex_knowledge_document("doc_1", object(), BackgroundTasks(), user)
 
-        self.assertEqual(result, {"doc_id": "doc_1", "status": "pending", "job_id": "document_reindex:doc_1"})
+        self.assertEqual(result, {"doc_id": "doc_1", "status": "pending", "job_id": "document-reindex-doc_1"})
         update_status.assert_called_once_with("user_a", "doc_1", "pending", chunk_count=0)
         self.assertEqual(enqueued["args"], ("doc_1", "user_a"))
 

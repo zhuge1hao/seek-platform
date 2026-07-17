@@ -19,6 +19,15 @@ Execute the v1.8.5 acceptance scripts with real Docker PostgreSQL, Redis/RQ, Min
 | pgvector migration | `python apps/api/scripts/acceptance_pgvector_nonempty.py --json-report` | `not_run` |
 | Browser Agent smoke | real browser or Playwright smoke | `not_run` |
 
+## Execution Update - 2026-07-17
+
+- Dataset queue: `passed`.
+- Knowledge queue: `failed`.
+- Blueprint queue: `passed`.
+- MinIO storage: `partial`; signed-url/download/secret-leak passed, TTL/streaming/user-isolation not run.
+- pgvector migration: `passed` for dry-run/execute/verify/repeat verify in Docker network; resume/top-k not run.
+- Browser Agent smoke: `not_run`.
+
 ## Rules
 
 - Docker-dependent acceptance stays `not_run` if Docker is unavailable.
