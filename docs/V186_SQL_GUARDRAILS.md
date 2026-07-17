@@ -17,4 +17,12 @@ Add guardrails that prevent new unsafe f-string SQL or unexplained `# nosec B608
 
 ## Current Result
 
-`not_run`
+- Scanner: `passed`
+- Baseline guard: `passed`
+- CI gate: `passed`
+- Baseline count: 31
+- High-risk findings: 0
+- Medium-risk findings: 28
+- Low-risk findings: 3
+- Fixed in v1.8.6: 4 high-risk helper SQL sites in `app_sqlite_migrations.py` and `qa_rag_store.py`.
+- Full historical cleanup: `not_run`

@@ -71,6 +71,9 @@ jobs:
           python -m bandit -r apps/api --severity-level medium -f json -o apps/api/runtime/logs/bandit-ci.json
           python apps/api/scripts/check_bandit_report.py apps/api/runtime/logs/bandit-ci.json
 
+      - name: SQL safety baseline gate
+        run: python apps/api/scripts/scan_sql_safety.py --json-report --fail-on-new --baseline docs/sql_safety_baseline_v186.json
+
       - name: pip-audit raw report and exception gate
         run: |
           mkdir -p apps/api/runtime/logs

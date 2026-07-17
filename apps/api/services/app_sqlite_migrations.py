@@ -7,6 +7,13 @@ import sqlite3
 SCHEMA_VERSION = "20260702_v17_agent_blueprints"
 SCHEMA_VERSION_V171 = "20260703_v171_blueprint_release_loop"
 SCHEMA_VERSION_V18 = "20260705_v18_capacity_foundation"
+_ALLOWED_COLUMN_MIGRATIONS = {
+    ("agent_runs", "row_version", "INTEGER DEFAULT 1"),
+    ("artifacts", "storage_backend", "TEXT DEFAULT 'local'"),
+    ("artifacts", "object_key", "TEXT"),
+    ("artifacts", "original_filename", "TEXT"),
+    ("artifacts", "checksum", "TEXT"),
+}
 
 
 def _now() -> str:
@@ -405,6 +412,8 @@ def run_migrations(conn: sqlite3.Connection) -> None:
 
 
 def _ensure_column(conn: sqlite3.Connection, table: str, column: str, definition: str) -> None:
-    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if (table, column, definition) not in _ALLOWED_COLUMN_MIGRATIONS:
+        raise ValueError("unsupported sqlite migration column")
+    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}  # nosec B608: table is validated against _ALLOWED_COLUMN_MIGRATIONS.
     if column not in existing:
-        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")  # nosec B608: table, column, and definition are validated against _ALLOWED_COLUMN_MIGRATIONS.

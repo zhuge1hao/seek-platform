@@ -237,6 +237,12 @@ Acceptance:
 - Failed stays documented as `not passed`.
 - Do not claim 500-user support without the real 500-user run.
 
+## v1.8.6 SQL Safety Follow-Up
+
+- Reduce `docs/sql_safety_baseline_v186.json` from 31 findings by replacing remaining dynamic SQL with fixed-clause builders or SQLAlchemy Core.
+- Keep the CI fail-on-new gate enabled.
+- Do not add new `# nosec B608` comments without a narrow explanation and baseline review.
+
 ## Current Known Blocks
 
 - `ARCHITECTURE_EVALUATION_REPORT.md` is protected dirty user work.

@@ -283,6 +283,13 @@ Generate a new-window handoff package only. Do not continue feature work. Update
 21. `apps/api/tasks/queue.py`
 22. `docker-compose.prod.yml`
 
+## v1.8.6 SQL Safety Handoff
+
+- SQL safety scanner: `apps/api/scripts/scan_sql_safety.py`.
+- Baseline: `docs/sql_safety_baseline_v186.json`.
+- Evidence: `docs/V186_SQL_SAFETY_GUARDRAILS.md`.
+- CI now blocks new dynamic SQL findings with `--fail-on-new`.
+
 ## New Window Prompt
 
 Continue `E:\USE\codexhome\agents-cowork\meizhaiseek-platform` on branch `stabilization/v1.8.3`, current HEAD `d83603213ed34fc315d783a98aa1c51467f288f3`, version `meizhaiseek v1.8.3`, model `meizhaiseek 2.0`. First read `AGENTS.md`, `docs/CODEX_HANDOFF.md`, `docs/NEXT_TASKS.md`, `docs/CHANGELOG_CONTEXT.md`, then inspect `git status --short` and the relevant code. `ARCHITECTURE_EVALUATION_REPORT.md` is protected dirty user work; do not modify, stage, or fix whitespace. Do not commit `.env`, runtime, logs, uploads, models, node_modules, DB files, Docker data, MinIO data, local videos, or Locust raw output. Current dirty functional files include `apps/web/src/app/agent/page.tsx`, `apps/api/tests/test_agent_runs_api.py`, and `docker-compose.prod.yml`; review before editing. Priority is `/agent`: after task submit the left conversation list must add and persist a real conversation; route switching must restore task/chat/run; script/video breakdown must truly execute through backend/local Agent; run status/result/error must write back to the matching chat. Verify with real backend/API or browser smoke, not UI-only state. Preserve auth, Connector, Debug, admin, Dataset, QA/RAG/DeepSeek, SQLite, video breakdown, SSE/polling, Blueprint, Postgres/Redis/RQ/S3/pgvector.

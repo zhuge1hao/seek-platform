@@ -7,6 +7,12 @@ from typing import Any
 
 from services.config_backup_service import resolve_runtime_path
 
+_ALLOWED_SCHEMA_COLUMNS = {
+    ("documents", "metadata_json", "TEXT"),
+    ("chunks", "metadata_json", "TEXT"),
+}
+_RAG_TABLES = {"documents", "chunks"}
+
 
 def _use_pgvector() -> bool:
     return os.getenv("RAG_BACKEND", "sqlite").lower() == "pgvector"
@@ -34,12 +40,16 @@ def _connect() -> sqlite3.Connection:
 
 
 def _columns(conn: sqlite3.Connection, table: str) -> set[str]:
-    return {str(row["name"]) for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if table not in _RAG_TABLES:
+        raise ValueError("unsupported RAG table")
+    return {str(row["name"]) for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}  # nosec B608: table is validated against _RAG_TABLES.
 
 
 def _add_column(conn: sqlite3.Connection, table: str, name: str, definition: str) -> None:
+    if (table, name, definition) not in _ALLOWED_SCHEMA_COLUMNS:
+        raise ValueError("unsupported RAG schema column")
     if name not in _columns(conn, table):
-        conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")  # nosec B608: table, column, and definition are validated against _ALLOWED_SCHEMA_COLUMNS.
 
 
 def init_db() -> None:

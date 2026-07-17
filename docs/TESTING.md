@@ -202,3 +202,10 @@ These are skipped by default. Set `RUN_DISTRIBUTED_ACCEPTANCE_TESTS=1` only when
 - `python apps/api/scripts/verify_schema_parity.py --json-report`: passed.
 - `python apps/api/scripts/migrate_rag_sqlite_to_pgvector.py --dry-run --json-report`: passed on current empty SQLite RAG source.
 - `cd apps/web; $env:NEXT_PUBLIC_API_BASE_URL='http://localhost:8000'; npm.cmd ci; npm.cmd run build`: passed.
+
+## meizhaiseek v1.8.6 SQL Safety
+
+- `python apps/api/scripts/scan_sql_safety.py --json-report`: executed.
+- `python apps/api/scripts/scan_sql_safety.py --json-report --fail-on-new --baseline docs/sql_safety_baseline_v186.json`: passed.
+- CI runs the same baseline gate after Bandit.
+- Baseline is 31 findings; high-risk findings are 0 after v1.8.6 helper guard fixes.
