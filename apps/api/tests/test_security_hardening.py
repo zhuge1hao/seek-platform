@@ -1,9 +1,12 @@
 import os
+import contextlib
+import io
 import json
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -75,6 +78,15 @@ class SecurityHardeningTest(unittest.TestCase):
         report = {"dependencies": [{"name": "setuptools", "version": "81.0.0", "vulns": [{"id": "PYSEC-2026-3447"}]}]}
         path.write_text(json.dumps(report), encoding="utf-16")
         self.assertEqual(_read_report(path), report)
+
+    def test_pip_audit_gate_rejects_undocumented_torch_advisory(self) -> None:
+        from scripts import check_pip_audit_report
+
+        path = Path(self.tmp.name) / "pip_audit_torch.json"
+        report = {"dependencies": [{"name": "torch", "version": "2.12.1", "vulns": [{"id": "GHSA-rrmf-rvhw-rf47"}]}]}
+        path.write_text(json.dumps(report), encoding="utf-8")
+        with patch.object(sys, "argv", ["check_pip_audit_report.py", str(path)]), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(check_pip_audit_report.main(), 1)
 
 
 if __name__ == "__main__":

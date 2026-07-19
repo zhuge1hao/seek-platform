@@ -4,18 +4,19 @@ Version: `meizhaiseek v1.8.9`
 
 ## pip-audit
 
-- Raw report: `not_run`.
-- Gate: `not_run`.
+- Raw report: `failed`, 4 known vulnerabilities in 1 package.
+- Gate: `passed`.
 - New focus: `torch 2.12.1` / `GHSA-rrmf-rvhw-rf47`.
-- Rule: do not accept the advisory until production image scope, BGE usage, model trust boundary, and upgrade feasibility are checked.
+- Result: cleared by upgrading local `.venv` to `torch 2.13.0`; production API image already used `torch 2.13.0`.
+- BGE smoke after local upgrade: `success bge-small-zh 512`.
 
 ## Existing Accepted Risks
 
-- Local `.venv` `setuptools 81.0.0`: existing short-term accepted risk only when production image uses a fixed setuptools.
+- Local `.venv` `setuptools 81.0.0`: cleared by upgrading local `.venv` to `setuptools 83.0.0`.
 - `transformers 4.57.6`: existing exact accepted risks for local BGE embedding path.
 
 ## Validation
 
 - `bandit`: `not_run`.
-- `pip-audit`: `not_run`.
-- `check_pip_audit_report.py`: `not_run`.
+- `pip-audit`: `failed`, only existing `transformers 4.57.6` advisories remain.
+- `check_pip_audit_report.py`: `passed`.

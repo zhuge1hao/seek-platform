@@ -1,7 +1,16 @@
 # Security Exceptions
 ## v1.8.9 Recheck Status
 
-Raw pip-audit is `failed` for v1.8.9 with 6 known vulnerabilities in 3 packages. The accepted-risk gate is also `failed` because `torch 2.12.1` / `GHSA-rrmf-rvhw-rf47` is a new undocumented advisory. Existing accepted risks for local `.venv` setuptools and Transformers remain exact, dated, and separate from production image risk; new or expired advisories must fail the gate.
+Raw pip-audit is `failed` for v1.8.9 with 4 known vulnerabilities in 1 package after local environment refresh. The accepted-risk gate is `passed` with only exact, unexpired `transformers 4.57.6` advisories. The new `torch 2.12.1` / `GHSA-rrmf-rvhw-rf47` finding was not accepted as risk; it was cleared by upgrading the local `.venv` to `torch 2.13.0` and `setuptools 83.0.0`, matching the already-fixed production API image versions.
+
+Executed:
+
+- Ran raw `.venv\Scripts\python.exe -m pip_audit --format json > apps/api/runtime/logs/pip_audit_v189_raw.json`: failed, 4 advisories in 1 package.
+- Ran `.venv\Scripts\python.exe apps/api/scripts/check_pip_audit_report.py apps/api/runtime/logs/pip_audit_v189_raw.json`: passed.
+- Ran local `.venv\Scripts\python.exe -m pip install --dry-run torch==2.13.0 setuptools==83.0.0`: passed.
+- Upgraded local `.venv` to `torch 2.13.0` and `setuptools 83.0.0`; `pip check` passed.
+- Confirmed production API container uses `torch 2.13.0`, `setuptools 83.0.0`, `sentence-transformers 3.3.1`, and `transformers 4.57.6`; production `pip check` passed.
+- Ran BGE smoke after local upgrade: `success bge-small-zh 512`.
 
 ## v1.8.7 Recheck - 2026-07-17
 
