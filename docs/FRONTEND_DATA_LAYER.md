@@ -1,4 +1,7 @@
-﻿# Frontend Data Layer
+# Frontend Data Layer
+## v1.8.8 `/agent` Data Layer Notes
+
+The `/agent` page now guards run-card updates by active conversation id so stale SSE or polling updates from a previous conversation cannot overwrite the current run. Browser persistence and duplicate-message checks still require full matrix execution.
 
 v1.6.5 保留 `apps/web/src/lib/api.ts` 作为唯一 HTTP、鉴权和错误处理层。SWR hooks 只调用 `api.ts` 中的函数，不绕过 token、401、403 和后端不可达处理。
 

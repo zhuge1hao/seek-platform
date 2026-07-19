@@ -1,4 +1,11 @@
 # Next Tasks
+## v1.8.8 Current Next Tasks
+
+1. Run `/agent` browser matrix against real services and record exact pass/fail evidence in `docs/V188_BROWSER_PRODUCTION_MATRIX.md`.
+2. Run multi-instance SSE acceptance with two API instances sharing PostgreSQL, Redis, JWT secret, artifact backend, and RAG backend.
+3. Capture `app_db_pool_acquire_seconds` p50/p95/p99 and pool gauge maxima after Locust runs.
+4. Run 100-user regression first; run 200-user gate only if all prerequisites pass.
+5. Recheck raw pip-audit, accepted-risk gate, SQL baseline, and follow_imports assessment.
 
 ## v1.8.7 Current Priority
 

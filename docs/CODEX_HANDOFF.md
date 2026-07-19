@@ -1,4 +1,13 @@
 # Codex Handoff
+## v1.8.8 Handoff Addendum
+
+- Branch: `stabilization/v1.8.8`.
+- Version: `meizhaiseek v1.8.8`.
+- Model display: `meizhaiseek 2.0`.
+- Protected dirty files remain excluded: `ARCHITECTURE_EVALUATION_REPORT.md`, `AGENTS.md`, and existing local `docker-compose.prod.yml` changes.
+- `coded`: stale smoke version hardcoding removed; PostgreSQL pool metrics added; browser matrix Playwright coverage expanded.
+- `not_run`: real video success/download matrix, multi-instance SSE production acceptance, 100-user regression, and 200-user capacity gate.
+- Marker rule: keep Browser, multi-instance SSE, and 200-user capacity as `not_run` or `failed` unless real logs and evidence prove `passed`.
 
 ## v1.8.7 Active Handoff
 

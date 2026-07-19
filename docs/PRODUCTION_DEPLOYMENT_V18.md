@@ -1,4 +1,7 @@
 # Production Deployment v1.8
+## v1.8.8 Deployment Notes
+
+Runtime health must report `version=v1.8.8` and `model=meizhaiseek 2.0`. PostgreSQL deployments now expose non-sensitive pool stats in runtime health and Prometheus pool metrics. Do not set Browser, multi-instance SSE, or 200-user capacity markers to `passed` without real v1.8.8 evidence.
 
 ## v1.8.7 Validation Note - 2026-07-17
 

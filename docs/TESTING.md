@@ -1,4 +1,10 @@
-﻿# Testing
+# Testing
+## v1.8.8 Test Notes
+
+- Smoke: `python apps/api/scripts/smoke_minimal.py --expected-version v1.8.8 --expected-model "meizhaiseek 2.0"`.
+- Pool metrics exporter: `python apps/api/scripts/export_pool_metrics.py --metrics-url http://127.0.0.1/metrics`.
+- Browser matrix: `cd apps/web && npm.cmd run e2e:agent -- --project=chrome`; set `MEIZHAISEEK_E2E_RUN_VIDEO=1` only when the local video Agent and test video are available.
+- Capacity: run 100 users first; run 200 users only after browser matrix, multi-instance SSE, pool metrics, Docker health, queue depth, and quality gates pass.
 
 ## v1.8.7 Final Validation - 2026-07-17
 

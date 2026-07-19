@@ -1,4 +1,7 @@
 # Artifact Storage
+## v1.8.8 Browser Artifact Evidence
+
+Browser video Excel/JSON/evidence download verification is `not_run` until the real video Agent matrix is executed. Signed artifact routes must continue to enforce user isolation and avoid leaking MinIO secrets.
 
 ## v1.8.4 Acceptance Status
 

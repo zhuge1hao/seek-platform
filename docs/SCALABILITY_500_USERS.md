@@ -1,4 +1,7 @@
 # Scalability 500 Users
+## v1.8.8 Gate Update
+
+This cycle may validate 200 users only after all prerequisites pass. 300/500-user load tests remain out of scope and must stay `not_run`. PostgreSQL pool-wait p95 and pool timeout count are required capacity evidence for any new user ceiling.
 
 ## v1.8.7 Capacity Status
 

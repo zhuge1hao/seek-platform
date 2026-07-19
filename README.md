@@ -1,4 +1,9 @@
 # meizhaiseek-platform
+## Latest v1.8.8 Browser, SSE, Pool Metrics, and 200-user Gate
+
+Branch: `stabilization/v1.8.8`.
+
+`meizhaiseek v1.8.8` keeps model display `meizhaiseek 2.0` and starts the browser production matrix, multi-instance SSE validation, PostgreSQL pool-wait observability, stale smoke-version cleanup, and 100/200-user capacity gate cycle. Browser full matrix, multi-instance SSE, and 200-user capacity remain `not_run` until real environment evidence is recorded.
 
 ## Latest v1.8.7 Production Closure Cycle
 
