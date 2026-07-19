@@ -5,8 +5,9 @@
 - `100_user_regression`: `not_run` for v1.8.9 in this working tree.
 - Browser full matrix prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_BROWSER_MATRIX.md`.
 - Multi-instance SSE prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_MULTI_INSTANCE_SSE.md`.
-- `200_user_gate`: `not_run`; must still wait for pool metrics, Docker health, queue depth zero, and quality gates.
-- Pool metrics to collect after load: pool-wait p50/p95/p99, timeout count, max in-use, max overflow, and max waiters.
+- Pool metrics prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_POOL_METRICS.md`.
+- `200_user_gate`: `not_run`; must still wait for Docker health, queue depth zero, and quality gates.
+- Latest pool metrics: p50 `0.000543435s`, p95 `0.182753950s`, p99 `0.797634409s`, timeout count `0`, max in-use `10`, max overflow `5`, max waiters `29`.
 
 ## v1.8.7 Cycle Start Status
 
