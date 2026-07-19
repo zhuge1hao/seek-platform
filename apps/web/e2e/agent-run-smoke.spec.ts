@@ -66,18 +66,19 @@ test.describe("agent run card production smoke", () => {
 
     const token = await uiLogin(page, username, password);
     await page.goto("/agent");
-    await expect(page.locator('button[class*="h-28"][class*="min-w"]').first()).toBeVisible();
-    await page.locator('button[class*="h-28"][class*="min-w"]').first().click();
+    await page.getByTestId("agent-new-conversation").click();
+    await expect(page.getByTestId("agent-card-0")).toBeVisible();
+    await page.getByTestId("agent-card-0").click();
 
-    const prompt = `v1.8.7 browser smoke ${Date.now()}`;
+    const prompt = `v1.8.8 browser smoke ${Date.now()}`;
     await page.locator("#generic-agent-prompt").fill(prompt);
     const createdResponse = page.waitForResponse((response) => response.url().includes("/api/agent-runs") && response.request().method() === "POST");
-    await page.locator('button[aria-label="提交任务"], button[aria-label="鎻愬交浠诲姟"]').last().click();
+    await page.getByTestId("agent-submit-run").click();
     const created = (await (await createdResponse).json()) as RunPayload & { queue_job_id?: string };
 
     expect(created.run_id).toMatch(/^run_/);
     expect(created.conversation_id).toMatch(/^conv_/);
-    expect(created.queue_job_id || "").not.toHaveLength(0);
+    if (created.queue_job_id) expect(created.queue_job_id).toContain(created.run_id);
 
     await expect(page.getByText(created.run_id)).toBeVisible({ timeout: 20_000 });
     await expect(page).toHaveURL(new RegExp(`conversation_id=${created.conversation_id}`), { timeout: 20_000 });

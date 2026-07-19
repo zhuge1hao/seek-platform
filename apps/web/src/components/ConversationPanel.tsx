@@ -116,7 +116,7 @@ export function ConversationPanel({ title, onNewConversation, conversations = []
         </button>
       </div>
 
-      <button className="mb-5 flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" onClick={onNewConversation} type="button">
+      <button className="mb-5 flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" data-testid="agent-new-conversation" onClick={onNewConversation} type="button">
         <Plus className="h-4 w-4" />
         发起新对话
       </button>

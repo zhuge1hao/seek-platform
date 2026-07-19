@@ -312,7 +312,7 @@ export function GenericAgentPanel({ agent, agentConfig, promptValue, onPromptCha
             <span className="text-xl font-medium text-slate-950">meizhaiseek 2.0</span>
             <span className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xl font-semibold text-slate-950 shadow-sm">-{agent.cost}</span>
             {getStoredUser()?.role === "admin" ? <button className="inline-flex h-12 items-center gap-2 rounded-2xl border border-violet-200 px-4 text-sm font-semibold text-violet-700 disabled:opacity-50" disabled={previewLoading} onClick={() => void handlePreview()} type="button"><Code2 className="h-4 w-4" />{previewLoading ? "生成中" : "预览 Payload"}</button> : null}
-            <button aria-label="提交任务" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-300 text-white shadow-sm transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:bg-slate-200" disabled={isSubmitting || isUploading || !canOperate} onClick={handleSubmit} type="button">
+            <button aria-label="提交任务" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-300 text-white shadow-sm transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:bg-slate-200" data-testid="agent-submit-run" disabled={isSubmitting || isUploading || !canOperate} onClick={handleSubmit} type="button">
               {isSubmitting ? <X className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
             </button>
           </div>

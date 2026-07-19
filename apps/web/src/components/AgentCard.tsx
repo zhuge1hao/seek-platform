@@ -24,6 +24,7 @@ export function AgentCard({ title, index, active = false, onClick }: AgentCardPr
         rotations[index % rotations.length],
         gradients[index % gradients.length]
       ].join(" ")}
+      data-testid={`agent-card-${index}`}
       onClick={onClick}
       type="button"
     >

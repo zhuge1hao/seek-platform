@@ -62,6 +62,7 @@ export default function AgentPage() {
   const activeRequestRef = useRef<AbortController | null>(null);
   const requestSeqRef = useRef(0);
   const conversationIdsRef = useRef<Set<string>>(new Set());
+  const activeConversationIdRef = useRef<string | null>(null);
   const lastLoadedConversationIdRef = useRef<string | null>(null);
   const loadingConversationIdRef = useRef<string | null>(null);
   const mountedRef = useRef(false);
@@ -92,6 +93,7 @@ export default function AgentPage() {
     activeRequestRef.current = null;
     lastLoadedConversationIdRef.current = null;
     loadingConversationIdRef.current = null;
+    activeConversationIdRef.current = null;
     localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
     syncConversationUrl(null);
     setSelectedAgentId(null);
@@ -120,6 +122,7 @@ export default function AgentPage() {
     loadingConversationIdRef.current = conversationId;
 
     const endLoad = markPerf("agent.loadConversation", { conversation_id: conversationId });
+    activeConversationIdRef.current = conversationId;
     setActiveConversationId(conversationId);
     setDetailLoading(true);
     setConversationError("");
@@ -157,6 +160,10 @@ export default function AgentPage() {
       }
     }
   }, [clearActiveConversation]);
+
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversationId || currentConversation?.conversation_id || null;
+  }, [activeConversationId, currentConversation?.conversation_id]);
 
   useEffect(() => {
     loadConversationRef.current = loadConversation;
@@ -226,7 +233,16 @@ export default function AgentPage() {
   }, [refreshConversations]);
 
   const handleRunChange = useCallback((run: AgentRunStatus) => {
-    setCurrentRun(run);
+    const visibleConversationId = activeConversationIdRef.current;
+    const runConversationId = run.conversation_id || null;
+    const isKnownConversation = Boolean(runConversationId && conversationIdsRef.current.has(runConversationId));
+    const canUpdateVisibleRun = Boolean(
+      runConversationId && (
+        runConversationId === visibleConversationId ||
+        (!visibleConversationId && !isKnownConversation)
+      )
+    );
+    if (canUpdateVisibleRun) setCurrentRun(run);
     const knownConversation = Boolean(run.conversation_id && conversationIdsRef.current.has(run.conversation_id));
     setConversations((items) => {
       const nextItems = items.map((item) => item.conversation_id === run.conversation_id ? { ...item, latest_run_id: run.run_id, status: run.status, summary: run.error || run.result?.answer || item.summary } : item);
