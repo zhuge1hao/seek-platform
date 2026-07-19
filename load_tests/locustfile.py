@@ -23,6 +23,7 @@ def _credentials() -> tuple[str, str]:
 class MeizhaiseekUser(HttpUser):
     wait_time = between(1, 4)
     token: str | None = None
+    last_run_id: str | None = None
 
     def on_start(self) -> None:
         username, password = _credentials()
@@ -64,6 +65,7 @@ class MeizhaiseekUser(HttpUser):
             if not run_id:
                 response.failure("missing run_id")
                 return
+            self.last_run_id = str(run_id)
         self.client.get(f"/api/agent-runs/{run_id}/summary", headers=self.headers, name="/api/agent-runs/:id/summary")
 
     @task(2)
@@ -76,15 +78,7 @@ class MeizhaiseekUser(HttpUser):
     def sse_active_run_smoke(self) -> None:
         if not self.token:
             return
-        created = self.client.post(
-            "/api/agent-runs",
-            json={"agent_type": AGENT_TYPE, "prompt": "SSE capacity smoke"},
-            headers=self.headers,
-            name="/api/agent-runs",
-        )
-        if created.status_code != 200:
-            return
-        run_id = created.json().get("run_id")
+        run_id = self.last_run_id
         if not run_id:
             return
         start = time.time()

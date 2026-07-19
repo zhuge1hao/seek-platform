@@ -1,7 +1,14 @@
 # Scalability 500 Users
 ## v1.8.9 Gate Update
 
-This cycle may validate 200 users only after all prerequisites pass. 300/500-user load tests remain out of scope and must stay `not_run`. PostgreSQL pool-wait p95 and pool timeout count are required capacity evidence for any new user ceiling.
+This cycle executed the 200-user gate after the browser matrix, multi-instance SSE, Redis recovery, pool metrics, Docker health, and 100-user baseline prerequisites passed. The 200-user gate remained `failed` after three rounds because `/api/agent-runs` submit p95 stayed above the `1000 ms` limit. 300/500-user load tests remain out of scope and stayed `not_run`.
+
+- 100 users: `passed` on 2026-07-19, round 2.
+- 200 users: `failed` on 2026-07-19 after three rounds.
+- 300 users: `not_run`.
+- 500 users: `not_run`.
+- Current maximum stable users: `100`.
+- Latest 200-user round: 100,301 requests, 0 failures, aggregate p95 `490 ms`, p99 `920 ms`, submit p95 `1800 ms`, pool-wait p95 `0.000953807 s`, DB pool timeout `0`, final queue depth `0`.
 
 ## v1.8.7 Capacity Status
 

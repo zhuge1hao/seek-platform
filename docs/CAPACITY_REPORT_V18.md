@@ -1,15 +1,16 @@
 # Capacity Report v1.8/v1.8.7 Update - 2026-07-17
 ## v1.8.9 Capacity Gate Status
 
-- `CAPACITY_LAST_VERIFIED_USERS`: remains `100` until a v1.8.9 200-user gate passes.
+- `CAPACITY_LAST_VERIFIED_USERS`: `100`.
+- `CAPACITY_LAST_TEST_PASSED`: `failed` for the latest v1.8.9 200-user gate.
 - `100_user_regression`: `passed` on round 2, 2026-07-19. Evidence: `docs/V189_100_USER_RESULTS.md`.
 - Browser full matrix prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_BROWSER_MATRIX.md`.
 - Multi-instance SSE prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_MULTI_INSTANCE_SSE.md`.
 - Pool metrics prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_POOL_METRICS.md`.
 - Docker health after 100-user run: `passed`; production API, web, nginx, PostgreSQL, Redis, MinIO, worker-general x4, and worker-video x2 were running with restart count `0`.
 - Queue depth after 100-user run: `general=0`, `video=0`, `dataset=0`, `knowledge=0`, `blueprint=0`.
-- `200_user_gate`: `not_run`; unblocked after the passed 100-user regression and final prerequisite checks.
-- Latest pool metrics from the 100-user regression: p50 `0.000501423s`, p95 `0.000952704s`, p99 `0.000992818s`, timeout count `0`, max in-use `15`, max overflow `9`, max waiters `0`.
+- `200_user_gate`: `failed` after three execution rounds. Evidence: `docs/V189_200_USER_RESULTS.md`.
+- Latest pool metrics from the 200-user round 3: p50 `0.000502003s`, p95 `0.000953807s`, p99 `0.000993967s`, timeout count `0`, max in-use `25`, max overflow `20`, max waiters `0`.
 
 ### v1.8.9 100-User Regression - 2026-07-19
 
@@ -17,6 +18,15 @@
 - Remediation: applied non-secret v1.8.9 override settings `APP_DB_POOL_SIZE=10`, `APP_DB_MAX_OVERFLOW=10`, and `AGENT_RUN_SUBMIT_TIMING=false`, then recreated the API service.
 - Round 2: `passed`; 84,808 requests, 0 failures, aggregate p95 `140 ms`, p99 `300 ms`, `/api/agents` p95 `69 ms`, login p95 `260 ms`, submit p95 `470 ms`, pool-wait p95 `0.000952704 s`, DB pool timeout `0`.
 - Current maximum stable user count remains `100` until the v1.8.9 200-user gate is completed.
+
+### v1.8.9 200-User Gate - 2026-07-19
+
+- Round 1: `failed`; 74,194 requests, 20 login 429 failures, aggregate p95 `890 ms`, p99 `2600 ms`, submit p95 `1400 ms`, pool-wait p95 `0.013558287 s`, immediate post-run general queue `598`.
+- Remediation: raised the v1.8.9 local shared-IP login limit to `LOGIN_RATE_LIMIT_PER_WINDOW=120`, changed Locust SSE to reuse the latest submitted run instead of creating an extra hidden run, restored `worker-general=4`, and verified queue drain.
+- Round 2: `failed`; 91,841 requests, 0 failures, aggregate p95 `670 ms`, p99 `1900 ms`, `/api/agents` p95 `560 ms`, login p95 `830 ms`, submit p95 `2500 ms`, pool-wait p95 `0.109555556 s`.
+- Remediation: increased API PostgreSQL pool to `APP_DB_POOL_SIZE=20`, `APP_DB_MAX_OVERFLOW=20`, with PostgreSQL `max_connections=100`.
+- Round 3: `failed`; 100,301 requests, 0 failures, aggregate p95 `490 ms`, p99 `920 ms`, `/api/agents` p95 `390 ms`, login p95 `670 ms`, submit p95 `1800 ms`, pool-wait p95 `0.000953807 s`, final queue depth `0`, container restart count `0`.
+- Final conclusion: 200-user gate did not pass because submit p95 stayed above the `1000 ms` limit after three attempts. Current maximum stable user count remains `100`. 300/500-user tests were not executed.
 
 ## v1.8.7 Cycle Start Status
 
