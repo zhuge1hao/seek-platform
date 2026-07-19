@@ -18,14 +18,14 @@ Model: `meizhaiseek 2.0`
 | Docker recovery | passed | Docker daemon recovered on attempt 1; production compose healthy |
 | 8001 recovery | passed | `http://127.0.0.1:8001/health` returned ok on attempt 1 |
 | smoke_minimal | passed | `--expected-version v1.8.9 --expected-model "meizhaiseek 2.0"` passed after Postgres persistence check fix |
-| Browser full matrix | not_run | Pending Playwright and real service run |
-| Multi-instance SSE | not_run | Pending two-API validation |
-| Pool metrics live collection | not_run | Pending production `/metrics` scrape |
-| 100-user regression | not_run | Pending prerequisites |
-| 200-user capacity | not_run | Pending 100-user pass |
-| pip-audit gate | not_run | Pending v1.8.9 raw audit and gate |
-| SQL safety | not_run | Pending baseline scan |
-| follow_imports review | not_run | Pending targeted mypy evaluation |
+| Browser full matrix | passed | Final Playwright matrix `6 passed` in `2.3m` with real 8001 video |
+| Multi-instance SSE | passed | Two API instances, Redis pause/recovery, and API A restart passed |
+| Pool metrics live collection | passed | Production `/metrics` scrape and controlled pool stress passed |
+| 100-user regression | passed | Round 2 passed with 84,808 requests, 0 failures, submit p95 `470 ms` |
+| 200-user capacity | failed | Three rounds executed; final submit p95 `1800 ms` exceeded the `1000 ms` gate |
+| pip-audit gate | passed | Raw audit remains failed with documented `transformers` advisories only; exact gate passed |
+| SQL safety | passed | Baseline `31`, high-risk `0` |
+| follow_imports review | passed | Targeted `pydantic.*` override set to `normal`; mypy passed |
 
 ## Execution Rule
 

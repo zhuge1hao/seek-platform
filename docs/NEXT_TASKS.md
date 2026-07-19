@@ -1,11 +1,12 @@
 # Next Tasks
 ## v1.8.9 Current Next Tasks
 
-1. Run `/agent` browser matrix against real services and record exact pass/fail evidence in `docs/V189_BROWSER_MATRIX.md`.
-2. Run multi-instance SSE acceptance with two API instances sharing PostgreSQL, Redis, JWT secret, artifact backend, and RAG backend.
-3. Capture `app_db_pool_acquire_seconds` p50/p95/p99 and pool gauge maxima after Locust runs.
-4. Run 100-user regression first; run 200-user gate only if all prerequisites pass.
-5. Recheck raw pip-audit, accepted-risk gate, SQL baseline, and follow_imports assessment.
+1. `passed`: `/agent` browser matrix against real services, including real video/download/cancel/retry/SSE/isolation. Evidence: `docs/V189_BROWSER_MATRIX.md`.
+2. `passed`: multi-instance SSE and Redis recovery with two API instances sharing PostgreSQL, Redis, JWT secret, artifact backend, and RAG backend. Evidence: `docs/V189_MULTI_INSTANCE_SSE.md`.
+3. `passed`: live PostgreSQL pool metrics capture from production `/metrics`. Evidence: `docs/V189_POOL_METRICS.md`.
+4. `passed`: 100-user regression on round 2. Evidence: `docs/V189_100_USER_RESULTS.md`.
+5. `failed`: 200-user capacity gate after three rounds; current maximum stable users remain `100`. Evidence: `docs/V189_200_USER_RESULTS.md`.
+6. `passed`: pip-audit accepted-risk gate, SQL safety baseline, and follow_imports assessment. Evidence: `docs/V189_SECURITY_AUDIT.md` and `docs/V189_SQL_AND_TYPING_REVIEW.md`.
 
 ## v1.8.7 Current Priority
 

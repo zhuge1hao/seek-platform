@@ -5,9 +5,10 @@
 - Version: `meizhaiseek v1.8.9`.
 - Model display: `meizhaiseek 2.0`.
 - Protected dirty files remain excluded: `ARCHITECTURE_EVALUATION_REPORT.md`, `AGENTS.md`, and existing local `docker-compose.prod.yml` changes.
-- `coded`: stale smoke version hardcoding removed; PostgreSQL pool metrics added; browser matrix Playwright coverage expanded.
-- `not_run`: real video success/download matrix, multi-instance SSE production acceptance, 100-user regression, and 200-user capacity gate.
-- Marker rule: keep Browser, multi-instance SSE, and 200-user capacity as `not_run` or `failed` unless real logs and evidence prove `passed`.
+- `passed`: Docker recovery, 8001 health, smoke_minimal, browser full matrix, multi-instance SSE, Redis recovery, live pool metrics, 100-user regression, SQL safety, Bandit, and the accepted-risk pip-audit gate.
+- `failed`: 200-user capacity gate after three rounds; final submit p95 `1800 ms` exceeded the `1000 ms` gate.
+- Runtime markers in the v1.8.9 override set Browser, multi-instance SSE, Redis recovery, and historic queue/storage/RAG markers to `passed`; capacity remains `CAPACITY_LAST_VERIFIED_USERS=100` and `CAPACITY_LAST_TEST_PASSED=failed`.
+- Final Playwright rerun after stabilizing `agent-run-smoke.spec.ts`: `6 passed` in `2.3m` with real 8001 video and temporary admin/viewer users.
 
 ## v1.8.7 Active Handoff
 

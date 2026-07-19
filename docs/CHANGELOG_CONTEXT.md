@@ -1,12 +1,14 @@
 # Changelog Context
-## v1.8.9 In Progress
+## v1.8.9 - Execution Closure Cycle
 
 - Started `stabilization/v1.8.9` from v1.8.8 HEAD `102d1a1cde275556254c8c8a10d595d34f8fe534`.
 - Updated runtime and frontend version surfaces to `meizhaiseek v1.8.9` while keeping model display `meizhaiseek 2.0`.
 - Removed stale `v1.8.4` smoke expectation by using CLI/env/config expected version and model.
 - Added PostgreSQL pool-wait metrics and a Prometheus exporter helper for capacity reporting.
-- Expanded `/agent` Playwright coverage for persistence, retry/isolation, SSE lifecycle, and optional real video/download validation.
-- Real browser full matrix, multi-instance SSE, and capacity gates remain `not_run` until environment execution evidence is recorded.
+- Completed `/agent` Playwright coverage for persistence, real video/downloads, cancel/retry, run switch abort, SSE terminal close, and backend user isolation.
+- Completed multi-instance SSE and Redis recovery acceptance with two API instances.
+- Completed 100-user regression on round 2.
+- Executed 200-user capacity gate for three rounds; final result is `failed` because submit p95 remained above the gate. 300/500-user tests were not executed.
 
 ## v1.8.7 - Production Closure Cycle Closed
 

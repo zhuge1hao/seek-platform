@@ -4,6 +4,7 @@
 - Smoke: `python apps/api/scripts/smoke_minimal.py --expected-version v1.8.9 --expected-model "meizhaiseek 2.0"`.
 - Pool metrics exporter: `python apps/api/scripts/export_pool_metrics.py --metrics-url http://127.0.0.1/metrics`.
 - Browser matrix: `cd apps/web && npm.cmd run e2e:agent -- --project=chrome`; set `MEIZHAISEEK_E2E_RUN_VIDEO=1` only when the local video Agent and test video are available.
+- Final v1.8.9 browser matrix rerun: `6 passed` in `2.3m` with real 8001 video after fixing the smoke spec's active-conversation restoration race.
 - Capacity: run 100 users first; run 200 users only after browser matrix, multi-instance SSE, pool metrics, Docker health, queue depth, and quality gates pass.
 - SQL safety: `.venv\Scripts\python.exe apps/api/scripts/scan_sql_safety.py --json-report --fail-on-new --baseline docs/sql_safety_baseline_v186.json`; v1.8.9 result was `passed`, baseline `31`, high-risk `0`.
 - Dependency audit gate: raw `.venv\Scripts\python.exe -m pip_audit --format json` remains `failed` with 4 documented `transformers 4.57.6` advisories; `.venv\Scripts\python.exe apps/api/scripts/check_pip_audit_report.py <raw-json>` passed.

@@ -3,7 +3,7 @@
 
 Branch: `stabilization/v1.8.9`.
 
-`meizhaiseek v1.8.9` keeps model display `meizhaiseek 2.0` and starts the browser production matrix, multi-instance SSE validation, PostgreSQL pool-wait observability, stale smoke-version cleanup, and 100/200-user capacity gate cycle. Browser full matrix, multi-instance SSE, and 200-user capacity remain `not_run` until real environment evidence is recorded.
+`meizhaiseek v1.8.9` keeps model display `meizhaiseek 2.0` and closes the browser production matrix, multi-instance SSE validation, PostgreSQL pool-wait observability, stale smoke-version cleanup, and 100/200-user capacity gate cycle with real production-stack evidence. Browser full matrix, multi-instance SSE, Redis recovery, pool metrics collection, and the 100-user regression are `passed`; the 200-user gate is `failed` after three real rounds because submit p95 remained above the gate. Current maximum stable users remain `100`. 300/500-user load tests were not executed.
 
 ## Latest v1.8.7 Production Closure Cycle
 

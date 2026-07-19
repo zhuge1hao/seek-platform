@@ -20,6 +20,9 @@ type RunPayload = {
 async function uiLogin(page: Page, name: string, secret: string): Promise<string> {
   const loginResponse = page.waitForResponse((response) => response.url().includes("/api/auth/login") && response.request().method() === "POST");
   await page.goto("/login");
+  await page.evaluate(() => {
+    localStorage.removeItem("meizhaiseek_active_conversation_id");
+  });
   await page.locator("input").first().fill(name);
   await page.locator('input[type="password"]').fill(secret);
   await page.locator('button[type="submit"]').click();
@@ -28,6 +31,21 @@ async function uiLogin(page: Page, name: string, secret: string): Promise<string
   const payload = (await response.json()) as LoginPayload;
   await expect(page).toHaveURL(/\/agent/, { timeout: 20_000 });
   return payload.token;
+}
+
+async function openFreshAgentSelection(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    localStorage.removeItem("meizhaiseek_active_conversation_id");
+  });
+  const conversationsLoaded = page
+    .waitForResponse((response) => response.url().includes("/api/conversations") && response.request().method() === "GET", { timeout: 15_000 })
+    .catch(() => null);
+  await page.goto("/agent");
+  await conversationsLoaded;
+  await expect(page.getByTestId("agent-new-conversation")).toBeVisible({ timeout: 10_000 });
+  await page.getByTestId("agent-new-conversation").click();
+  await expect(page.getByTestId("agent-card-0")).toBeVisible({ timeout: 10_000 });
+  await page.waitForTimeout(300);
 }
 
 async function apiLogin(request: APIRequestContext, name: string, secret: string): Promise<string> {
@@ -65,10 +83,8 @@ test.describe("agent run card production smoke", () => {
     });
 
     const token = await uiLogin(page, username, password);
-    await page.goto("/agent");
-    await page.getByTestId("agent-new-conversation").click();
-    await expect(page.getByTestId("agent-card-0")).toBeVisible();
-    await page.getByTestId("agent-card-0").click();
+    await openFreshAgentSelection(page);
+    await page.getByTestId("agent-card-0").click({ force: true });
 
     const prompt = `v1.8.9 browser smoke ${Date.now()}`;
     await page.locator("#generic-agent-prompt").fill(prompt);

@@ -4,7 +4,7 @@
 - Version focus: browser production matrix, multi-instance SSE, PostgreSQL pool-wait observability, smoke script version maintenance, 100-user regression, 200-user capacity gate, and security/SQL closeout.
 - Model display name remains `meizhaiseek 2.0`.
 - Do not enter v1.9, add business agents, change the local video Agent source or Prompt, upgrade Transformers 5.x, or run 300/500-user load tests.
-- Browser full matrix, multi-instance SSE, and 200-user capacity stay `not_run` until real command evidence is recorded.
+- Browser full matrix, multi-instance SSE, Redis recovery, live pool metrics, and the 100-user regression have real `passed` evidence. The 200-user gate was executed for three rounds and remains `failed` because submit p95 stayed above the `1000 ms` gate. Current maximum stable users remain `100`; 300/500-user load tests remain `not_run`.
 
 ## meizhaiseek v1.8.7
 
