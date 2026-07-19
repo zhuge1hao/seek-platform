@@ -17,6 +17,12 @@ Version: `meizhaiseek v1.8.9`
 
 ## Validation
 
-- `bandit`: `not_run`.
+- `compileall`: `passed`.
+- `ruff`: `passed`.
+- `mypy`: `passed`, including the new `pydantic.*` `follow_imports = "normal"` override.
+- `unittest`: `passed`, 91 tests.
+- `pytest`: `passed`, 91 passed / 2 skipped.
+- `bandit`: `passed` for medium+ severity; no medium or high issues identified.
 - `pip-audit`: `failed`, only existing `transformers 4.57.6` advisories remain.
 - `check_pip_audit_report.py`: `passed`.
+- SQL safety scan: `passed`, baseline `31`, high-risk count `0`.

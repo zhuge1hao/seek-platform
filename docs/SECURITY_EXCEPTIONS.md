@@ -11,6 +11,9 @@ Executed:
 - Upgraded local `.venv` to `torch 2.13.0` and `setuptools 83.0.0`; `pip check` passed.
 - Confirmed production API container uses `torch 2.13.0`, `setuptools 83.0.0`, `sentence-transformers 3.3.1`, and `transformers 4.57.6`; production `pip check` passed.
 - Ran BGE smoke after local upgrade: `success bge-small-zh 512`.
+- Ran P8 raw `.venv\Scripts\python.exe -m pip_audit --format json > apps/api/runtime/logs/pip_audit_v189_p8_raw.json`: failed, 4 advisories in 1 package.
+- Ran P8 gate `.venv\Scripts\python.exe apps/api/scripts/check_pip_audit_report.py apps/api/runtime/logs/pip_audit_v189_p8_raw.json`: passed.
+- Ran P8 `bandit --severity-level medium -r apps/api`: passed with no medium or high issues.
 
 ## v1.8.7 Recheck - 2026-07-17
 

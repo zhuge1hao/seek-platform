@@ -5,6 +5,9 @@
 - Pool metrics exporter: `python apps/api/scripts/export_pool_metrics.py --metrics-url http://127.0.0.1/metrics`.
 - Browser matrix: `cd apps/web && npm.cmd run e2e:agent -- --project=chrome`; set `MEIZHAISEEK_E2E_RUN_VIDEO=1` only when the local video Agent and test video are available.
 - Capacity: run 100 users first; run 200 users only after browser matrix, multi-instance SSE, pool metrics, Docker health, queue depth, and quality gates pass.
+- SQL safety: `.venv\Scripts\python.exe apps/api/scripts/scan_sql_safety.py --json-report --fail-on-new --baseline docs/sql_safety_baseline_v186.json`; v1.8.9 result was `passed`, baseline `31`, high-risk `0`.
+- Dependency audit gate: raw `.venv\Scripts\python.exe -m pip_audit --format json` remains `failed` with 4 documented `transformers 4.57.6` advisories; `.venv\Scripts\python.exe apps/api/scripts/check_pip_audit_report.py <raw-json>` passed.
+- Typing: `.venv\Scripts\python.exe -m mypy apps/api` passed after adding a targeted `pydantic.*` `follow_imports = "normal"` override.
 
 ## v1.8.7 Final Validation - 2026-07-17
 

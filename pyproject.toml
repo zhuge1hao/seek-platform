@@ -27,3 +27,7 @@ follow_imports = "skip"
 check_untyped_defs = true
 warn_unused_ignores = true
 no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = ["pydantic.*"]
+follow_imports = "normal"
