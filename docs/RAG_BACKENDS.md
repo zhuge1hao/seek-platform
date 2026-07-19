@@ -1,7 +1,7 @@
 # RAG Backends
-## v1.8.8 RAG Boundary
+## v1.8.9 RAG Boundary
 
-No RAG backend redesign is included in v1.8.8. Capacity tests must avoid mixing uncontrolled external embedding latency into platform capacity results, and multi-instance SSE must share the same configured RAG backend.
+No RAG backend redesign is included in v1.8.9. Capacity tests must avoid mixing uncontrolled external embedding latency into platform capacity results, and multi-instance SSE must share the same configured RAG backend.
 
 ## v1.8.4 pgvector Status
 

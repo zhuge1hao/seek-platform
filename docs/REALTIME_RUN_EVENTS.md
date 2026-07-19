@@ -1,5 +1,5 @@
 # Realtime Run Events
-## v1.8.8 SSE Lifecycle Status
+## v1.8.9 SSE Lifecycle Status
 
 Browser SSE terminal-close and run-switch abort checks are coded in Playwright but remain `not_run` for production evidence until executed against real services. Terminal states must close EventSource and avoid duplicate assistant messages.
 

@@ -1,5 +1,5 @@
 # Frontend Data Layer
-## v1.8.8 `/agent` Data Layer Notes
+## v1.8.9 `/agent` Data Layer Notes
 
 The `/agent` page now guards run-card updates by active conversation id so stale SSE or polling updates from a previous conversation cannot overwrite the current run. Browser persistence and duplicate-message checks still require full matrix execution.
 

@@ -1,8 +1,8 @@
 # Changelog Context
-## v1.8.8 In Progress
+## v1.8.9 In Progress
 
-- Started `stabilization/v1.8.8` from v1.8.7 HEAD `8837e8a6545355dc5fc653267dde1286e18df56e`.
-- Updated runtime and frontend version surfaces to `meizhaiseek v1.8.8` while keeping model display `meizhaiseek 2.0`.
+- Started `stabilization/v1.8.9` from v1.8.8 HEAD `102d1a1cde275556254c8c8a10d595d34f8fe534`.
+- Updated runtime and frontend version surfaces to `meizhaiseek v1.8.9` while keeping model display `meizhaiseek 2.0`.
 - Removed stale `v1.8.4` smoke expectation by using CLI/env/config expected version and model.
 - Added PostgreSQL pool-wait metrics and a Prometheus exporter helper for capacity reporting.
 - Expanded `/agent` Playwright coverage for persistence, retry/isolation, SSE lifecycle, and optional real video/download validation.

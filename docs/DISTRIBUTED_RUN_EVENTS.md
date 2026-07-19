@@ -1,5 +1,5 @@
 # Distributed Run Events
-## v1.8.8 Multi-instance SSE Status
+## v1.8.9 Multi-instance SSE Status
 
 Multi-instance SSE production acceptance is `not_run` until two API instances are verified with shared PostgreSQL, Redis, JWT secret, artifact backend, and RAG backend. Redis Pub/Sub must carry terminal events without sensitive payload fields.
 

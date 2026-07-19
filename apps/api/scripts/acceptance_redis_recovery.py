@@ -61,7 +61,7 @@ def redis_container() -> str:
 def create_token() -> tuple[str, str]:
     username = f"v184_p1_redis_{int(time.time())}_{secrets.token_hex(3)}"
     password = f"V184-{secrets.token_urlsafe(18)}"
-    user_admin_service.create_user(username, password, "admin", True, "v1.8.8 multi-instance SSE validation")
+    user_admin_service.create_user(username, password, "admin", True, "v1.8.9 multi-instance SSE validation")
     user = user_store.get_user(username)
     if user is None:
         raise RuntimeError("validation user missing")
@@ -170,7 +170,7 @@ def main() -> int:
     paused = False
     try:
         wait_api(api_b)
-        run = new_run(username, "v1.8.8 multi-instance SSE Redis pause recovery")
+        run = new_run(username, "v1.8.9 multi-instance SSE Redis pause recovery")
         events_q: queue.Queue[dict[str, Any]] = queue.Queue()
         thread = threading.Thread(target=collect_sse, args=(api_b, run["run_id"], token, events_q), daemon=True)
         thread.start()
@@ -193,7 +193,7 @@ def main() -> int:
         recovered_at = time.time()
         events = drain(events_q)
 
-        post = new_run(username, "v1.8.8 multi-instance SSE post recovery")
+        post = new_run(username, "v1.8.9 multi-instance SSE post recovery")
         post_q: queue.Queue[dict[str, Any]] = queue.Queue()
         post_thread = threading.Thread(target=collect_sse, args=(api_b, post["run_id"], token, post_q), daemon=True)
         post_thread.start()

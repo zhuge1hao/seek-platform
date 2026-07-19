@@ -36,7 +36,7 @@ class AgentRunsApiTest(unittest.TestCase):
             token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
             headers = {"Authorization": f"Bearer {token}"}
             runtime = client.get("/api/admin/runtime/health", headers=headers).json()
-            self.assertEqual(runtime["version"], "v1.8.8")
+            self.assertEqual(runtime["version"], "v1.8.9")
             self.assertEqual(runtime["model"], "meizhaiseek 2.0")
             self.assertEqual(runtime["validation"]["browser_agent_smoke_verified"], "not_run")
             self.assertIn("database", runtime)

@@ -38,7 +38,7 @@ test.describe("agent retry and isolation matrix", () => {
     const token = await apiLogin(request, username, password);
     const createdResponse = await request.post(`${apiBaseURL}/api/agent-runs`, {
       headers: { Authorization: `Bearer ${token}` },
-      data: { agent_type: "video_script_breakdown", mode: "shot_text_excel", prompt: `v1.8.8 retry matrix ${Date.now()}` }
+      data: { agent_type: "video_script_breakdown", mode: "shot_text_excel", prompt: `v1.8.9 retry matrix ${Date.now()}` }
     });
     expect(createdResponse.ok()).toBeTruthy();
     const created = (await createdResponse.json()) as RunPayload;

@@ -1,7 +1,7 @@
 # TODO
-## v1.8.8 Active Items
+## v1.8.9 Active Items
 
-- `coded`: runtime version updated to `v1.8.8`; smoke version checks now support CLI/env/config precedence; PostgreSQL pool metrics are wired.
+- `coded`: runtime version updated to `v1.8.9`; smoke version checks now support CLI/env/config precedence; PostgreSQL pool metrics are wired.
 - `not_run`: browser full production matrix, multi-instance SSE production acceptance, 100-user regression, and 200-user capacity gate.
 - `blocked_by_gate`: 200-user capacity must wait for browser matrix, multi-instance SSE, pool metrics, Docker health, queue depth zero, and quality gates.
 

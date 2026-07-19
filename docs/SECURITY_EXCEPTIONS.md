@@ -1,7 +1,7 @@
 # Security Exceptions
-## v1.8.8 Recheck Status
+## v1.8.9 Recheck Status
 
-Raw pip-audit is `failed` for v1.8.8 with 6 known vulnerabilities in 3 packages. The accepted-risk gate is also `failed` because `torch 2.12.1` / `GHSA-rrmf-rvhw-rf47` is a new undocumented advisory. Existing accepted risks for local `.venv` setuptools and Transformers remain exact, dated, and separate from production image risk; new or expired advisories must fail the gate.
+Raw pip-audit is `failed` for v1.8.9 with 6 known vulnerabilities in 3 packages. The accepted-risk gate is also `failed` because `torch 2.12.1` / `GHSA-rrmf-rvhw-rf47` is a new undocumented advisory. Existing accepted risks for local `.venv` setuptools and Transformers remain exact, dated, and separate from production image risk; new or expired advisories must fail the gate.
 
 ## v1.8.7 Recheck - 2026-07-17
 

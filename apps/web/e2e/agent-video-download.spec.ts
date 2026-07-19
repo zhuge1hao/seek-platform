@@ -46,7 +46,7 @@ test.describe("agent real video downloads", () => {
       data: {
         agent_type: "video_script_breakdown",
         mode: "shot_text_excel",
-        prompt: `v1.8.8 real video matrix ${Date.now()}`,
+        prompt: `v1.8.9 real video matrix ${Date.now()}`,
         video_path: videoPath,
         workflow_options: { export_excel: true, export_json: true, export_keyframes: true, keep_debug_payload: true }
       },

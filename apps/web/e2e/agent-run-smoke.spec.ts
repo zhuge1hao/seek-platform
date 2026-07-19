@@ -70,7 +70,7 @@ test.describe("agent run card production smoke", () => {
     await expect(page.getByTestId("agent-card-0")).toBeVisible();
     await page.getByTestId("agent-card-0").click();
 
-    const prompt = `v1.8.8 browser smoke ${Date.now()}`;
+    const prompt = `v1.8.9 browser smoke ${Date.now()}`;
     await page.locator("#generic-agent-prompt").fill(prompt);
     const createdResponse = page.waitForResponse((response) => response.url().includes("/api/agent-runs") && response.request().method() === "POST");
     await page.getByTestId("agent-submit-run").click();

@@ -1,8 +1,8 @@
 # Codex Handoff
-## v1.8.8 Handoff Addendum
+## v1.8.9 Handoff Addendum
 
-- Branch: `stabilization/v1.8.8`.
-- Version: `meizhaiseek v1.8.8`.
+- Branch: `stabilization/v1.8.9`.
+- Version: `meizhaiseek v1.8.9`.
 - Model display: `meizhaiseek 2.0`.
 - Protected dirty files remain excluded: `ARCHITECTURE_EVALUATION_REPORT.md`, `AGENTS.md`, and existing local `docker-compose.prod.yml` changes.
 - `coded`: stale smoke version hardcoding removed; PostgreSQL pool metrics added; browser matrix Playwright coverage expanded.

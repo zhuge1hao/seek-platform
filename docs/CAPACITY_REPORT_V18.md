@@ -1,8 +1,8 @@
 # Capacity Report v1.8/v1.8.7 Update - 2026-07-17
-## v1.8.8 Capacity Gate Status
+## v1.8.9 Capacity Gate Status
 
-- `CAPACITY_LAST_VERIFIED_USERS`: remains `100` until a v1.8.8 200-user gate passes.
-- `100_user_regression`: `not_run` for v1.8.8 in this working tree.
+- `CAPACITY_LAST_VERIFIED_USERS`: remains `100` until a v1.8.9 200-user gate passes.
+- `100_user_regression`: `not_run` for v1.8.9 in this working tree.
 - `200_user_gate`: `not_run`; must wait for browser full matrix, multi-instance SSE, pool metrics, Docker health, queue depth zero, and quality gates.
 - Pool metrics to collect after load: pool-wait p50/p95/p99, timeout count, max in-use, max overflow, and max waiters.
 

@@ -1,7 +1,7 @@
 # Redis And Queue
-## v1.8.8 Queue/SSE Notes
+## v1.8.9 Queue/SSE Notes
 
-Multi-instance SSE acceptance remains `not_run` for v1.8.8. The target validation requires Redis event propagation across API instances, Redis pause/recovery behavior, and final queue depth returning to zero after capacity tests.
+Multi-instance SSE acceptance remains `not_run` for v1.8.9. The target validation requires Redis event propagation across API instances, Redis pause/recovery behavior, and final queue depth returning to zero after capacity tests.
 
 ## v1.8.7 Production Closure Queue Evidence
 

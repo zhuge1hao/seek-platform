@@ -15,13 +15,13 @@ class SmokeMinimalTest(unittest.TestCase):
         os.environ.pop("APP_EXPECTED_MODEL", None)
 
     def test_runtime_identity_requires_exact_version_and_model(self) -> None:
-        smoke_minimal.assert_runtime_identity({"version": "v1.8.8", "model": "meizhaiseek 2.0"}, "v1.8.8", "meizhaiseek 2.0")
+        smoke_minimal.assert_runtime_identity({"version": "v1.8.9", "model": "meizhaiseek 2.0"}, "v1.8.9", "meizhaiseek 2.0")
         with self.assertRaisesRegex(AssertionError, "version mismatch"):
-            smoke_minimal.assert_runtime_identity({"version": "v1.8.7", "model": "meizhaiseek 2.0"}, "v1.8.8", "meizhaiseek 2.0")
+            smoke_minimal.assert_runtime_identity({"version": "v1.8.7", "model": "meizhaiseek 2.0"}, "v1.8.9", "meizhaiseek 2.0")
         with self.assertRaisesRegex(AssertionError, "version is missing"):
-            smoke_minimal.assert_runtime_identity({"model": "meizhaiseek 2.0"}, "v1.8.8", "meizhaiseek 2.0")
+            smoke_minimal.assert_runtime_identity({"model": "meizhaiseek 2.0"}, "v1.8.9", "meizhaiseek 2.0")
         with self.assertRaisesRegex(AssertionError, "model mismatch"):
-            smoke_minimal.assert_runtime_identity({"version": "v1.8.8", "model": "wrong"}, "v1.8.8", "meizhaiseek 2.0")
+            smoke_minimal.assert_runtime_identity({"version": "v1.8.9", "model": "wrong"}, "v1.8.9", "meizhaiseek 2.0")
 
     def test_cli_overrides_env_and_runtime_defaults(self) -> None:
         os.environ["APP_EXPECTED_VERSION"] = "v-env"

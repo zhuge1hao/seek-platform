@@ -16,7 +16,7 @@ async function apiLogin(request: APIRequestContext): Promise<string> {
 async function createFailedVideoRun(request: APIRequestContext, token: string): Promise<RunPayload> {
   const response = await request.post(`${apiBaseURL}/api/agent-runs`, {
     headers: { Authorization: `Bearer ${token}` },
-    data: { agent_type: "video_script_breakdown", mode: "shot_text_excel", prompt: `v1.8.8 sse lifecycle ${Date.now()}` }
+    data: { agent_type: "video_script_breakdown", mode: "shot_text_excel", prompt: `v1.8.9 sse lifecycle ${Date.now()}` }
   });
   expect(response.ok()).toBeTruthy();
   return (await response.json()) as RunPayload;
