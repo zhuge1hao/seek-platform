@@ -2,12 +2,21 @@
 ## v1.8.9 Capacity Gate Status
 
 - `CAPACITY_LAST_VERIFIED_USERS`: remains `100` until a v1.8.9 200-user gate passes.
-- `100_user_regression`: `not_run` for v1.8.9 in this working tree.
+- `100_user_regression`: `passed` on round 2, 2026-07-19. Evidence: `docs/V189_100_USER_RESULTS.md`.
 - Browser full matrix prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_BROWSER_MATRIX.md`.
 - Multi-instance SSE prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_MULTI_INSTANCE_SSE.md`.
 - Pool metrics prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_POOL_METRICS.md`.
-- `200_user_gate`: `not_run`; must still wait for Docker health, queue depth zero, and quality gates.
-- Latest pool metrics: p50 `0.000543435s`, p95 `0.182753950s`, p99 `0.797634409s`, timeout count `0`, max in-use `10`, max overflow `5`, max waiters `29`.
+- Docker health after 100-user run: `passed`; production API, web, nginx, PostgreSQL, Redis, MinIO, worker-general x4, and worker-video x2 were running with restart count `0`.
+- Queue depth after 100-user run: `general=0`, `video=0`, `dataset=0`, `knowledge=0`, `blueprint=0`.
+- `200_user_gate`: `not_run`; unblocked after the passed 100-user regression and final prerequisite checks.
+- Latest pool metrics from the 100-user regression: p50 `0.000501423s`, p95 `0.000952704s`, p99 `0.000992818s`, timeout count `0`, max in-use `15`, max overflow `9`, max waiters `0`.
+
+### v1.8.9 100-User Regression - 2026-07-19
+
+- Round 1: `failed`; 86,102 requests, 0 failures, aggregate p95 `160 ms`, p99 `400 ms`, submit p95 `590 ms`, pool-wait p95 `0.003845081 s`. The submit p95 exceeded the `500 ms` gate.
+- Remediation: applied non-secret v1.8.9 override settings `APP_DB_POOL_SIZE=10`, `APP_DB_MAX_OVERFLOW=10`, and `AGENT_RUN_SUBMIT_TIMING=false`, then recreated the API service.
+- Round 2: `passed`; 84,808 requests, 0 failures, aggregate p95 `140 ms`, p99 `300 ms`, `/api/agents` p95 `69 ms`, login p95 `260 ms`, submit p95 `470 ms`, pool-wait p95 `0.000952704 s`, DB pool timeout `0`.
+- Current maximum stable user count remains `100` until the v1.8.9 200-user gate is completed.
 
 ## v1.8.7 Cycle Start Status
 
