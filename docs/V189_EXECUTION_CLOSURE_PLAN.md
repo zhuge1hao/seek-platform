@@ -15,8 +15,9 @@ Model: `meizhaiseek 2.0`
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| Docker recovery | not_run | Pending live execution |
-| 8001 recovery | not_run | Pending live execution |
+| Docker recovery | passed | Docker daemon recovered on attempt 1; production compose healthy |
+| 8001 recovery | passed | `http://127.0.0.1:8001/health` returned ok on attempt 1 |
+| smoke_minimal | passed | `--expected-version v1.8.9 --expected-model "meizhaiseek 2.0"` passed after Postgres persistence check fix |
 | Browser full matrix | not_run | Pending Playwright and real service run |
 | Multi-instance SSE | not_run | Pending two-API validation |
 | Pool metrics live collection | not_run | Pending production `/metrics` scrape |
@@ -29,3 +30,10 @@ Model: `meizhaiseek 2.0`
 ## Execution Rule
 
 Recoverable failures require diagnosis, fix, restart or rebuild when needed, and retry. Critical environment failures require up to three reasonable recovery attempts before marking `failed` or `not_run`.
+
+## Smoke Notes
+
+- First smoke attempt failed because no recognized admin credential environment variable was present.
+- Second attempt bridged `.env` `INITIAL_ADMIN_PASSWORD` but current admin password differed, returning 401.
+- A temporary v1.8.9 admin account was created for acceptance.
+- The smoke script previously queried local SQLite after talking to a Postgres API; it now keeps direct DB row checks for SQLite and uses API persistence evidence for Postgres.

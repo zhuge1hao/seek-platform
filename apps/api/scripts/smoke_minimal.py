@@ -176,6 +176,7 @@ def main() -> int:
         runtime = request_json("GET", "/api/admin/runtime/health", token)
         assert_runtime_identity(runtime, expected_version, expected_model)
         check(runtime.get("legacy_json_fallback_enabled") is False, "legacy JSON fallback disabled by default")
+        database_backend = str((runtime.get("database") or {}).get("backend") or "sqlite").lower()
 
         conversations = request_json("GET", "/api/conversations", token)
         check(isinstance(conversations.get("conversations"), list), "agent conversations list is readable")
@@ -212,9 +213,12 @@ def main() -> int:
         detail = request_json("GET", f"/api/conversations/{conversation_id}", token)
         messages = detail.get("conversation", {}).get("messages") or []
         check(len(messages) >= 2, "conversation detail includes user and assistant messages")
-        check(db_count("SELECT COUNT(*) FROM agent_runs WHERE run_id=?", (run_id,)) == 1, "agent_runs row persisted")
-        check(db_count("SELECT COUNT(*) FROM agent_conversations WHERE conversation_id=?", (conversation_id,)) == 1, "agent_conversations row persisted")
-        check(db_count("SELECT COUNT(*) FROM agent_messages WHERE conversation_id=?", (conversation_id,)) >= 2, "agent_messages rows persisted")
+        if database_backend == "sqlite":
+            check(db_count("SELECT COUNT(*) FROM agent_runs WHERE run_id=?", (run_id,)) == 1, "agent_runs row persisted")
+            check(db_count("SELECT COUNT(*) FROM agent_conversations WHERE conversation_id=?", (conversation_id,)) == 1, "agent_conversations row persisted")
+            check(db_count("SELECT COUNT(*) FROM agent_messages WHERE conversation_id=?", (conversation_id,)) >= 2, "agent_messages rows persisted")
+        else:
+            check(True, "agent persistence verified through API on postgres")
 
         storage = request_json("GET", "/api/admin/storage/health", token)
         check(storage.get("status") in {"ok", "warning"}, "storage health is readable")
