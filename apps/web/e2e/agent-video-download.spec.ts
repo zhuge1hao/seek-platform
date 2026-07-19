@@ -7,7 +7,8 @@ const videoPath = process.env.MEIZHAISEEK_E2E_VIDEO_PATH || "E:\\USE\\codexhome\
 const runRealVideo = process.env.MEIZHAISEEK_E2E_RUN_VIDEO === "1";
 
 type LoginPayload = { token: string };
-type RunPayload = { run_id: string; conversation_id: string; status: string; result?: { files?: Array<{ artifact_id?: string; file_type?: string; type?: string; filename?: string; name?: string; download_url?: string }> } };
+type AgentFile = { artifact_id?: string; file_type?: string; type?: string; filename?: string; name?: string; download_url?: string; path?: string };
+type RunPayload = { run_id: string; conversation_id: string; status: string; result?: { files?: AgentFile[] } };
 
 async function apiLogin(request: APIRequestContext): Promise<string> {
   const response = await request.post(`${apiBaseURL}/api/auth/login`, { data: { username, password } });
@@ -17,11 +18,20 @@ async function apiLogin(request: APIRequestContext): Promise<string> {
 
 async function waitForTerminalRun(request: APIRequestContext, token: string, runId: string): Promise<RunPayload> {
   const deadline = Date.now() + 30 * 60_000;
+  let transientErrors = 0;
   while (Date.now() < deadline) {
-    const response = await request.get(`${apiBaseURL}/api/agent-runs/${encodeURIComponent(runId)}/summary`, {
-      headers: { Authorization: `Bearer ${token}` },
-      timeout: 30_000
-    });
+    let response;
+    try {
+      response = await request.get(`${apiBaseURL}/api/agent-runs/${encodeURIComponent(runId)}/summary`, {
+        headers: { Authorization: `Bearer ${token}`, Connection: "close" },
+        timeout: 30_000
+      });
+    } catch {
+      transientErrors += 1;
+      expect(transientErrors).toBeLessThan(20);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      continue;
+    }
     expect(response.status()).toBeLessThan(500);
     if (response.ok()) {
       const run = (await response.json()) as RunPayload;
@@ -36,6 +46,7 @@ test.describe("agent real video downloads", () => {
   test.skip(!runRealVideo || !username || !password, "Set MEIZHAISEEK_E2E_RUN_VIDEO=1 and credentials to run real 8001 video matrix.");
 
   test("completes real video run and downloads Excel/JSON/evidence artifacts", async ({ request }) => {
+    test.setTimeout(30 * 60_000);
     const token = await apiLogin(request);
     const health = await request.get(`${apiBaseURL}/api/agents/video-script/status`, { headers: { Authorization: `Bearer ${token}` } });
     expect(health.ok()).toBeTruthy();
@@ -64,10 +75,16 @@ test.describe("agent real video downloads", () => {
     expect(resultResponse.ok()).toBeTruthy();
     const result = (await resultResponse.json()).result as RunPayload["result"];
     const files = result?.files || [];
-    expect(files.some((file) => (file.file_type || file.type) === "excel")).toBeTruthy();
-    expect(files.some((file) => String(file.filename || file.name || "").endsWith(".json"))).toBeTruthy();
+    const excel = files.find((file) => (file.file_type || file.type) === "excel");
+    const json = files.find((file) => String(file.filename || file.name || "").endsWith(".json"));
+    const evidence = files.find((file) => (file.file_type || file.type) === "image");
+    expect(excel?.download_url).toBeTruthy();
+    expect(json?.download_url).toBeTruthy();
+    expect(evidence?.download_url).toBeTruthy();
+    expect(JSON.stringify(result).toLowerCase()).not.toContain("s3_secret");
+    expect(JSON.stringify(result).toLowerCase()).not.toContain("secret_access_key");
 
-    for (const file of files.filter((item) => item.download_url).slice(0, 5)) {
+    for (const file of [excel, json, evidence].filter((item): item is AgentFile => Boolean(item?.download_url))) {
       const download = await request.get(`${apiBaseURL}${file.download_url}`, { headers: { Authorization: `Bearer ${token}` }, timeout: 30_000 });
       expect(download.ok()).toBeTruthy();
       expect((await download.body()).length).toBeGreaterThan(0);

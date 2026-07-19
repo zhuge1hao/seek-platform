@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 from services import audit_log_service, debug_payload_service, task_store, video_agent_status_service
@@ -93,6 +94,16 @@ def _output_dir_for_run(run_id: str, user_id: str, options: dict[str, Any]) -> P
     return Path(configured) if configured else artifacts_dir(user_id, run_id)
 
 
+def local_agent_output_dir(container_output_dir: Path) -> str:
+    mount_root = os.getenv("LOCAL_VIDEO_AGENT_OUTPUT_MOUNT", "").strip().replace("\\", "/").rstrip("/")
+    host_root = os.getenv("LOCAL_VIDEO_AGENT_OUTPUT_ROOT", "").strip()
+    output_text = container_output_dir.as_posix()
+    if mount_root and host_root and (output_text == mount_root or output_text.startswith(f"{mount_root}/")):
+        rel = output_text[len(mount_root):].lstrip("/")
+        return str(PureWindowsPath(host_root) / PurePosixPath(rel))
+    return str(container_output_dir)
+
+
 def _is_cancelled(run_id: str, user_id: str) -> bool:
     run = task_store.get_run(run_id, user_id, include_legacy=False)
     if run and run.get("status") == "cancelled":
@@ -167,7 +178,7 @@ def run(run_id: str, user_id: str) -> None:
     task_store.update_run(run_id, {"output_dir": output_dir, "workflow_options": options}, user_id)
 
     _set_step(run_id, user_id, "prepare_payload", "running", "Preparing native /run payload", progress=40)
-    payload = build_video_agent_run_payload(current, options, output_dir)
+    payload = build_video_agent_run_payload(current, options, local_agent_output_dir(output_path))
     if payload.get("mode") != "mock" and not payload.get("video_file"):
         _fail(run_id, user_id, "validate_input", "video_file is required for shot_text_excel mode.")
         return

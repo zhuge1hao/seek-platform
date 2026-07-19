@@ -82,7 +82,7 @@ v1.7.2 focuses on architecture stabilization after the 2026-07-03 evaluation: Bl
 # v1.8.5 Browser Smoke Status
 
 - Browser Run-card and conversation refresh smoke is `not_run` for v1.8.5 in this environment because the production Docker stack was unavailable.
-- Keep `BROWSER_AGENT_SMOKE_VERIFIED=not_run` until a real browser or Playwright run records run IDs, conversation IDs, artifacts, console output, and network/SSE behavior.
+- v1.8.9 browser matrix: `passed` on 2026-07-19 with production Docker, local 8001, and Playwright Chrome. Evidence is in `docs/V189_BROWSER_MATRIX.md`.
 
 ## meizhaiseek v1.8.7 Browser Core Smoke
 

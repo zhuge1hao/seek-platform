@@ -1,0 +1,10 @@
+services:
+  api:
+    environment:
+      LOCAL_VIDEO_AGENT_OUTPUT_ROOT: ${LOCAL_VIDEO_AGENT_OUTPUT_ROOT:-E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\runtime}
+      LOCAL_VIDEO_AGENT_OUTPUT_MOUNT: /app/apps/api/runtime
+      BROWSER_AGENT_SMOKE_VERIFIED: ${BROWSER_AGENT_SMOKE_VERIFIED:-passed}
+  worker-video:
+    environment:
+      LOCAL_VIDEO_AGENT_OUTPUT_ROOT: ${LOCAL_VIDEO_AGENT_OUTPUT_ROOT:-E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\runtime}
+      LOCAL_VIDEO_AGENT_OUTPUT_MOUNT: /app/apps/api/runtime

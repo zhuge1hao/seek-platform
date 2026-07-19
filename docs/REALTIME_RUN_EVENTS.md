@@ -1,7 +1,13 @@
 # Realtime Run Events
+
+## v1.8.9 Browser Lifecycle Evidence
+
+- Browser SSE terminal close: `passed` through `apps/web/e2e/agent-sse-lifecycle.spec.ts`.
+- Run switch abort: `passed` through `apps/web/e2e/agent-cancel-switch.spec.ts`; the previous `/api/agent-runs/{run_id}/events` request AbortSignal fired when the browser switched conversations.
+- Sensitive payload check: `passed`; terminal SSE payloads did not include `raw_response`, `workflow_options`, authorization headers, bearer tokens, `api_key`, or `secret`.
 ## v1.8.9 SSE Lifecycle Status
 
-Browser SSE terminal-close and run-switch abort checks are coded in Playwright but remain `not_run` for production evidence until executed against real services. Terminal states must close EventSource and avoid duplicate assistant messages.
+Browser SSE terminal-close and run-switch abort checks are `passed` for production evidence on 2026-07-19. Terminal states closed the stream, run switching aborted the previous `/events` request, and duplicate assistant messages were not observed in the Playwright matrix.
 
 v1.8 keeps the task realtime strategy as SSE + durable DB summary + polling fallback.
 

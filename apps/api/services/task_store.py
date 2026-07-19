@@ -297,7 +297,9 @@ def cancel_run(run_id: str, user_id: str | None = None) -> tuple[dict[str, Any] 
     run = get_run(run_id, user_id)
     if run is None:
         return None, "not_found"
-    if run.get("status") in {"completed", "failed", "cancelled"}:
+    if run.get("status") == "cancelled":
+        return run, None
+    if run.get("status") in {"completed", "failed"}:
         return run, "finished"
     run.setdefault("logs", []).append("用户取消了任务")
     run.update({"status": "cancelled", "progress": 100, "current_step": "任务已取消", "error": None, "updated_at": _now()})

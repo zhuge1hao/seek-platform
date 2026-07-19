@@ -3,7 +3,8 @@
 
 - `CAPACITY_LAST_VERIFIED_USERS`: remains `100` until a v1.8.9 200-user gate passes.
 - `100_user_regression`: `not_run` for v1.8.9 in this working tree.
-- `200_user_gate`: `not_run`; must wait for browser full matrix, multi-instance SSE, pool metrics, Docker health, queue depth zero, and quality gates.
+- Browser full matrix prerequisite: `passed` on 2026-07-19. Evidence: `docs/V189_BROWSER_MATRIX.md`.
+- `200_user_gate`: `not_run`; must still wait for multi-instance SSE, pool metrics, Docker health, queue depth zero, and quality gates.
 - Pool metrics to collect after load: pool-wait p50/p95/p99, timeout count, max in-use, max overflow, and max waiters.
 
 ## v1.8.7 Cycle Start Status

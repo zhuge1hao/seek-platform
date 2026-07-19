@@ -1,3 +1,4 @@
+import os
 import sys
 import tempfile
 import unittest
@@ -67,6 +68,18 @@ class VideoResultNormalizerTest(unittest.TestCase):
             types = {item.get("file_type") or item.get("type") for item in result["files"]}
             self.assertIn("image", types)
             self.assertEqual(result["summary"]["video_name"], "1.mp4")
+
+    def test_local_agent_output_dir_maps_container_runtime_to_host_root(self) -> None:
+        from workflows.video_script_workflow import local_agent_output_dir
+
+        os.environ["LOCAL_VIDEO_AGENT_OUTPUT_MOUNT"] = "/app/apps/api/runtime"
+        os.environ["LOCAL_VIDEO_AGENT_OUTPUT_ROOT"] = r"E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\runtime"
+        try:
+            mapped = local_agent_output_dir(Path("/app/apps/api/runtime/users/alice/artifacts/run1"))
+        finally:
+            os.environ.pop("LOCAL_VIDEO_AGENT_OUTPUT_MOUNT", None)
+            os.environ.pop("LOCAL_VIDEO_AGENT_OUTPUT_ROOT", None)
+        self.assertEqual(mapped, r"E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\runtime\users\alice\artifacts\run1")
 
 
 if __name__ == "__main__":

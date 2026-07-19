@@ -104,6 +104,11 @@ class TaskStoreTest(unittest.TestCase):
         self.assertIsNotNone(cancelled)
         assert cancelled is not None
         self.assertEqual(cancelled["status"], "cancelled")
+        cancelled_again, second_error = task_store.cancel_run(cancel["run_id"], "user_a")
+        self.assertIsNone(second_error)
+        self.assertIsNotNone(cancelled_again)
+        assert cancelled_again is not None
+        self.assertEqual(cancelled_again["status"], "cancelled")
 
         stale = task_store.create_run_from_payload({"user_id": "user_a", "username": "user_a", "role": "operator", "agent_type": "title_writing", "prompt": "stale"})
         old = (datetime.now() - timedelta(minutes=180)).strftime("%Y-%m-%d %H:%M:%S")
