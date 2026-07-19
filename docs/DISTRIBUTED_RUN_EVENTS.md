@@ -1,7 +1,14 @@
 # Distributed Run Events
 ## v1.8.9 Multi-instance SSE Status
 
-Multi-instance SSE production acceptance is `not_run` until two API instances are verified with shared PostgreSQL, Redis, JWT secret, artifact backend, and RAG backend. Redis Pub/Sub must carry terminal events without sensitive payload fields.
+Multi-instance SSE production acceptance is `passed` on 2026-07-19.
+
+- API topology: API A on `http://127.0.0.1:8000`, API B on `http://127.0.0.1:8002`, same PostgreSQL, Redis, JWT secret, MinIO/S3, and pgvector configuration; separate API processes, so no shared in-process hub.
+- API A created run `run_20260719100014_839d7813`; API B subscribed to `/api/agent-runs/{run_id}/events` and received `running` then `completed`.
+- Redis pause/recovery: Redis paused for `1.099s`; API B summary fallback still read PostgreSQL truth at `progress=66`; after unpause, new events delivered and no duplicate terminal was observed.
+- API A restart: completed in `3.684s`; API B remained usable and a post-restart run completed.
+- Event propagation p95 across collected events: `3.938s`.
+- Sensitive payload check: `passed`; no `raw_response`, `prompt`, `workflow_options`, token, `api_key`, `secret`, `password`, or full local path was observed in SSE event payloads.
 
 ## v1.8.7 Runtime Event Status
 

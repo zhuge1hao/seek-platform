@@ -5,6 +5,12 @@
 - Browser SSE terminal close: `passed` through `apps/web/e2e/agent-sse-lifecycle.spec.ts`.
 - Run switch abort: `passed` through `apps/web/e2e/agent-cancel-switch.spec.ts`; the previous `/api/agent-runs/{run_id}/events` request AbortSignal fired when the browser switched conversations.
 - Sensitive payload check: `passed`; terminal SSE payloads did not include `raw_response`, `workflow_options`, authorization headers, bearer tokens, `api_key`, or `secret`.
+
+## v1.8.9 Multi-Instance Evidence
+
+- Cross-instance Redis-backed SSE: `passed`; API A created `run_20260719100014_839d7813`, API B received `running` then `completed`.
+- Redis pause/recovery: `passed`; PostgreSQL summary fallback remained readable at `progress=66` while Redis was paused, and post-recovery events resumed.
+- API A restart: `passed`; API B stayed usable and a post-restart run completed.
 ## v1.8.9 SSE Lifecycle Status
 
 Browser SSE terminal-close and run-switch abort checks are `passed` for production evidence on 2026-07-19. Terminal states closed the stream, run switching aborted the previous `/events` request, and duplicate assistant messages were not observed in the Playwright matrix.

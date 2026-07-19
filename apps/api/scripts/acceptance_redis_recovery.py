@@ -90,6 +90,17 @@ def request_json(api: str, path: str, token: str | None = None) -> Any:
     return data
 
 
+def post_json(api: str, path: str, token: str, payload: dict[str, Any]) -> Any:
+    response = requests.post(f"{api.rstrip('/')}{path}", headers={"Authorization": f"Bearer {token}"}, json=payload, timeout=15)
+    try:
+        data = response.json()
+    except ValueError:
+        data = response.text
+    if not response.ok:
+        raise RuntimeError(f"POST {path} failed {response.status_code}: {data}")
+    return data
+
+
 def wait_api(api: str, timeout: int = 45) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -111,6 +122,38 @@ def start_api_b(env: dict[str, str], port: int) -> subprocess.Popen:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+
+
+def api_container() -> str:
+    return run_cmd(["docker", "compose", "-f", "docker-compose.prod.yml", "ps", "-q", "api"])
+
+
+def restart_api_a(api: str) -> float:
+    container_id = api_container()
+    started = time.time()
+    run_cmd(["docker", "restart", container_id], timeout=90)
+    wait_api(api, timeout=90)
+    return round(time.time() - started, 3)
+
+
+def create_run_via_api(api: str, token: str, prompt: str) -> dict[str, Any]:
+    return post_json(
+        api,
+        "/api/agent-runs",
+        token,
+        {"agent_type": "video_script_breakdown", "mode": "mock", "prompt": prompt, "workflow_options": {"acceptance": "multi-instance-sse"}},
+    )
+
+
+def wait_terminal(api: str, run_id: str, token: str, timeout: int = 60) -> dict[str, Any]:
+    deadline = time.monotonic() + timeout
+    latest: dict[str, Any] = {}
+    while time.monotonic() < deadline:
+        latest = request_json(api, f"/api/agent-runs/{run_id}/summary", token)
+        if latest.get("status") in {"completed", "failed", "cancelled"}:
+            return latest
+        time.sleep(1)
+    raise TimeoutError(f"run {run_id} did not reach terminal state; latest={latest}")
 
 
 def collect_sse(api: str, run_id: str, token: str, out: queue.Queue[dict[str, Any]]) -> None:
@@ -153,7 +196,7 @@ def assistant_count(run_id: str) -> int:
 
 def leak_free(events: list[dict[str, Any]]) -> bool:
     text = json.dumps(events, ensure_ascii=False).lower()
-    return not any(token in text for token in ("raw_response", "workflow_options", "authorization", "bearer ", "api_key", "secret", "token"))
+    return not any(token in text for token in ("raw_response", "workflow_options", "prompt", "authorization", "bearer ", "api_key", "secret", "token"))
 
 
 def main() -> int:
@@ -170,6 +213,15 @@ def main() -> int:
     paused = False
     try:
         wait_api(api_b)
+
+        api_created = create_run_via_api(args.api_a, token, "v1.8.9 api-a worker-backed multi-instance SSE")
+        api_events_q: queue.Queue[dict[str, Any]] = queue.Queue()
+        api_thread = threading.Thread(target=collect_sse, args=(api_b, api_created["run_id"], token, api_events_q), daemon=True)
+        api_thread.start()
+        api_terminal = wait_terminal(args.api_a, api_created["run_id"], token, timeout=60)
+        api_thread.join(timeout=20)
+        api_events = drain(api_events_q)
+
         run = new_run(username, "v1.8.9 multi-instance SSE Redis pause recovery")
         events_q: queue.Queue[dict[str, Any]] = queue.Queue()
         thread = threading.Thread(target=collect_sse, args=(api_b, run["run_id"], token, events_q), daemon=True)
@@ -205,34 +257,63 @@ def main() -> int:
         )
         post_thread.join(timeout=20)
         post_events = drain(post_q)
+
+        api_restart_seconds = restart_api_a(args.api_a)
+        restart_created = create_run_via_api(args.api_a, token, "v1.8.9 api-a restart post recovery")
+        restart_q: queue.Queue[dict[str, Any]] = queue.Queue()
+        restart_thread = threading.Thread(target=collect_sse, args=(api_b, restart_created["run_id"], token, restart_q), daemon=True)
+        restart_thread.start()
+        restart_terminal = wait_terminal(args.api_a, restart_created["run_id"], token, timeout=60)
+        restart_thread.join(timeout=20)
+        restart_events = drain(restart_q)
+
         terminal_events = [item for item in events if (item.get("payload") or {}).get("status") in {"completed", "failed", "cancelled"}]
-        event_times = [item["received_at"] for item in events if item.get("received_at")]
+        event_times = [item["received_at"] for item in [*api_events, *events, *post_events, *restart_events] if item.get("received_at")]
         p95 = None
         if len(event_times) >= 2:
             deltas = sorted(event_times[index] - event_times[index - 1] for index in range(1, len(event_times)))
             p95 = round(deltas[min(len(deltas) - 1, int(len(deltas) * 0.95))], 3)
         report = {
+            "api_instances": 2,
+            "api_a": args.api_a,
+            "api_b": api_b,
+            "api_a_created_run_id": api_created["run_id"],
+            "api_a_created_conversation_id": api_created.get("conversation_id"),
+            "api_a_created_queue_job_id": api_created.get("queue_job_id"),
+            "api_a_worker_terminal_status": api_terminal.get("status"),
+            "api_a_worker_events": [{"event": item.get("event"), "status": (item.get("payload") or {}).get("status"), "progress": (item.get("payload") or {}).get("progress")} for item in api_events],
             "run_id": run["run_id"],
             "post_recovery_run_id": post["run_id"],
+            "post_restart_run_id": restart_created["run_id"],
+            "post_restart_terminal_status": restart_terminal.get("status"),
+            "api_restart_seconds": api_restart_seconds,
             "redis_pause_seconds": round(recovered_at - pause_started, 3),
             "redis_recovery_seconds": 0,
             "fallback_summary_status": fallback_summary.get("status"),
             "fallback_summary_progress": fallback_summary.get("progress"),
             "events": [{"event": item.get("event"), "status": (item.get("payload") or {}).get("status"), "progress": (item.get("payload") or {}).get("progress")} for item in events],
             "post_recovery_events": [{"event": item.get("event"), "status": (item.get("payload") or {}).get("status")} for item in post_events],
+            "post_restart_events": [{"event": item.get("event"), "status": (item.get("payload") or {}).get("status")} for item in restart_events],
             "event_p95_seconds": p95,
             "duplicate_terminal": len(terminal_events) > 1,
             "assistant_messages": assistant_count(run["run_id"]),
             "post_recovery_assistant_messages": assistant_count(post["run_id"]),
-            "sensitive_leak": not leak_free(events + post_events),
+            "post_restart_assistant_messages": assistant_count(restart_created["run_id"]),
+            "sensitive_leak": not leak_free(api_events + events + post_events + restart_events),
         }
         report["passed"] = (
-            fallback_summary.get("progress") == 66
+            api_created.get("queue_job_id")
+            and api_terminal.get("status") in {"completed", "failed"}
+            and any((item.get("payload") or {}).get("status") in {"completed", "failed"} for item in api_events)
+            and fallback_summary.get("progress") == 66
             and any((item.get("payload") or {}).get("status") == "completed" for item in events)
             and any((item.get("payload") or {}).get("status") == "completed" for item in post_events)
+            and restart_terminal.get("status") in {"completed", "failed"}
+            and any((item.get("payload") or {}).get("status") in {"completed", "failed"} for item in restart_events)
             and not report["duplicate_terminal"]
             and report["assistant_messages"] == 1
             and report["post_recovery_assistant_messages"] == 1
+            and report["post_restart_assistant_messages"] == 1
             and not report["sensitive_leak"]
         )
         print(json.dumps(report, ensure_ascii=False, indent=2 if args.json_report else None))
