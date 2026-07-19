@@ -5,7 +5,7 @@ from services import agent_run_event_bus, app_sqlite, redis_service, security_co
 from tasks import queue as task_queue
 
 
-VERSION = "v1.8.7"
+VERSION = "v1.8.8"
 MODEL = "meizhaiseek 2.0"
 VALIDATION_VALUES = {"not_run", "failed", "passed"}
 
@@ -19,7 +19,14 @@ def database_health() -> dict[str, Any]:
     backend = os.getenv("APP_DB_BACKEND", "sqlite").lower()
     if backend == "postgres":
         result = app_sqlite.health_check()
-        return {"backend": "postgres", "status": result.get("status", "failed"), "pool_size": int(os.getenv("APP_DB_POOL_SIZE", "20")), "tables": result.get("tables", {})}
+        pool = app_sqlite.pool_stats()
+        return {
+            "backend": "postgres",
+            "status": result.get("status", "failed"),
+            "pool_size": pool.get("pool_size", int(os.getenv("APP_DB_POOL_SIZE", "5"))),
+            "pool": pool,
+            "tables": result.get("tables", {}),
+        }
     result = app_sqlite.health_check()
     return {"backend": "sqlite", "status": result.get("status", "failed"), "sqlite_exists": result.get("sqlite_exists")}
 

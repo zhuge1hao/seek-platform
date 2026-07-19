@@ -39,6 +39,12 @@ class SqlSafetyScannerTest(unittest.TestCase):
 
         self.assertEqual(result, 1)
 
+    def test_baseline_key_allows_line_number_drift(self) -> None:
+        original = {"path": "apps/api/services/example.py", "line": 10, "snippet_hash": "abc123"}
+        shifted = {"path": "apps/api/services/example.py", "line": 20, "snippet_hash": "abc123"}
+
+        self.assertEqual(scan_sql_safety._key(original), scan_sql_safety._key(shifted))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
+from middleware import metrics as app_metrics
 from services.config_backup_service import resolve_runtime_path
 
 
@@ -87,8 +88,34 @@ class _PostgresPool:
         self._timeout = max(1.0, float(os.getenv("APP_DB_POOL_TIMEOUT", "10")))
         self._recycle_seconds = max(0, int(os.getenv("APP_DB_POOL_RECYCLE", "1800")))
         self._created = 0
+        self._in_use = 0
+        self._waiters = 0
+        self._timeouts = 0
+        self._discarded = 0
+        self._reconnects = 0
         self._created_at: dict[int, float] = {}
         self._lock = threading.Lock()
+
+    def stats(self) -> dict[str, int | float]:
+        with self._lock:
+            overflow = max(0, self._created - self._pool.maxsize)
+            return {
+                "pool_size": self._pool.maxsize,
+                "max_overflow": max(0, self._max_total - self._pool.maxsize),
+                "max_total": self._max_total,
+                "in_use": self._in_use,
+                "idle": self._pool.qsize(),
+                "overflow": overflow,
+                "waiters": self._waiters,
+                "timeout_total": self._timeouts,
+                "discarded_total": self._discarded,
+                "reconnect_total": self._reconnects,
+                "pool_timeout_seconds": self._timeout,
+                "pool_recycle_seconds": self._recycle_seconds,
+            }
+
+    def _sync_metrics(self) -> None:
+        app_metrics.set_db_pool_gauges({key: int(value) for key, value in self.stats().items() if isinstance(value, int)})
 
     def _new_connection(self) -> Any:
         import psycopg
@@ -119,10 +146,14 @@ class _PostgresPool:
             self._forget(conn)
             with self._lock:
                 self._created = max(0, self._created - 1)
+                self._discarded += 1
+            app_metrics.inc_db_pool_discarded()
+            self._sync_metrics()
 
     def acquire(self) -> _PostgresConnection:
         global _PG_LAST_WAIT_MS
         started = time.perf_counter()
+        counted_waiter = False
         while True:
             try:
                 conn = self._pool.get_nowait()
@@ -130,29 +161,54 @@ class _PostgresPool:
                 with self._lock:
                     if self._created < self._max_total:
                         self._created += 1
+                        self._reconnects += 1
+                        app_metrics.inc_db_pool_reconnect()
                         try:
-                            return _PostgresConnection(self._remember(self._new_connection()), self)
+                            conn = self._remember(self._new_connection())
+                            break
                         except Exception:
                             self._created = max(0, self._created - 1)
                             raise
+                    self._waiters += 1
+                    counted_waiter = True
+                self._sync_metrics()
                 try:
                     conn = self._pool.get(timeout=self._timeout)
                 except queue.Empty as exc:
+                    with self._lock:
+                        self._timeouts += 1
+                        if counted_waiter:
+                            self._waiters = max(0, self._waiters - 1)
+                            counted_waiter = False
+                    app_metrics.inc_db_pool_timeout()
+                    self._sync_metrics()
                     raise RuntimeError("PostgreSQL connection pool exhausted") from exc
+                finally:
+                    if counted_waiter:
+                        with self._lock:
+                            self._waiters = max(0, self._waiters - 1)
+                        counted_waiter = False
             if self._expired_or_closed(conn):
                 self._discard(conn)
                 continue
             break
         wait_ms = round((time.perf_counter() - started) * 1000, 3)
         _PG_LAST_WAIT_MS = wait_ms
+        app_metrics.observe_db_pool_acquire(wait_ms / 1000)
+        with self._lock:
+            self._in_use += 1
+        self._sync_metrics()
         return _PostgresConnection(conn, self)
 
     def release(self, conn: Any) -> None:
         try:
+            with self._lock:
+                self._in_use = max(0, self._in_use - 1)
             if self._expired_or_closed(conn) or self._pool.full():
                 self._discard(conn)
             else:
                 self._pool.put_nowait(conn)
+                self._sync_metrics()
         except Exception:
             self._discard(conn)
 
@@ -164,6 +220,12 @@ def _postgres_pool() -> _PostgresPool:
             if _PG_POOL is None:
                 _PG_POOL = _PostgresPool()
     return _PG_POOL
+
+
+def pool_stats() -> dict[str, int | float]:
+    if not is_postgres():
+        return {}
+    return _postgres_pool().stats()
 
 
 def _now() -> str:

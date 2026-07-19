@@ -12,6 +12,7 @@ import requests
 ROOT = Path(__file__).resolve().parents[3]
 TEST_VIDEO_FILE = os.getenv("VIDEO_AGENT_TEST_VIDEO", r"E:\USE\codexhome\fenge\videos\test\1.mp4")
 TEST_OUTPUT_DIR = os.getenv("VIDEO_AGENT_TEST_OUTPUT_DIR", r"E:\USE\codexhome\fenge\output\test")
+API_ROOT = ROOT / "apps" / "api"
 
 
 def load_env() -> None:
@@ -56,6 +57,43 @@ def check(condition: bool, message: str) -> None:
     if not condition:
         raise AssertionError(message)
     print(f"PASS {message}")
+
+
+def configured_expected_version(cli_value: str | None = None) -> str:
+    if cli_value:
+        return cli_value
+    if os.getenv("APP_EXPECTED_VERSION"):
+        return str(os.environ["APP_EXPECTED_VERSION"])
+    sys.path.insert(0, str(API_ROOT))
+    from services.runtime_health_service import VERSION
+    if not VERSION:
+        raise RuntimeError("expected runtime version is not configured")
+    return VERSION
+
+
+def configured_expected_model(cli_value: str | None = None) -> str:
+    if cli_value:
+        return cli_value
+    if os.getenv("APP_EXPECTED_MODEL"):
+        return str(os.environ["APP_EXPECTED_MODEL"])
+    sys.path.insert(0, str(API_ROOT))
+    from services.runtime_health_service import MODEL
+    if not MODEL:
+        raise RuntimeError("expected runtime model is not configured")
+    return MODEL
+
+
+def assert_runtime_identity(runtime: dict[str, Any], expected_version: str, expected_model: str) -> None:
+    actual_version = runtime.get("version")
+    actual_model = runtime.get("model")
+    if not actual_version:
+        raise AssertionError("runtime health version is missing")
+    if actual_version != expected_version:
+        raise AssertionError(f"runtime health version mismatch: expected {expected_version}, got {actual_version}")
+    if actual_model != expected_model:
+        raise AssertionError(f"runtime health model mismatch: expected {expected_model}, got {actual_model}")
+    check(True, f"runtime health version is {expected_version}")
+    check(True, f"runtime health model is {expected_model}")
 
 
 def video_agent_available() -> bool:
@@ -115,8 +153,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--video-agent-e2e", action="store_true")
     parser.add_argument("--require-video-agent", action="store_true")
+    parser.add_argument("--expected-version")
+    parser.add_argument("--expected-model")
     args = parser.parse_args()
     load_env()
+    expected_version = configured_expected_version(args.expected_version)
+    expected_model = configured_expected_model(args.expected_model)
     username = os.getenv("SMOKE_ADMIN_USERNAME") or os.getenv("MEIZHAISEEK_ADMIN_USERNAME")
     password = os.getenv("SMOKE_ADMIN_PASSWORD") or os.getenv("MEIZHAISEEK_ADMIN_INITIAL_PASSWORD")
     if not username or not password:
@@ -132,7 +174,7 @@ def main() -> int:
         check(bool(token), "admin login returns token")
 
         runtime = request_json("GET", "/api/admin/runtime/health", token)
-        check(runtime.get("version") == "v1.8.4", "runtime health version is v1.8.4")
+        assert_runtime_identity(runtime, expected_version, expected_model)
         check(runtime.get("legacy_json_fallback_enabled") is False, "legacy JSON fallback disabled by default")
 
         conversations = request_json("GET", "/api/conversations", token)

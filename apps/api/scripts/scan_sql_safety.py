@@ -155,8 +155,8 @@ def scan() -> list[Finding]:
     return findings
 
 
-def _key(item: dict[str, Any]) -> tuple[str, int, str]:
-    return (str(item["path"]), int(item["line"]), str(item.get("snippet_hash") or ""))
+def _key(item: dict[str, Any]) -> tuple[str, str]:
+    return (str(item["path"]), str(item.get("snippet_hash") or ""))
 
 
 def _load_baseline(path: Path) -> list[dict[str, Any]]:

@@ -114,8 +114,11 @@ class AppSQLiteTest(unittest.TestCase):
             first = pool.acquire()
             second = pool.acquire()
             self.assertEqual(pool._created, 2)
+            self.assertEqual(pool.stats()["in_use"], 2)
+            self.assertEqual(pool.stats()["overflow"], 1)
             first.close()
             second.close()
+            self.assertEqual(pool.stats()["in_use"], 0)
             third = pool.acquire()
             third.close()
         self.assertLessEqual(pool._pool.qsize(), 1)
@@ -222,6 +225,8 @@ class AppSQLiteTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "pool exhausted"):
                 pool.acquire()
             first.close()
+        self.assertEqual(pool.stats()["timeout_total"], 1)
+        self.assertEqual(pool.stats()["waiters"], 0)
 
         failing_pool = app_sqlite._PostgresPool()
         with patch.object(failing_pool, "_new_connection", side_effect=RuntimeError("boom")):
@@ -275,6 +280,23 @@ class AppSQLiteTest(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertLessEqual(pool._created, pool._max_total)
         self.assertLessEqual(len(raw), pool._max_total)
+        self.assertGreaterEqual(pool.stats()["reconnect_total"], 1)
+        self.assertEqual(pool.stats()["in_use"], 0)
+
+    def test_pool_stats_sqlite_is_empty_and_postgres_has_safe_fields(self) -> None:
+        from services import app_sqlite
+
+        os.environ["APP_DB_BACKEND"] = "sqlite"
+        self.assertEqual(app_sqlite.pool_stats(), {})
+        os.environ["APP_DB_BACKEND"] = "postgres"
+        os.environ["APP_DB_POOL_SIZE"] = "2"
+        os.environ["APP_DB_MAX_OVERFLOW"] = "1"
+        pool = app_sqlite._PostgresPool()
+        with patch("services.app_sqlite._postgres_pool", return_value=pool):
+            stats = app_sqlite.pool_stats()
+        self.assertEqual(stats["pool_size"], 2)
+        self.assertEqual(stats["max_overflow"], 1)
+        self.assertNotIn("password", str(stats).lower())
 
 
 if __name__ == "__main__":
