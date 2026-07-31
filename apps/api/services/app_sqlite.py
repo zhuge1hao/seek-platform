@@ -7,6 +7,7 @@ import sqlite3
 import threading
 import time
 from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
@@ -22,6 +23,7 @@ _LAST_ERROR = ""
 _PG_POOL: "_PostgresPool | None" = None
 _PG_POOL_LOCK = threading.Lock()
 _PG_LAST_WAIT_MS = 0.0
+_TRANSACTION_TRACE: ContextVar[dict[str, int] | None] = ContextVar("app_db_transaction_trace", default=None)
 
 
 def is_postgres() -> bool:
@@ -79,6 +81,58 @@ class _PostgresConnection:
         if not self._closed:
             self._closed = True
             self._pool.release(self._conn)
+
+
+class _ObservedConnection:
+    def __init__(self, conn: Any, backend: str):
+        self._conn = conn
+        self._backend = backend
+        self.dirty = False
+
+    def execute(self, sql: str, params: Any = ()) -> Any:
+        started = time.perf_counter()
+        operation = (sql.lstrip().split(None, 1)[0].lower() if sql.strip() else "other")
+        if operation not in {"select", "insert", "update", "delete"}:
+            operation = "other"
+        if operation != "select":
+            self.dirty = True
+        try:
+            return self._conn.execute(sql, params)
+        finally:
+            app_metrics.observe_db_execute(self._backend, operation, time.perf_counter() - started)
+            trace = _TRANSACTION_TRACE.get()
+            if trace is not None:
+                trace["executes"] += 1
+
+    def commit(self) -> None:
+        started = time.perf_counter()
+        failed = False
+        try:
+            self._conn.commit()
+        except Exception:
+            failed = True
+            raise
+        finally:
+            app_metrics.observe_db_commit(self._backend, time.perf_counter() - started, failed)
+            trace = _TRANSACTION_TRACE.get()
+            if trace is not None:
+                trace["commits"] += 1
+
+    def rollback(self) -> None:
+        started = time.perf_counter()
+        try:
+            self._conn.rollback()
+        finally:
+            app_metrics.observe_db_rollback(self._backend, time.perf_counter() - started)
+            trace = _TRANSACTION_TRACE.get()
+            if trace is not None:
+                trace["rollbacks"] += 1
+
+    def close(self) -> None:
+        self._conn.close()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._conn, name)
 
 
 class _PostgresPool:
@@ -244,23 +298,47 @@ def _init_key() -> str:
     return f"sqlite:{db_path()}"
 
 
-def get_connection() -> sqlite3.Connection:
+def get_connection() -> Any:
     if is_postgres():
         init_app_db()
-        return _postgres_pool().acquire()  # type: ignore[return-value]
-    init_app_db()
-    conn = sqlite3.connect(db_path())
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys=ON")
+        conn = _ObservedConnection(_postgres_pool().acquire(), "postgres")
+    else:
+        init_app_db()
+        raw = sqlite3.connect(db_path())
+        raw.row_factory = sqlite3.Row
+        raw.execute("PRAGMA foreign_keys=ON")
+        conn = _ObservedConnection(raw, "sqlite")
+    trace = _TRANSACTION_TRACE.get()
+    if trace is not None:
+        trace["transactions"] += 1
+        trace["acquires"] += 1
     return conn
 
 
+def start_transaction_trace() -> Any:
+    return _TRANSACTION_TRACE.set({"transactions": 0, "acquires": 0, "executes": 0, "commits": 0, "rollbacks": 0})
+
+
+def transaction_trace_snapshot() -> dict[str, int]:
+    return dict(_TRANSACTION_TRACE.get() or {})
+
+
+def stop_transaction_trace(token: Any) -> None:
+    _TRANSACTION_TRACE.reset(token)
+
+
 @contextmanager
-def connection() -> Iterator[sqlite3.Connection]:
+def connection(existing_connection: Any | None = None) -> Iterator[Any]:
+    if existing_connection is not None:
+        yield existing_connection
+        return
     conn = get_connection()
     try:
         yield conn
-        conn.commit()
+        if conn.dirty:
+            conn.commit()
+        else:
+            conn.rollback()
     except Exception:
         conn.rollback()
         raise

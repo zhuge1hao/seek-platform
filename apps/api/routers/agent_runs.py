@@ -7,6 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
+from middleware import metrics as app_metrics
 
 from schemas.agent_runs import (
     DEFAULT_VIDEO_SCRIPT_MODE,
@@ -56,6 +57,7 @@ def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks,
     if blueprint and blueprint.get("status") in {"disabled", "deprecated"}:
         raise HTTPException(status_code=403, detail="该智能体蓝图已停用或废弃，不能创建新任务。")
     marks["blueprint_guard_ms"] = (time.perf_counter() - started) * 1000
+    app_metrics.observe_agent_submit_stage("blueprint_guard", marks["blueprint_guard_ms"] / 1000)
 
     prompt = payload.prompt.strip()
     if not prompt:
@@ -95,9 +97,11 @@ def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks,
         }
     )
     marks["normalize_ms"] = (time.perf_counter() - started) * 1000
+    app_metrics.observe_agent_submit_stage("prepare_ids", max(0.0, (marks["normalize_ms"] - marks["input_guard_ms"]) / 1000))
     try:
         result = orchestrator.start_run(normalized_payload, background_tasks, user)
     except Exception as exc:
+        logger.exception("agent_run_submit_failed agent_type=%s error_type=%s", payload.agent_type, type(exc).__name__)
         raise HTTPException(status_code=503, detail="任务入队失败，请稍后重试。") from exc
     marks["orchestrator_ms"] = (time.perf_counter() - started) * 1000
     ip = audit_log_service.client_ip(request)
@@ -110,6 +114,7 @@ def create_agent_run(payload: AgentRunCreate, background_tasks: BackgroundTasks,
     if payload.agent_type == "video_script_breakdown":
         _write_audit_later(background_tasks, "agent.video.submit", "success", user, result["run_id"], {"mode": normalized_payload.mode, "conversation_id": result["conversation_id"]}, ip)
     marks["audit_schedule_ms"] = (time.perf_counter() - started) * 1000
+    app_metrics.observe_agent_submit_stage("response", max(0.0, (marks["audit_schedule_ms"] - marks["orchestrator_ms"]) / 1000))
     if _submit_timing_enabled():
         logger.info(
             "agent_run_submit_timing",

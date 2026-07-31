@@ -33,7 +33,7 @@ def _new_run_id() -> str:
 def _base_run(payload: dict[str, Any], logs: list[str] | None = None) -> dict[str, Any]:
     now = _now()
     return {
-        "run_id": _new_run_id(),
+        "run_id": payload.get("run_id") or _new_run_id(),
         "user_id": payload.get("user_id") or "admin",
         "username": payload.get("username") or payload.get("user_id") or "admin",
         "role": payload.get("role") or "admin",
@@ -53,6 +53,8 @@ def _base_run(payload: dict[str, Any], logs: list[str] | None = None) -> dict[st
         "session_id": payload.get("session_id"),
         "workflow_options": payload.get("workflow_options") or {},
         "conversation_id": payload.get("conversation_id"),
+        "queue_job_id": payload.get("queue_job_id"),
+        "job_id": payload.get("queue_job_id"),
         "output_dir": payload.get("output_dir"),
         "logs": logs or ["任务已创建"],
         "result": None,
@@ -136,10 +138,27 @@ def summarize_run(run: dict[str, Any] | None) -> dict[str, Any] | None:
     }
 
 
-def _write_run(run: dict[str, Any]) -> dict[str, Any]:
+def _publish_run(run: dict[str, Any], sync_conversation: bool = True) -> None:
+    if sync_conversation and run.get("conversation_id"):
+        service_events.emit_run_updated(run)
+        try:
+            from services import conversation_store
+            conversation_store.sync_run_to_conversation(run)
+        except Exception as exc:
+            LOGGER.warning("conversation_sync_failed operation=sync_run_to_conversation run_id=%s error_type=%s", run.get("run_id"), type(exc).__name__)
+    from services import agent_run_event_hub
+    agent_run_event_hub.publish_run_event(run)
+    try:
+        from services import agent_run_event_bus
+        agent_run_event_bus.publish_run_event(run)
+    except Exception as exc:
+        LOGGER.warning("distributed_event_publish_failed operation=publish_run_event run_id=%s error_type=%s", run.get("run_id"), type(exc).__name__)
+
+
+def _write_run(run: dict[str, Any], connection: Any | None = None, publish: bool = True) -> dict[str, Any]:
     artifacts = (run.get("result") or {}).get("files") if isinstance(run.get("result"), dict) else []
     run["row_version"] = int(run.get("row_version") or 1)
-    with app_sqlite.connection() as conn:
+    with app_sqlite.connection(connection) as conn:
         conn.execute(
             """
             INSERT INTO agent_runs(run_id, user_id, conversation_id, agent_id, agent_type, status, mode, input_json, workflow_options_json, result_json, error, artifacts_json, created_at, updated_at, started_at, completed_at, metadata_json, row_version)
@@ -157,21 +176,40 @@ def _write_run(run: dict[str, Any]) -> dict[str, Any]:
                 run.get("started_at"), run.get("completed_at"), app_sqlite.json_dump(run), run["row_version"],
             ),
         )
-    if run.get("conversation_id"):
-        service_events.emit_run_updated(run)
-        try:
-            from services import conversation_store
-            conversation_store.sync_run_to_conversation(run)
-        except Exception as exc:
-            LOGGER.warning("conversation_sync_failed operation=sync_run_to_conversation run_id=%s error_type=%s", run.get("run_id"), type(exc).__name__)
-    from services import agent_run_event_hub
-    agent_run_event_hub.publish_run_event(run)
-    try:
-        from services import agent_run_event_bus
-        agent_run_event_bus.publish_run_event(run)
-    except Exception as exc:
-        LOGGER.warning("distributed_event_publish_failed operation=publish_run_event run_id=%s error_type=%s", run.get("run_id"), type(exc).__name__)
+    if publish:
+        _publish_run(run)
     return run
+
+
+def prepare_run(payload: AgentRunCreate, user: dict[str, Any], conversation_id: str, queue_job_id: str) -> dict[str, Any]:
+    data = payload.model_dump()
+    data.update({
+        "user_id": user["user_id"], "username": user["username"], "role": user["role"],
+        "conversation_id": conversation_id, "queue_job_id": queue_job_id,
+    })
+    return _base_run(data)
+
+
+def write_run_in_tx(run: dict[str, Any], connection: Any) -> dict[str, Any]:
+    return _write_run(run, connection=connection, publish=False)
+
+
+def publish_created_run(run: dict[str, Any]) -> None:
+    _publish_run(run, sync_conversation=False)
+
+
+def mark_enqueue_failed(run: dict[str, Any]) -> dict[str, Any]:
+    failed = {
+        **run, "status": "failed", "progress": 100, "current_step": "enqueue failed",
+        "result": None, "error": "task enqueue failed", "updated_at": _now(),
+        "row_version": int(run.get("row_version") or 1) + 1,
+    }
+    with app_sqlite.connection() as conn:
+        _write_run(failed, connection=conn, publish=False)
+        from services import conversation_store
+        conversation_store.sync_run_to_conversation(failed, connection=conn)
+    _publish_run(failed, sync_conversation=False)
+    return failed
 
 
 def create_run(payload: AgentRunCreate, user: dict[str, Any] | None = None) -> dict[str, Any]:

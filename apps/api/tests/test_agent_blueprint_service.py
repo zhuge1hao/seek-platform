@@ -47,7 +47,7 @@ class AgentBlueprintServiceTest(unittest.TestCase):
         case = agent_blueprint_service.save_test_case(blueprint_id, {"name": "case", "input": {"prompt": "hello"}}, OPERATOR)
 
         agent_blueprint_service.validate(blueprint_id, OPERATOR)
-        with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+        with patch("services.orchestrator.schedule_run", lambda *_args: None):
             run = agent_blueprint_service.run_test_case(blueprint_id, case["test_case_id"], BackgroundTasks(), OPERATOR)
         agent_blueprint_service.sync_test_run_result({"run_id": run["run"]["run_id"], "status": "completed", "result": {"summary": {"ok": True}}})
 
@@ -58,7 +58,7 @@ class AgentBlueprintServiceTest(unittest.TestCase):
 
         v2 = agent_blueprint_service.create_version(blueprint_id, {"change_summary": "second"}, OPERATOR)
         agent_blueprint_service.validate(blueprint_id, OPERATOR)
-        with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+        with patch("services.orchestrator.schedule_run", lambda *_args: None):
             run_v2 = agent_blueprint_service.run_test_case(blueprint_id, case["test_case_id"], BackgroundTasks(), OPERATOR)
         agent_blueprint_service.sync_test_run_result({"run_id": run_v2["run"]["run_id"], "status": "completed", "result": {"summary": {"ok": True}}})
         agent_blueprint_service.publish(blueprint_id, {"version_id": v2["version_id"]}, ADMIN)

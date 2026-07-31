@@ -307,23 +307,43 @@ def archive_conversation(conversation_id: str, user_id: str) -> dict[str, Any] |
     return json.loads(json.dumps(conversation, ensure_ascii=False))
 
 
-def attach_run(run: dict[str, Any], include_user_message: bool = True) -> tuple[dict[str, Any], bool]:
+def attach_run_atomic(
+    connection: Any,
+    run: dict[str, Any],
+    include_user_message: bool = True,
+    user_message_id: str | None = None,
+    assistant_message_id: str | None = None,
+) -> tuple[dict[str, Any], bool]:
     user_id = str(run["user_id"])
     conversation_id = str(run.get("conversation_id") or "")
-    conversation = get_conversation(conversation_id, user_id) if conversation_id else None
+    row = connection.execute(
+        "SELECT * FROM agent_conversations WHERE conversation_id=? AND user_id=?",
+        (conversation_id, user_id),
+    ).fetchone() if conversation_id else None
+    conversation = _row_conversation(row) if row else None
     created = conversation is None
     if conversation is None:
-        conversation = create_conversation(user_id, str(run.get("agent_type") or ""), str(run.get("prompt") or ""))
+        now = _now()
+        agent_type = str(run.get("agent_type") or "")
+        prompt = str(run.get("prompt") or "")
+        agent_name = _agent_name(agent_type)
+        conversation = {
+            "conversation_id": conversation_id or _new_id("conv"), "user_id": user_id,
+            "title": _title(agent_name, prompt), "agent_type": agent_type, "agent_name": agent_name,
+            "prompt": prompt, "latest_run_id": None, "run_ids": [], "status": "running",
+            "summary": "", "messages": [], "created_at": now, "updated_at": now,
+            "last_opened_at": now, "is_archived": False,
+        }
     now = _now()
     prompt = str(run.get("prompt") or "")
     if include_user_message:
-        append_agent_message(user_id, conversation["conversation_id"], {
-            "message_id": _new_id("msg"), "role": "user", "content": prompt, "run_id": None,
+        _insert_agent_message(connection, user_id, conversation["conversation_id"], {
+            "message_id": user_message_id or _new_id("msg"), "role": "user", "content": prompt, "run_id": None,
             "status": "completed", "result": None, "error": None, "progress": 100,
             "current_step": "已提交", "logs": [], "created_at": now, "updated_at": now,
         })
-    append_agent_message(user_id, conversation["conversation_id"], {
-        "message_id": _new_id("msg"), "role": "assistant", "content": "任务已提交，正在执行。",
+    _insert_agent_message(connection, user_id, conversation["conversation_id"], {
+        "message_id": assistant_message_id or _new_id("msg"), "role": "assistant", "content": "任务已提交，正在执行。",
         "run_id": run["run_id"], "status": "running", "result": None, "error": None,
         "progress": run.get("progress") or 0, "current_step": run.get("current_step") or "任务已创建",
         "logs": list(run.get("logs") or []), "created_at": now, "updated_at": now,
@@ -336,8 +356,13 @@ def attach_run(run: dict[str, Any], include_user_message: bool = True) -> tuple[
         "prompt": prompt, "latest_run_id": run["run_id"], "run_ids": run_ids, "status": "running",
         "summary": "", "updated_at": now, "is_archived": False,
     })
-    upsert_agent_conversation(user_id, conversation)
-    return get_conversation(conversation["conversation_id"], user_id) or conversation, created
+    _upsert_agent_conversation(connection, user_id, conversation)
+    return json.loads(json.dumps(conversation, ensure_ascii=False)), created
+
+
+def attach_run(run: dict[str, Any], include_user_message: bool = True) -> tuple[dict[str, Any], bool]:
+    with app_sqlite.connection() as conn:
+        return attach_run_atomic(conn, run, include_user_message=include_user_message)
 
 
 def _summary_for_run(run: dict[str, Any]) -> str:
@@ -364,13 +389,13 @@ def update_latest_run(user_id: str, conversation_id: str, run_id: str, status: s
     upsert_agent_conversation(user_id, conversation)
 
 
-def sync_run_to_conversation(run: dict[str, Any]) -> None:
+def sync_run_to_conversation(run: dict[str, Any], connection: Any | None = None) -> None:
     conversation_id = str(run.get("conversation_id") or "")
     user_id = str(run.get("user_id") or "")
     run_id = str(run.get("run_id") or "")
     if not conversation_id or not user_id or not run_id:
         return
-    with app_sqlite.connection() as conn:
+    with app_sqlite.connection(connection) as conn:
         row = conn.execute(
             """
             SELECT * FROM agent_messages

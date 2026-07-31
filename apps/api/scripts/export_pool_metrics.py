@@ -36,16 +36,17 @@ def _gauge(text: str, metric: str) -> float:
     return values[-1] if values else 0.0
 
 
-def _bucket_counts(text: str) -> list[tuple[float, float]]:
-    buckets: list[tuple[float, float]] = []
-    for labels, value in _samples(text, "app_db_pool_acquire_seconds_bucket"):
+def _bucket_counts(text: str, metric: str = "app_db_pool_acquire_seconds", required_labels: dict[str, str] | None = None) -> list[tuple[float, float]]:
+    totals: dict[float, float] = {}
+    for labels, value in _samples(text, f"{metric}_bucket"):
+        if required_labels and any(labels.get(key) != expected for key, expected in required_labels.items()):
+            continue
         le = labels.get("le")
         if le is None:
             continue
         upper = math.inf if le == "+Inf" else float(le)
-        buckets.append((upper, value))
-    buckets.sort(key=lambda item: item[0])
-    return buckets
+        totals[upper] = totals.get(upper, 0.0) + value
+    return sorted(totals.items(), key=lambda item: item[0])
 
 
 def _histogram_quantile_from_buckets(buckets: list[tuple[float, float]], quantile: float) -> float | None:
@@ -86,11 +87,11 @@ def _max_gauge(snapshots: list[str], metric: str) -> float:
     return max((_gauge(text, metric) for text in snapshots), default=0.0)
 
 
-def _window_buckets(snapshots: list[str]) -> list[tuple[float, float]]:
+def _window_buckets(snapshots: list[str], metric: str = "app_db_pool_acquire_seconds", required_labels: dict[str, str] | None = None) -> list[tuple[float, float]]:
     if len(snapshots) < 2:
-        return _bucket_counts(snapshots[-1])
-    first = dict(_bucket_counts(snapshots[0]))
-    last = _bucket_counts(snapshots[-1])
+        return _bucket_counts(snapshots[-1], metric, required_labels)
+    first = dict(_bucket_counts(snapshots[0], metric, required_labels))
+    last = _bucket_counts(snapshots[-1], metric, required_labels)
     return [(upper, max(0.0, count - first.get(upper, 0.0))) for upper, count in last]
 
 
@@ -113,7 +114,7 @@ def build_report(text: str) -> dict[str, Any]:
 def build_window_report(snapshots: list[str]) -> dict[str, Any]:
     buckets = _window_buckets(snapshots)
     latest = snapshots[-1]
-    return {
+    report: dict[str, Any] = {
         "samples": len(snapshots),
         "pool_wait_p50_seconds": _histogram_quantile_from_buckets(buckets, 0.5),
         "pool_wait_p95_seconds": _histogram_quantile_from_buckets(buckets, 0.95),
@@ -130,6 +131,27 @@ def build_window_report(snapshots: list[str]) -> dict[str, Any]:
         "max_pool_overflow": _max_gauge(snapshots, "app_db_pool_overflow"),
         "max_pool_waiters": _max_gauge(snapshots, "app_db_pool_waiters"),
     }
+    for name, metric in {
+        "execute": "app_db_execute_seconds",
+        "commit": "app_db_commit_seconds",
+        "rollback": "app_db_rollback_seconds",
+    }.items():
+        metric_buckets = _window_buckets(snapshots, metric)
+        report.update({
+            f"{name}_p50_seconds": _histogram_quantile_from_buckets(metric_buckets, 0.5),
+            f"{name}_p95_seconds": _histogram_quantile_from_buckets(metric_buckets, 0.95),
+            f"{name}_p99_seconds": _histogram_quantile_from_buckets(metric_buckets, 0.99),
+        })
+    report["submit_stages"] = {
+        stage: {
+            f"p{int(quantile * 100)}_seconds": _histogram_quantile_from_buckets(
+                _window_buckets(snapshots, "app_agent_submit_stage_seconds", {"stage": stage}), quantile
+            )
+            for quantile in (0.5, 0.95, 0.99)
+        }
+        for stage in ("blueprint_guard", "prepare_ids", "persist_run_and_conversation", "enqueue", "compensation", "response")
+    }
+    return report
 
 
 def main() -> int:

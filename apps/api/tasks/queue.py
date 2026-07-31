@@ -32,6 +32,10 @@ def _queue_for_agent_run(run_id: str, user_id: str) -> str:
     return AGENT_QUEUE_BY_TYPE.get(str(run.get("agent_type") or ""), DEFAULT_QUEUE_NAME)
 
 
+def _queue_for_agent_type(agent_type: str) -> str:
+    return AGENT_QUEUE_BY_TYPE.get(agent_type, DEFAULT_QUEUE_NAME)
+
+
 def _queue_for_call(func_path: str) -> str:
     lowered = func_path.lower()
     for hint, queue_name in CALL_QUEUE_HINTS.items():
@@ -40,7 +44,14 @@ def _queue_for_call(func_path: str) -> str:
     return DEFAULT_QUEUE_NAME
 
 
-def enqueue_agent_run(run_id: str, user_id: str, background_tasks: BackgroundTasks | None = None) -> dict[str, Any]:
+def enqueue_agent_run(
+    run_id: str,
+    user_id: str,
+    background_tasks: BackgroundTasks | None = None,
+    job_id: str | None = None,
+    agent_type: str | None = None,
+) -> dict[str, Any]:
+    job_id = job_id or f"agent-run-{run_id}"
     if backend() != "redis":
         if background_tasks is not None:
             from services.orchestrator import execute_run
@@ -48,21 +59,19 @@ def enqueue_agent_run(run_id: str, user_id: str, background_tasks: BackgroundTas
         else:
             from services.orchestrator import execute_run
             execute_run(run_id, user_id)
-        return {"backend": "inline", "job_id": None}
+        return {"backend": "inline", "job_id": job_id}
     try:
         from rq import Queue
         from rq.job import Job
     except Exception as exc:  # pragma: no cover - dependency is optional in sqlite dev mode
         raise RuntimeError("RQ is required when TASK_QUEUE_BACKEND=redis") from exc
     connection = redis_service.binary_client()
-    queue_name = _queue_for_agent_run(run_id, user_id)
+    queue_name = _queue_for_agent_type(agent_type) if agent_type else _queue_for_agent_run(run_id, user_id)
     queue = Queue(queue_name, connection=connection)
-    job_id = f"agent-run-{run_id}"
     try:
         job = Job.fetch(job_id, connection=connection)
     except Exception:
         job = queue.enqueue("tasks.video_tasks.execute_agent_run", run_id, user_id, job_id=job_id, job_timeout=int(os.getenv("AGENT_RUN_JOB_TIMEOUT_SECONDS", "7200")))
-    task_store.update_run(run_id, {"job_id": job.id}, user_id)
     return {"backend": "redis", "job_id": job.id}
 
 

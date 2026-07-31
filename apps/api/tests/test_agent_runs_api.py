@@ -36,7 +36,7 @@ class AgentRunsApiTest(unittest.TestCase):
             token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
             headers = {"Authorization": f"Bearer {token}"}
             runtime = client.get("/api/admin/runtime/health", headers=headers).json()
-            self.assertEqual(runtime["version"], "v1.8.9")
+            self.assertEqual(runtime["version"], "v1.8.10")
             self.assertEqual(runtime["model"], "meizhaiseek 2.0")
             self.assertEqual(runtime["validation"]["browser_agent_smoke_verified"], "not_run")
             self.assertIn("database", runtime)
@@ -57,7 +57,7 @@ class AgentRunsApiTest(unittest.TestCase):
         with TestClient(app) as client:
             token = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"}).json()["token"]
             headers = {"Authorization": f"Bearer {token}"}
-            with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+            with patch("services.orchestrator.schedule_run", lambda *_args: None):
                 created = client.post(
                     "/api/agent-runs",
                     headers=headers,
@@ -123,7 +123,7 @@ class AgentRunsApiTest(unittest.TestCase):
             other_token = client.post("/api/auth/login", json={"username": "other", "password": "password123"}).json()["token"]
             other = {"Authorization": f"Bearer {other_token}"}
 
-            with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+            with patch("services.orchestrator.schedule_run", lambda *_args: None):
                 created = client.post("/api/agent-runs", headers=admin, json={"agent_type": "title_writing", "prompt": "hello"})
             self.assertEqual(created.status_code, 200, created.text)
             run_id = created.json()["run_id"]
@@ -141,7 +141,7 @@ class AgentRunsApiTest(unittest.TestCase):
             blocked = client.post("/api/agent-runs", headers=admin, json={"agent_type": "title_writing", "prompt": "blocked"})
             self.assertEqual(blocked.status_code, 403)
             agent_blueprint_service.set_state("bp_block_title", "enable", "published", user)
-            with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+            with patch("services.orchestrator.schedule_run", lambda *_args: None):
                 restored = client.post("/api/agent-runs", headers=admin, json={"agent_type": "title_writing", "prompt": "restored"})
             self.assertEqual(restored.status_code, 200, restored.text)
 

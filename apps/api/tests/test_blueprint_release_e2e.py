@@ -144,7 +144,7 @@ class BlueprintReleaseE2ETest(unittest.TestCase):
                     self.assertEqual(enabled.status_code, 200, enabled.text)
 
             client.post("/api/agent-blueprints/bp_title_e2e/enable", headers=admin, json={})
-            with patch("services.orchestrator.schedule_run", lambda run_id, background_tasks, user_id: None):
+            with patch("services.orchestrator.schedule_run", lambda *_args: None):
                 restored = client.post("/api/agent-runs", headers=admin, json={"agent_type": "title_writing", "prompt": "restored"})
             self.assertEqual(restored.status_code, 200, restored.text)
             self.assertTrue(restored.json()["run_id"].startswith("run_"))

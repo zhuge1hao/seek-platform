@@ -1,12 +1,14 @@
 import logging
 import os
 import time
+import uuid
 from typing import Any
 
 from fastapi import BackgroundTasks
+from middleware import metrics as app_metrics
 
 from schemas.agent_runs import AgentRunCreate
-from services import conversation_store, task_store
+from services import app_sqlite, conversation_store, task_store
 from services.agent_config_store import get_config
 from services.agent_registry import get_agent_by_type
 from workflows import (
@@ -28,20 +30,27 @@ def _submit_timing_enabled() -> bool:
 
 def start_run(payload: AgentRunCreate, background_tasks: BackgroundTasks, user: dict[str, Any]) -> dict[str, Any]:
     started = time.perf_counter()
-    run = task_store.create_run(payload, user=user)
+    conversation_id = payload.conversation_id or f"conv_{uuid.uuid4().hex[:12]}"
+    run = task_store.prepare_run(payload, user, conversation_id, "")
+    queue_job_id = f"agent-run-{run['run_id']}"
+    run["queue_job_id"] = queue_job_id
+    run["job_id"] = queue_job_id
+    with app_sqlite.connection() as conn:
+        task_store.write_run_in_tx(run, conn)
+        conversation, _created = conversation_store.attach_run_atomic(conn, run)
+    app_metrics.observe_agent_submit_stage("persist_run_and_conversation", time.perf_counter() - started)
     after_run_insert = time.perf_counter()
-    conversation, _created = conversation_store.attach_run(run)
     after_conversation = time.perf_counter()
-    run = task_store.update_run(run["run_id"], {"conversation_id": conversation["conversation_id"]}, run["user_id"]) or run
     after_run_update = time.perf_counter()
+    task_store.publish_created_run(run)
     try:
-        queue_result = schedule_run(run["run_id"], background_tasks, run["user_id"]) or {}
+        enqueue_started = time.perf_counter()
+        queue_result = schedule_run(run["run_id"], background_tasks, run["user_id"], queue_job_id, str(run.get("agent_type") or "")) or {}
+        app_metrics.observe_agent_submit_stage("enqueue", time.perf_counter() - enqueue_started)
     except Exception:
-        task_store.update_run(
-            run["run_id"],
-            {"status": "failed", "progress": 100, "current_step": "enqueue failed", "result": None, "error": "task enqueue failed"},
-            run["user_id"],
-        )
+        compensation_started = time.perf_counter()
+        task_store.mark_enqueue_failed(run)
+        app_metrics.observe_agent_submit_stage("compensation", time.perf_counter() - compensation_started)
         raise
     after_enqueue = time.perf_counter()
     if _submit_timing_enabled():
@@ -68,10 +77,10 @@ def start_run(payload: AgentRunCreate, background_tasks: BackgroundTasks, user: 
     }
 
 
-def schedule_run(run_id: str, background_tasks: BackgroundTasks, user_id: str) -> dict[str, Any]:
+def schedule_run(run_id: str, background_tasks: BackgroundTasks, user_id: str, job_id: str | None = None, agent_type: str | None = None) -> dict[str, Any]:
     from tasks.queue import enqueue_agent_run
 
-    return enqueue_agent_run(run_id, user_id, background_tasks)
+    return enqueue_agent_run(run_id, user_id, background_tasks, job_id=job_id, agent_type=agent_type)
 
 
 def _fail_unsupported(run_id: str, agent_type: str | None, user_id: str) -> None:
