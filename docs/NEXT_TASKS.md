@@ -1,10 +1,10 @@
 # Next Tasks
 ## v1.8.10 Current Next Tasks
 
-1. Rebuild the production API and capture before/after submit transaction evidence.
-2. Run PostgreSQL durability and API worker comparisons without changing production durability defaults.
-3. Pass the 100-user regression, then rerun the 200-user gate up to three evidence-driven rounds.
-4. Close SQL/type gates and final runtime evidence. Do not run 300/500 users.
+1. `passed`: submit transaction budget, from 16 transactions/16 commits to 4 transactions/1 commit.
+2. `passed`: PostgreSQL durability and API workers 1/2/4 comparison; selected workers 2 with `synchronous_commit=on`.
+3. `passed`: 100-user 15-minute regression and 200-user 15-minute capacity gate; current maximum stable users are 200.
+4. `passed`: real-video Browser matrix, multi-instance SSE/Redis recovery, SQL baseline 31/high 0, and targeted database import following. Do not run 300/500 users.
 
 ## v1.8.9 Previous Tasks
 

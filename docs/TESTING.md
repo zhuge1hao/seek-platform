@@ -1,4 +1,11 @@
 # Testing
+## v1.8.10 Test Notes
+
+- Submit profile: `apps/api/scripts/profile_agent_submit.py`; production success measured 4 transactions and 1 commit versus the v1.8.9 baseline of 16/16.
+- Browser: `npm.cmd run e2e:agent -- --project=chrome --workers=1` passed 6/6 with real 8001 video, downloads, cancel/retry, switch abort, SSE close, and isolation.
+- Capacity: 100 users passed with submit p95 95ms; 200 users passed with submit p95 110ms and 0 failures. No 300/500-user test was run.
+- SQL safety passed at baseline 31/high 0. Mypy passed 201 files with targeted `normal` overrides for SQLAlchemy and psycopg.
+
 ## v1.8.9 Test Notes
 
 - Smoke: `python apps/api/scripts/smoke_minimal.py --expected-version v1.8.9 --expected-model "meizhaiseek 2.0"`.

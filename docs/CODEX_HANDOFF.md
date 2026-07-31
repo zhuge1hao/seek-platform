@@ -3,7 +3,10 @@
 
 - Branch: `stabilization/v1.8.10`; base: `0ae8e5a8576e1eb1a332c92bc31dc74be794726d`.
 - Version/model: `v1.8.10` / `meizhaiseek 2.0`.
-- Submit persistence is coded as one write transaction with a pre-generated queue job id; live PostgreSQL and capacity evidence must still be recorded before marking passed.
+- Submit persistence passed with one write commit and a pre-generated queue job id; the measured successful request budget is 4 transactions, 1 commit.
+- Production evidence passed: 100 users (90,106 requests, 0 failures, submit p95 95ms) and 200 users (145,700 requests, 0 failures, submit p95 110ms).
+- Browser real-video matrix passed 6/6; multi-instance SSE/Redis recovery passed with 2 API instances and event p95 3.815s.
+- Runtime defaults are API workers 2, PostgreSQL pool 20+20 per worker, `synchronous_commit=on`, and capacity marker 200/passed.
 - Protected dirty files remain `AGENTS.md`, `ARCHITECTURE_EVALUATION_REPORT.md`, and `docker-compose.prod.yml`.
 
 ## v1.8.9 Handoff History

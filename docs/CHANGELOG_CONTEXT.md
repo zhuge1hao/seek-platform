@@ -4,7 +4,9 @@
 - Started `stabilization/v1.8.10` from v1.8.9 HEAD `0ae8e5a8576e1eb1a332c92bc31dc74be794726d`.
 - Updated runtime and frontend version surfaces to `meizhaiseek v1.8.10`; model remains `meizhaiseek 2.0`.
 - Coded atomic Agent submit persistence, pre-generated RQ job ids, transaction tracing, and database latency metrics.
-- Production profile, durability/worker experiments, and 100/200-user results remain `not_run` until executed.
+- Reduced successful submit from 16 transactions/16 commits to 4 transactions/1 commit while keeping enqueue compensation atomic and idempotent.
+- Passed production profiling, PostgreSQL durability/API-worker comparison, the 100-user regression, and the 200-user gate. Submit p95 improved from the v1.8.9 result of 1800ms to 110ms.
+- Passed the real-video Playwright matrix (6/6), two-instance SSE/Redis recovery, SQL baseline 31/high 0, and targeted SQLAlchemy/psycopg import following.
 
 ## v1.8.9 - Execution Closure Cycle
 
