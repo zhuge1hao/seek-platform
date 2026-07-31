@@ -1,5 +1,5 @@
 # 产品说明 PRD
-## meizhaiseek v1.8.9
+## meizhaiseek v1.8.10
 
 - Version focus: browser production matrix, multi-instance SSE, PostgreSQL pool-wait observability, smoke script version maintenance, 100-user regression, 200-user capacity gate, and security/SQL closeout.
 - Model display name remains `meizhaiseek 2.0`.

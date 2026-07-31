@@ -1,5 +1,12 @@
 # Next Tasks
-## v1.8.9 Current Next Tasks
+## v1.8.10 Current Next Tasks
+
+1. Rebuild the production API and capture before/after submit transaction evidence.
+2. Run PostgreSQL durability and API worker comparisons without changing production durability defaults.
+3. Pass the 100-user regression, then rerun the 200-user gate up to three evidence-driven rounds.
+4. Close SQL/type gates and final runtime evidence. Do not run 300/500 users.
+
+## v1.8.9 Previous Tasks
 
 1. `passed`: `/agent` browser matrix against real services, including real video/download/cancel/retry/SSE/isolation. Evidence: `docs/V189_BROWSER_MATRIX.md`.
 2. `passed`: multi-instance SSE and Redis recovery with two API instances sharing PostgreSQL, Redis, JWT secret, artifact backend, and RAG backend. Evidence: `docs/V189_MULTI_INSTANCE_SSE.md`.

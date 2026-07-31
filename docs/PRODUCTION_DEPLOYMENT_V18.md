@@ -1,4 +1,8 @@
 # Production Deployment v1.8
+## v1.8.10 Deployment Notes
+
+Runtime health must report `version=v1.8.10` and `model=meizhaiseek 2.0`. Use `docker-compose.v1810.override.yml` for non-secret pool, API worker, tracing, and capacity marker settings. `synchronous_commit=off` is test-only and must not become the production default.
+
 ## v1.8.9 Deployment Notes
 
 Runtime health must report `version=v1.8.9` and `model=meizhaiseek 2.0`. PostgreSQL deployments now expose non-sensitive pool stats in runtime health and Prometheus pool metrics. Do not set Browser, multi-instance SSE, or 200-user capacity markers to `passed` without real v1.8.9 evidence.

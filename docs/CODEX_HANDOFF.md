@@ -1,5 +1,12 @@
 # Codex Handoff
-## v1.8.9 Handoff Addendum
+## v1.8.10 Handoff Addendum
+
+- Branch: `stabilization/v1.8.10`; base: `0ae8e5a8576e1eb1a332c92bc31dc74be794726d`.
+- Version/model: `v1.8.10` / `meizhaiseek 2.0`.
+- Submit persistence is coded as one write transaction with a pre-generated queue job id; live PostgreSQL and capacity evidence must still be recorded before marking passed.
+- Protected dirty files remain `AGENTS.md`, `ARCHITECTURE_EVALUATION_REPORT.md`, and `docker-compose.prod.yml`.
+
+## v1.8.9 Handoff History
 
 - Branch: `stabilization/v1.8.9`.
 - Version: `meizhaiseek v1.8.9`.

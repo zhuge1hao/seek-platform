@@ -1,4 +1,8 @@
 # Scalability 500 Users
+## v1.8.10 Gate Update
+
+The v1.8.10 cycle is limited to 100/200-user validation after submit transaction convergence. No 300/500-user test is authorized.
+
 ## v1.8.9 Gate Update
 
 This cycle executed the 200-user gate after the browser matrix, multi-instance SSE, Redis recovery, pool metrics, Docker health, and 100-user baseline prerequisites passed. The 200-user gate remained `failed` after three rounds because `/api/agent-runs` submit p95 stayed above the `1000 ms` limit. 300/500-user load tests remain out of scope and stayed `not_run`.

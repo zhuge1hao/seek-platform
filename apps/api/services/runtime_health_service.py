@@ -5,7 +5,7 @@ from services import agent_run_event_bus, app_sqlite, redis_service, security_co
 from tasks import queue as task_queue
 
 
-VERSION = "v1.8.9"
+VERSION = "v1.8.10"
 MODEL = "meizhaiseek 2.0"
 VALIDATION_VALUES = {"not_run", "failed", "passed"}
 

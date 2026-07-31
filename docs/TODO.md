@@ -1,5 +1,11 @@
 # TODO
-## v1.8.9 Active Items
+## v1.8.10 Active Items
+
+- `coded`: Agent submit atomic persistence, pre-generated queue job id, incremental conversation writes, transaction budget headers, and database latency metrics.
+- `not_run`: v1.8.10 production profile, PostgreSQL durability/worker comparison, 100-user and 200-user gates.
+- `out_of_scope`: 300/500-user load tests, local video Agent changes, and broad frontend work.
+
+## v1.8.9 Closed Items
 
 - `coded`: runtime version updated to `v1.8.9`; smoke version checks now support CLI/env/config precedence; PostgreSQL pool metrics are wired.
 - `passed`: browser full production matrix, multi-instance SSE production acceptance, Redis recovery, live pool metrics collection, smoke_minimal, and the 100-user regression.

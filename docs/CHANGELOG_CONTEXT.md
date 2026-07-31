@@ -1,4 +1,11 @@
 # Changelog Context
+## v1.8.10 - Submit Transaction And Capacity Cycle
+
+- Started `stabilization/v1.8.10` from v1.8.9 HEAD `0ae8e5a8576e1eb1a332c92bc31dc74be794726d`.
+- Updated runtime and frontend version surfaces to `meizhaiseek v1.8.10`; model remains `meizhaiseek 2.0`.
+- Coded atomic Agent submit persistence, pre-generated RQ job ids, transaction tracing, and database latency metrics.
+- Production profile, durability/worker experiments, and 100/200-user results remain `not_run` until executed.
+
 ## v1.8.9 - Execution Closure Cycle
 
 - Started `stabilization/v1.8.9` from v1.8.8 HEAD `102d1a1cde275556254c8c8a10d595d34f8fe534`.

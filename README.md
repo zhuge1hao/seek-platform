@@ -1,9 +1,9 @@
 # meizhaiseek-platform
-## Latest v1.8.9 Browser, SSE, Pool Metrics, and 200-user Gate
+## Latest v1.8.10 Submit Transaction and Capacity Cycle
 
-Branch: `stabilization/v1.8.9`.
+Branch: `stabilization/v1.8.10`.
 
-`meizhaiseek v1.8.9` keeps model display `meizhaiseek 2.0` and closes the browser production matrix, multi-instance SSE validation, PostgreSQL pool-wait observability, stale smoke-version cleanup, and 100/200-user capacity gate cycle with real production-stack evidence. Browser full matrix, multi-instance SSE, Redis recovery, pool metrics collection, and the 100-user regression are `passed`; the 200-user gate is `failed` after three real rounds because submit p95 remained above the gate. Current maximum stable users remain `100`. 300/500-user load tests were not executed.
+`meizhaiseek v1.8.10` keeps model display `meizhaiseek 2.0` and targets the remaining 200-user bottleneck by collapsing Agent submit persistence into one write transaction, adding commit/execute/stage metrics, and rerunning the 100/200-user gates. Capacity remains verified at `100` until the new tests pass. 300/500-user load tests are out of scope.
 
 ## Latest v1.8.7 Production Closure Cycle
 

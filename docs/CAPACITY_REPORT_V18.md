@@ -1,4 +1,11 @@
 # Capacity Report v1.8/v1.8.7 Update - 2026-07-17
+## v1.8.10 Capacity Gate Status
+
+- Current verified capacity remains `100` users from v1.8.9.
+- v1.8.10 100-user regression: `not_run`.
+- v1.8.10 200-user gate: `not_run`.
+- Submit transaction and commit metrics are coded; production evidence is pending.
+
 ## v1.8.9 Capacity Gate Status
 
 - `CAPACITY_LAST_VERIFIED_USERS`: `100`.
