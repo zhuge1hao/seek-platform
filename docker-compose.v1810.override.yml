@@ -2,7 +2,8 @@ services:
   api:
     command: sh -c "if [ \"$${APP_DB_BACKEND}\" = \"postgres\" ]; then cd /app && alembic upgrade head; cd /app/apps/api; fi; python -m uvicorn main:app --host 0.0.0.0 --port 8000 --workers $${API_WORKERS:-1}"
     environment:
-      API_WORKERS: ${API_WORKERS:-1}
+      API_WORKERS: ${API_WORKERS:-2}
+      PGOPTIONS: ${PGOPTIONS:--c synchronous_commit=on}
       APP_DB_POOL_SIZE: ${APP_DB_POOL_SIZE:-20}
       APP_DB_MAX_OVERFLOW: ${APP_DB_MAX_OVERFLOW:-20}
       APP_DB_TRANSACTION_TRACE: ${APP_DB_TRANSACTION_TRACE:-true}
@@ -20,8 +21,8 @@ services:
       BLUEPRINT_QUEUE_VERIFIED: ${BLUEPRINT_QUEUE_VERIFIED:-passed}
       ARTIFACT_S3_VERIFIED: ${ARTIFACT_S3_VERIFIED:-passed}
       PGVECTOR_MIGRATION_VERIFIED: ${PGVECTOR_MIGRATION_VERIFIED:-passed}
-      CAPACITY_LAST_VERIFIED_USERS: ${CAPACITY_LAST_VERIFIED_USERS:-100}
-      CAPACITY_LAST_TEST_PASSED: ${CAPACITY_LAST_TEST_PASSED:-failed}
+      CAPACITY_LAST_VERIFIED_USERS: ${CAPACITY_LAST_VERIFIED_USERS:-200}
+      CAPACITY_LAST_TEST_PASSED: ${CAPACITY_LAST_TEST_PASSED:-passed}
   worker-video:
     environment:
       LOCAL_VIDEO_AGENT_OUTPUT_ROOT: ${LOCAL_VIDEO_AGENT_OUTPUT_ROOT:-E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\runtime}

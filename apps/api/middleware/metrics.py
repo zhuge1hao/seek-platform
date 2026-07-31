@@ -1,5 +1,7 @@
 import os
 import time
+from collections import deque
+from threading import Lock
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -9,6 +11,14 @@ try:
 except Exception:  # pragma: no cover - dependency can be absent in old dev envs
     Counter = Gauge = Histogram = None
     generate_latest = None
+
+
+_DB_OBSERVABILITY_LOCK = Lock()
+_DB_EXECUTE_COUNT = 0
+_DB_COMMIT_COUNT = 0
+_DB_COMMIT_FAILURE_COUNT = 0
+_DB_EXECUTE_WINDOW: deque[float] = deque(maxlen=1000)
+_DB_COMMIT_WINDOW: deque[float] = deque(maxlen=1000)
 
 
 if Counter and Gauge and Histogram:
@@ -115,11 +125,16 @@ def set_db_pool_gauges(stats: dict[str, int]) -> None:
 
 
 def observe_db_execute(backend: str, operation: str, seconds: float) -> None:
+    global _DB_EXECUTE_COUNT
     if DB_EXECUTE_SECONDS:
         DB_EXECUTE_SECONDS.labels(backend, operation).observe(max(0.0, seconds))
+    with _DB_OBSERVABILITY_LOCK:
+        _DB_EXECUTE_COUNT += 1
+        _DB_EXECUTE_WINDOW.append(max(0.0, seconds))
 
 
 def observe_db_commit(backend: str, seconds: float, failed: bool = False) -> None:
+    global _DB_COMMIT_COUNT, _DB_COMMIT_FAILURE_COUNT
     if DB_COMMIT_SECONDS:
         DB_COMMIT_SECONDS.labels(backend).observe(max(0.0, seconds))
     if failed:
@@ -127,6 +142,10 @@ def observe_db_commit(backend: str, seconds: float, failed: bool = False) -> Non
             DB_COMMIT_FAILURES.labels(backend).inc()
     elif DB_COMMITS:
         DB_COMMITS.labels(backend).inc()
+    with _DB_OBSERVABILITY_LOCK:
+        _DB_COMMIT_COUNT += 0 if failed else 1
+        _DB_COMMIT_FAILURE_COUNT += 1 if failed else 0
+        _DB_COMMIT_WINDOW.append(max(0.0, seconds))
 
 
 def observe_db_rollback(backend: str, seconds: float) -> None:
@@ -151,3 +170,23 @@ def observe_agent_submit_counts(transactions: int, commits: int) -> None:
 def inc_agent_submit_failure() -> None:
     if AGENT_SUBMIT_FAILURES:
         AGENT_SUBMIT_FAILURES.inc()
+
+
+def db_observability_summary() -> dict[str, dict[str, int | float | None]]:
+    with _DB_OBSERVABILITY_LOCK:
+        execute = list(_DB_EXECUTE_WINDOW)
+        commit = list(_DB_COMMIT_WINDOW)
+        execute_count = _DB_EXECUTE_COUNT
+        commit_count = _DB_COMMIT_COUNT
+        failure_count = _DB_COMMIT_FAILURE_COUNT
+
+    def p95_ms(values: list[float]) -> float | None:
+        if not values:
+            return None
+        ordered = sorted(values)
+        return round(ordered[min(len(ordered) - 1, int(len(ordered) * 0.95))] * 1000, 3)
+
+    return {
+        "execute": {"count": execute_count, "last_p95_ms": p95_ms(execute), "last_window_samples": len(execute)},
+        "commit": {"count": commit_count, "failure_count": failure_count, "last_p95_ms": p95_ms(commit), "last_window_samples": len(commit)},
+    }

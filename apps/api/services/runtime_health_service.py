@@ -1,6 +1,7 @@
 import os
 from typing import Any
 
+from middleware import metrics as app_metrics
 from services import agent_run_event_bus, app_sqlite, redis_service, security_config_service
 from tasks import queue as task_queue
 
@@ -25,6 +26,7 @@ def database_health() -> dict[str, Any]:
             "status": result.get("status", "failed"),
             "pool_size": pool.get("pool_size", int(os.getenv("APP_DB_POOL_SIZE", "5"))),
             "pool": pool,
+            **app_metrics.db_observability_summary(),
             "tables": result.get("tables", {}),
         }
     result = app_sqlite.health_check()

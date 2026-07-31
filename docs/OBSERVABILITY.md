@@ -11,6 +11,14 @@ Metrics should cover HTTP, DB pool, Redis, queue, worker, SSE, DeepSeek, 8001, a
 
 Secrets, connection strings, raw prompts, raw responses, and full workflow options must not be returned from health or metrics endpoints.
 
+## v1.8.10 Submit And Commit Metrics
+
+- Database latency: `app_db_execute_seconds`, `app_db_commit_seconds`, `app_db_rollback_seconds`.
+- Database counters: `app_db_commit_total`, `app_db_rollback_total`, `app_db_commit_failure_total`.
+- Submit metrics: `app_agent_submit_stage_seconds`, `app_agent_submit_transactions`, `app_agent_submit_commits`, `app_agent_submit_failures_total`.
+- Labels are fixed backend/operation/stage enums; SQL, parameters, table names, DSNs, and credentials are not labels.
+- Runtime health exposes only rolling sample counts and p95 latency summaries.
+
 ## v1.8.9 PostgreSQL Pool Metrics
 
 - Live `/metrics` validation: `passed` on 2026-07-19.

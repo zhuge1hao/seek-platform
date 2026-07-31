@@ -31,3 +31,7 @@ no_implicit_optional = true
 [[tool.mypy.overrides]]
 module = ["pydantic.*"]
 follow_imports = "normal"
+
+[[tool.mypy.overrides]]
+module = ["sqlalchemy", "sqlalchemy.*", "psycopg", "psycopg.*"]
+follow_imports = "normal"
