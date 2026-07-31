@@ -1,7 +1,7 @@
 # Scalability 500 Users
 ## v1.8.10 Gate Update
 
-The v1.8.10 cycle is limited to 100/200-user validation after submit transaction convergence. No 300/500-user test is authorized.
+The v1.8.10 200-user gate passed with 0 failures and submit p95 110ms. Verified stable capacity is 200 users. No 300/500-user test was authorized or executed.
 
 ## v1.8.9 Gate Update
 

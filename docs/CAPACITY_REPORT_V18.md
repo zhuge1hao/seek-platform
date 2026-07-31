@@ -1,10 +1,10 @@
 # Capacity Report v1.8/v1.8.7 Update - 2026-07-17
 ## v1.8.10 Capacity Gate Status
 
-- Current verified capacity remains `100` users from v1.8.9.
-- v1.8.10 100-user regression: `not_run`.
-- v1.8.10 200-user gate: `not_run`.
-- Submit transaction and commit metrics are coded; production evidence is pending.
+- Current verified capacity is `200` users.
+- v1.8.10 100-user regression: `passed`, 90,106 requests, 0 failures, aggregate p95 45ms, submit p95 95ms.
+- v1.8.10 200-user gate: `passed`, 145,700 requests, 0 failures, aggregate p95 82ms, submit p95 110ms, final queue 0.
+- Submit transactions fell from 16 to 4 and commits from 16 to 1 in the controlled before/after check.
 
 ## v1.8.9 Capacity Gate Status
 
