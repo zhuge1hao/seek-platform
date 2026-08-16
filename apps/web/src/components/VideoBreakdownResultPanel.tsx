@@ -29,6 +29,15 @@ function list(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null) : [];
 }
 
+function fileForPath(files: AgentRunFile[], path: unknown): AgentRunFile | undefined {
+  const target = String(path || "").replace(/\\/g, "/").toLowerCase();
+  return target ? files.find((file) => String(file.path || "").replace(/\\/g, "/").toLowerCase() === target) : undefined;
+}
+
+function filenameForPath(path: unknown): string {
+  return String(path || "download").split(/[\\/]/).pop() || "download";
+}
+
 function Empty({ label }: { label: string }) {
   return <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-400">{label}</p>;
 }
@@ -126,12 +135,14 @@ export const VideoBreakdownResultPanel = memo(function VideoBreakdownResultPanel
             ["artifact_count", prepared.summary.artifact_count || prepared.summary.file_count],
             ["Excel path", prepared.summary.excel_path],
             ["shot_report path", prepared.summary.shot_report_path],
-          ].map(([label, value]) => (
-            <div key={label as string} className="rounded-xl bg-white px-3 py-2">
+          ].map(([label, value]) => {
+            const file = label === "Excel path" || label === "shot_report path" ? fileForPath(prepared.files, value) : undefined;
+            return <div key={label as string} className="rounded-xl bg-white px-3 py-2">
               <p className="text-xs text-slate-500">{label}</p>
               <FullText value={value} />
-            </div>
-          ))}
+              {file?.download_url ? <button aria-label={`下载 ${label}`} className="mt-2 inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50" onClick={() => void downloadArtifact(file.download_url!, filenameForPath(value))} type="button"><Download className="h-3.5 w-3.5" />下载</button> : null}
+            </div>;
+          })}
         </div>
       </section>
 
