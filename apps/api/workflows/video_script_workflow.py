@@ -94,14 +94,22 @@ def _output_dir_for_run(run_id: str, user_id: str, options: dict[str, Any]) -> P
     return Path(configured) if configured else artifacts_dir(user_id, run_id)
 
 
-def local_agent_output_dir(container_output_dir: Path) -> str:
-    mount_root = os.getenv("LOCAL_VIDEO_AGENT_OUTPUT_MOUNT", "").strip().replace("\\", "/").rstrip("/")
-    host_root = os.getenv("LOCAL_VIDEO_AGENT_OUTPUT_ROOT", "").strip()
-    output_text = container_output_dir.as_posix()
-    if mount_root and host_root and (output_text == mount_root or output_text.startswith(f"{mount_root}/")):
-        rel = output_text[len(mount_root):].lstrip("/")
+def _local_agent_path(path_value: str | Path, mount_env: str, root_env: str) -> str:
+    mount_root = os.getenv(mount_env, "").strip().replace("\\", "/").rstrip("/")
+    host_root = os.getenv(root_env, "").strip()
+    path_text = str(path_value).replace("\\", "/")
+    if mount_root and host_root and (path_text == mount_root or path_text.startswith(f"{mount_root}/")):
+        rel = path_text[len(mount_root):].lstrip("/")
         return str(PureWindowsPath(host_root) / PurePosixPath(rel))
-    return str(container_output_dir)
+    return str(path_value)
+
+
+def local_agent_output_dir(container_output_dir: Path) -> str:
+    return _local_agent_path(container_output_dir, "LOCAL_VIDEO_AGENT_OUTPUT_MOUNT", "LOCAL_VIDEO_AGENT_OUTPUT_ROOT")
+
+
+def local_agent_video_file(video_file: str) -> str:
+    return _local_agent_path(video_file, "LOCAL_VIDEO_AGENT_UPLOAD_MOUNT", "LOCAL_VIDEO_AGENT_UPLOAD_ROOT")
 
 
 def _is_cancelled(run_id: str, user_id: str) -> bool:
@@ -179,6 +187,8 @@ def run(run_id: str, user_id: str) -> None:
 
     _set_step(run_id, user_id, "prepare_payload", "running", "Preparing native /run payload", progress=40)
     payload = build_video_agent_run_payload(current, options, local_agent_output_dir(output_path))
+    if payload.get("video_file"):
+        payload["video_file"] = local_agent_video_file(str(payload["video_file"]))
     if payload.get("mode") != "mock" and not payload.get("video_file"):
         _fail(run_id, user_id, "validate_input", "video_file is required for shot_text_excel mode.")
         return

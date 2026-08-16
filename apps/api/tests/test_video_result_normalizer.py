@@ -81,6 +81,18 @@ class VideoResultNormalizerTest(unittest.TestCase):
             os.environ.pop("LOCAL_VIDEO_AGENT_OUTPUT_ROOT", None)
         self.assertEqual(mapped, r"E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\runtime\users\alice\artifacts\run1")
 
+    def test_local_agent_video_file_maps_container_upload_to_host_root(self) -> None:
+        from workflows.video_script_workflow import local_agent_video_file
+
+        os.environ["LOCAL_VIDEO_AGENT_UPLOAD_MOUNT"] = "/app/apps/api/uploads"
+        os.environ["LOCAL_VIDEO_AGENT_UPLOAD_ROOT"] = r"E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\uploads"
+        try:
+            mapped = local_agent_video_file("/app/apps/api/uploads/users/admin/files/demo.mp4")
+        finally:
+            os.environ.pop("LOCAL_VIDEO_AGENT_UPLOAD_MOUNT", None)
+            os.environ.pop("LOCAL_VIDEO_AGENT_UPLOAD_ROOT", None)
+        self.assertEqual(mapped, r"E:\USE\codexhome\agents-cowork\meizhaiseek-platform\apps\api\uploads\users\admin\files\demo.mp4")
+
 
 if __name__ == "__main__":
     unittest.main()
