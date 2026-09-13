@@ -1,0 +1,87 @@
+{
+  "source": {
+    "file_name": "关键词洞察报告【女士内衣_男士内衣_】-表格.xlsx",
+    "sheet_counts": {
+      "全部搜索词": 300,
+      "行业必争搜索词": 4,
+      "供给不足蓝海词": 33,
+      "小众高意向蓝海词": 61
+    },
+    "overlapping_strategy_keywords": []
+  },
+  "benchmark_inference": {
+    "ctr": {
+      "value": 102.4,
+      "confidence": 1.0,
+      "supported_rows": 257,
+      "valid_rows": 257,
+      "max_error": 0.0,
+      "status": "inferred"
+    },
+    "conversion": {
+      "value": 22.5,
+      "confidence": 1.0,
+      "supported_rows": 257,
+      "valid_rows": 257,
+      "max_error": 0.0,
+      "status": "inferred"
+    }
+  },
+  "ground_truth_counts": {
+    "must_win": 4,
+    "blue_ocean_supply_gap": 33,
+    "blue_ocean_high_intent": 61
+  },
+  "prediction_counts": {
+    "total_keywords": 300,
+    "must_win_count": 4,
+    "supply_gap_count": 35,
+    "high_intent_count": 62
+  },
+  "metrics": {
+    "must_win": {
+      "true_positive": 4,
+      "false_positive": 0,
+      "false_negative": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "false_positive_keywords": [],
+      "false_negative_keywords": []
+    },
+    "blue_ocean_supply_gap": {
+      "true_positive": 33,
+      "false_positive": 2,
+      "false_negative": 0,
+      "precision": 0.942857,
+      "recall": 1.0,
+      "f1": 0.970588,
+      "false_positive_keywords": [
+        "丁字裤女内",
+        "性感内裤女生"
+      ],
+      "false_negative_keywords": []
+    },
+    "blue_ocean_high_intent": {
+      "true_positive": 60,
+      "false_positive": 2,
+      "false_negative": 1,
+      "precision": 0.967742,
+      "recall": 0.983607,
+      "f1": 0.97561,
+      "false_positive_keywords": [
+        "女士无痕内裤",
+        "无痕女士内裤"
+      ],
+      "false_negative_keywords": [
+        "全棉内裤"
+      ]
+    }
+  },
+  "method": {
+    "status": "INFERRED_FROM_ONE_SAMPLE",
+    "runtime_model": "configurable explainable rules",
+    "keyword_lookup_used": false,
+    "deduplicate_intents_default": false
+  }
+}

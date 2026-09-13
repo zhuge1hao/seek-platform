@@ -17,6 +17,16 @@ class SkillTemplateStoreError(RuntimeError):
 
 DEFAULT_TEMPLATES: list[dict[str, Any]] = [
     {
+        "id": "keyword_insight",
+        "name": "关键词洞察",
+        "agent_types": ["keyword_insight"],
+        "description": "从关键词市场数据识别行业必争词、供给不足蓝海词和小众高意向蓝海词",
+        "required_inputs": ["excel"],
+        "prompt_template": "上传关键词 Excel，并在业务上下文中说明行业、品类、人群、材质、功能和核心卖点。",
+        "output_format": "结构化 JSON 与四工作表 Excel",
+        "enabled": True,
+    },
+    {
         "id": "competitor_low_cost_ratio",
         "name": "低费比高成交分析",
         "agent_types": ["competitor_analysis", "smart_selection"],

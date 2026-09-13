@@ -1,0 +1,34 @@
+{
+  "benchmark_tolerance": 0.11,
+  "benchmark_min_confidence": 0.95,
+  "supply_gap": {
+    "min_popularity_7d_lower": 5000,
+    "weak_ctr_max": 94.0,
+    "weak_conversion_lower_max": 17.5,
+    "supporting_ctr_30d_min": 110.0
+  },
+  "high_intent": {
+    "max_popularity_7d_mid": 5625,
+    "ctr_7d_min": 102.5,
+    "conversion_30d_lower_min": 22.5,
+    "recovery_conversion_7d_mid_min": 25.0,
+    "recovery_ctr_30d_min": 100.5
+  },
+  "must_win": {
+    "demand_momentum_min": 1.64,
+    "ctr_30d_min": 106.5,
+    "conversion_30d_lower_min": 22.5,
+    "business_relevance_min": 0.4
+  },
+  "intent_lexicon": {
+    "category": ["内裤", "三角裤", "平角裤", "文胸", "保暖内衣", "家居服"],
+    "audience": ["女士", "女性", "女生", "女式", "女款", "女", "妈妈", "中老年", "老人", "孕妇", "孕期", "少女", "青少年", "大码", "胖mm", "男士"],
+    "material": ["纯棉", "全棉", "棉", "冰丝", "莫代尔", "桑蚕丝", "蚕丝", "真丝", "羊绒", "蕾丝"],
+    "function": ["无痕", "高腰", "收腹", "收小肚子", "抗菌", "抑菌", "透气", "速干", "不夹屁屁", "不卡裆"],
+    "style": ["性感", "高级感", "高颜值", "漂亮", "精品", "日系"],
+    "season": ["夏季", "夏天", "薄款", "夏薄款"],
+    "scene": ["孕期", "怀孕期", "生理期", "经期", "月经期"],
+    "size": ["大码", "胖mm"],
+    "brand": ["ck", "蕉内", "ubras", "有棵树", "维密", "维多利亚的秘密", "全棉时代", "猫人", "都市丽人", "优衣库", "曼妮芬", "芬腾", "红豆"]
+  }
+}

@@ -15,6 +15,7 @@ from workflows import (
     competitor_analysis_workflow,
     detail_page_planning_workflow,
     generic_agent_workflow,
+    keyword_insight_workflow,
     main_image_breakdown_workflow,
     smart_selection_workflow,
     video_script_workflow,
@@ -116,6 +117,8 @@ def execute_run(run_id: str, user_id: str) -> None:
             competitor_analysis_workflow.run(run_id, user_id)
         elif agent_type == "smart_selection":
             smart_selection_workflow.run(run_id, user_id)
+        elif agent_type == "keyword_insight":
+            keyword_insight_workflow.run(run_id, user_id)
         elif agent_type in {"detail_page_planning", "brand_detail_page_planning"}:
             detail_page_planning_workflow.run(run_id, user_id)
         elif agent_type in {"hot_main_image_breakdown", "search_main_image", "main_image_planning"}:
